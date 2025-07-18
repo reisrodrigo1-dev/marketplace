@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Classes de peso da fonte Inter */
+.font-inter-thin { font-family: 'Inter', sans-serif; font-weight: 100; }
+.font-inter-extralight { font-family: 'Inter', sans-serif; font-weight: 200; }
+.font-inter-light { font-family: 'Inter', sans-serif; font-weight: 300; }
+.font-inter-regular { font-family: 'Inter', sans-serif; font-weight: 400; }
+.font-inter-medium { font-family: 'Inter', sans-serif; font-weight: 500; }
+.font-inter-semibold { font-family: 'Inter', sans-serif; font-weight: 600; }
+.font-inter-bold { font-family: 'Inter', sans-serif; font-weight: 700; }
+.font-inter-extrabold { font-family: 'Inter', sans-serif; font-weight: 800; }
+.font-inter-black { font-family: 'Inter', sans-serif; font-weight: 900; }
+
+/* Estilos específicos para a tela de vagas */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Estilos para DireitoHub Flix */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.job-card {
+  transition: all 0.3s ease;
+}
+
+.job-card:hover {
+  transform: translateY(-2px);
+}

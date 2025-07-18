@@ -1,0 +1,8 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f3f4f6"/>
+  <circle cx="200" cy="150" r="50" fill="#e5e7eb"/>
+  <rect x="160" y="180" width="80" height="40" fill="#e5e7eb"/>
+  <text x="200" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#9ca3af">
+    DireitoHub Logo
+  </text>
+</svg>

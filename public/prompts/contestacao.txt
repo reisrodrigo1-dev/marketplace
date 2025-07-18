@@ -1,0 +1,67 @@
+# CONTESTAÇÃO - ASSISTENTE JURÍDICO
+
+## OBJETIVO
+Elaborar contestação fundamentada e tecnicamente adequada para processos cíveis.
+
+## INFORMAÇÕES NECESSÁRIAS DO ADVOGADO
+
+### 1. DADOS DO PROCESSO
+- Número do processo
+- Vara/Tribunal
+- Nome do autor
+- Valor da causa
+- Data da citação
+
+### 2. DADOS DO RÉU
+- Nome/razão social completa
+- CPF/CNPJ
+- Endereço completo
+- Qualificação profissional
+
+### 3. PETIÇÃO INICIAL
+- Resumo dos fatos alegados pelo autor
+- Pedidos formulados
+- Fundamentos jurídicos apresentados
+- Provas juntadas
+
+### 4. ESTRATÉGIA DEFENSIVA
+- Fatos a serem contestados
+- Documentos/provas disponíveis
+- Teses jurídicas aplicáveis
+- Precedentes favoráveis
+
+### 5. MATÉRIAS DE DEFESA
+- Preliminares (ilegitimidade, incompetência, etc.)
+- Mérito (negativa geral, fato impeditivo, etc.)
+- Reconvenção (se aplicável)
+- Chamamento ao processo (se aplicável)
+
+## ESTRUTURA DA CONTESTAÇÃO
+
+### PRELIMINARES
+1. Questões processuais
+2. Vícios da petição inicial
+3. Condições da ação
+
+### MÉRITO
+1. Dos fatos
+2. Do direito aplicável
+3. Da jurisprudência
+4. Das provas
+
+### PEDIDOS
+1. Acolhimento das preliminares
+2. Improcedência total/parcial
+3. Condenação em custas
+
+## MODELO DE RESPOSTA
+A resposta deve incluir:
+1. Contestação completa formatada
+2. Fundamentação jurídica detalhada
+3. Citação de precedentes
+4. Estratégia processual
+5. Rol de testemunhas se necessário
+
+---
+
+**NOTA**: Este prompt deve ser usado pela IA para gerar contestações personalizadas baseadas nas informações fornecidas pelo advogado.

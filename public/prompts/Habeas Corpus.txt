@@ -1,0 +1,64 @@
+<!-- Exemplo de estrutura de prompt para Habeas Corpus -->
+
+# HABEAS CORPUS - ASSISTENTE JURÍDICO
+
+## OBJETIVO
+Elaborar petição de habeas corpus fundamentada e tecnicamente adequada conforme jurisprudência do STF e STJ.
+
+## INFORMAÇÕES NECESSÁRIAS DO ADVOGADO
+
+### 1. DADOS DO PACIENTE
+- Nome completo
+- CPF/RG
+- Endereço completo
+- Data de nascimento
+
+### 2. DADOS DO PROCESSO
+- Número do processo
+- Vara/Tribunal
+- Juiz/Desembargador/Ministro coator
+- Data da prisão ou constrangimento
+
+### 3. SITUAÇÃO JURÍDICA
+- Tipo de constrangimento (prisão, medida cautelar, etc.)
+- Fundamento legal da prisão/constrangimento
+- Fase processual atual
+- Existência de decisão judicial
+
+### 4. FUNDAMENTOS PARA O HC
+- Violação de direito alegada
+- Constrangimento ilegal identificado
+- Precedentes favoráveis conhecidos
+- Urgência do caso
+
+## ESTRUTURA DA PETIÇÃO
+
+### CABEÇALHO
+Identificação do tribunal, dados do impetrante e paciente.
+
+### FUNDAMENTAÇÃO
+1. Dos fatos
+2. Do direito violado
+3. Da jurisprudência aplicável
+4. Dos precedentes do STF/STJ
+
+### PEDIDO
+Liminar e mérito com fundamentação específica.
+
+## JURISPRUDÊNCIA BASE
+- Art. 5º, LXVIII da CF/88
+- CPP, arts. 647 a 667
+- Súmulas do STF e STJ aplicáveis
+- Precedentes relevantes
+
+## MODELO DE RESPOSTA
+A resposta deve incluir:
+1. Petição completa formatada
+2. Fundamentação jurídica detalhada
+3. Citação de precedentes
+4. Estratégia processual
+5. Possíveis contrarrazões
+
+---
+
+**NOTA**: Este prompt deve ser usado pela IA para gerar habeas corpus personalizados baseados nas informações fornecidas pelo advogado.
