@@ -9,6 +9,7 @@ import UserTypeSelection from './components/UserTypeSelection';
 import LawyerLogin from './components/LawyerLogin';
 import ClientLogin from './components/ClientLogin';
 import LawyerPageDebug from './components/LawyerPageDebug';
+import RouteTest from './components/RouteTest';
 
 // Componente para proteger rotas de dashboard
 const DashboardRoute = ({ userType }) => {
@@ -79,6 +80,9 @@ function App() {
           
           {/* Debug de páginas - TEMPORÁRIO */}
           <Route path="/debug-paginas" element={<LawyerPageDebug />} />
+          
+          {/* Teste de roteamento - TEMPORÁRIO */}
+          <Route path="/teste-rota/:slug" element={<RouteTest />} />
         </Routes>
       </Router>
     </AuthProvider>

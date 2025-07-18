@@ -12,22 +12,67 @@ const PublicLawyerPage = () => {
   useEffect(() => {
     const loadPage = async () => {
       if (!slug) {
-        setError('Página não encontrada');
+        console.error('❌ Slug não fornecido');
+        setError('Página não encontrada - slug vazio');
         setLoading(false);
         return;
       }
 
+      console.log('🔍 Procurando página com slug:', slug);
+
       try {
+        // Debug mais detalhado
+        console.log('📡 Chamando lawyerPageService.getPageBySlug...');
         const result = await lawyerPageService.getPageBySlug(slug);
+        console.log('📊 Resultado da busca:', result);
         
         if (result.success) {
+          console.log('✅ Página encontrada:', result.data);
           setPageData(result.data);
         } else {
-          setError(result.error);
+          console.error('❌ Página não encontrada:', result.error);
+          setError(`Página não encontrada: ${result.error}`);
+          
+          // Debug adicional - buscar diretamente no Firestore
+          console.log('🔥 Tentando busca direta no Firestore...');
+          try {
+            const { 
+              collection, 
+              getDocs, 
+              query, 
+              where 
+            } = await import('firebase/firestore');
+            const { db } = await import('../firebase/config');
+
+            const directQuery = query(
+              collection(db, 'lawyerPages'),
+              where('slug', '==', slug)
+            );
+            const directSnapshot = await getDocs(directQuery);
+            console.log(`🎯 Busca direta encontrou ${directSnapshot.size} documentos`);
+            
+            if (directSnapshot.size > 0) {
+              const doc = directSnapshot.docs[0];
+              const data = { id: doc.id, ...doc.data() };
+              console.log('📄 Documento encontrado diretamente:', data);
+              
+              if (data.isActive) {
+                console.log('✅ Página ativa, carregando...');
+                setPageData(data);
+                return;
+              } else {
+                console.warn('⚠️ Página existe mas está inativa');
+                setError('Esta página está temporariamente indisponível');
+                return;
+              }
+            }
+          } catch (directError) {
+            console.error('💥 Erro na busca direta:', directError);
+          }
         }
       } catch (err) {
-        console.error('Erro ao carregar página:', err);
-        setError('Erro ao carregar página');
+        console.error('💥 Erro ao carregar página:', err);
+        setError(`Erro técnico: ${err.message}`);
       } finally {
         setLoading(false);
       }
