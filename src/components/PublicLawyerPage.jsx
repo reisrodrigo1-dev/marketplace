@@ -21,55 +21,98 @@ const PublicLawyerPage = () => {
       console.log('🔍 Procurando página com slug:', slug);
 
       try {
-        // Debug mais detalhado
-        console.log('📡 Chamando lawyerPageService.getPageBySlug...');
-        const result = await lawyerPageService.getPageBySlug(slug);
-        console.log('📊 Resultado da busca:', result);
+        // Tentativa 1: Busca exata via service
+        console.log('📡 Tentativa 1: Busca exata via lawyerPageService...');
+        let result = await lawyerPageService.getPageBySlug(slug);
+        console.log('📊 Resultado busca exata:', result);
         
         if (result.success) {
-          console.log('✅ Página encontrada:', result.data);
+          console.log('✅ Página encontrada (busca exata):', result.data);
           setPageData(result.data);
-        } else {
-          console.error('❌ Página não encontrada:', result.error);
-          setError(`Página não encontrada: ${result.error}`);
-          
-          // Debug adicional - buscar diretamente no Firestore
-          console.log('🔥 Tentando busca direta no Firestore...');
-          try {
-            const { 
-              collection, 
-              getDocs, 
-              query, 
-              where 
-            } = await import('firebase/firestore');
-            const { db } = await import('../firebase/config');
+          return;
+        }
 
-            const directQuery = query(
-              collection(db, 'lawyerPages'),
-              where('slug', '==', slug)
-            );
-            const directSnapshot = await getDocs(directQuery);
-            console.log(`🎯 Busca direta encontrou ${directSnapshot.size} documentos`);
-            
-            if (directSnapshot.size > 0) {
-              const doc = directSnapshot.docs[0];
-              const data = { id: doc.id, ...doc.data() };
-              console.log('📄 Documento encontrado diretamente:', data);
-              
-              if (data.isActive) {
-                console.log('✅ Página ativa, carregando...');
-                setPageData(data);
-                return;
-              } else {
-                console.warn('⚠️ Página existe mas está inativa');
-                setError('Esta página está temporariamente indisponível');
-                return;
-              }
+        // Tentativa 2: Busca com variações do slug
+        console.log('🔄 Tentativa 2: Testando variações do slug...');
+        
+        const slugVariations = [
+          `${slug}-`,           // Adicionar hífen final
+          slug.replace(/-$/, ''), // Remover hífen final
+          slug.toLowerCase(),    // Lowercase
+          slug.toUpperCase()     // Uppercase (improvável, mas...)
+        ];
+
+        for (const variation of slugVariations) {
+          if (variation !== slug) {
+            console.log(`🧪 Testando variação: "${variation}"`);
+            result = await lawyerPageService.getPageBySlug(variation);
+            if (result.success) {
+              console.log(`✅ Página encontrada com variação "${variation}":`, result.data);
+              // Redirecionar para URL correta
+              window.history.replaceState(null, '', `/advogado/${variation}`);
+              setPageData(result.data);
+              return;
             }
-          } catch (directError) {
-            console.error('💥 Erro na busca direta:', directError);
           }
         }
+
+        // Tentativa 3: Busca direta no Firestore com correspondência flexível
+        console.log('🔥 Tentativa 3: Busca direta no Firestore...');
+        const { 
+          collection, 
+          getDocs 
+        } = await import('firebase/firestore');
+        const { db } = await import('../firebase/config');
+
+        const allPagesSnapshot = await getDocs(collection(db, 'lawyerPages'));
+        console.log(`📊 Total de páginas no banco: ${allPagesSnapshot.size}`);
+
+        let foundPage = null;
+        const similarPages = [];
+
+        allPagesSnapshot.forEach((doc) => {
+          const data = { id: doc.id, ...doc.data() };
+          
+          // Correspondência exata
+          if (data.slug === slug) {
+            foundPage = data;
+            return;
+          }
+          
+          // Correspondências similares
+          if (data.slug && (
+            data.slug.includes(slug) || 
+            slug.includes(data.slug) ||
+            data.slug.toLowerCase() === slug.toLowerCase()
+          )) {
+            similarPages.push(data);
+          }
+        });
+
+        if (foundPage && foundPage.isActive) {
+          console.log('✅ Página encontrada (busca direta):', foundPage);
+          setPageData(foundPage);
+          return;
+        }
+
+        // Se encontrou páginas similares, sugerir
+        if (similarPages.length > 0) {
+          const activeSimilar = similarPages.filter(p => p.isActive);
+          if (activeSimilar.length > 0) {
+            console.log('🔗 Páginas similares encontradas:', activeSimilar);
+            
+            // Redirecionar automaticamente para a primeira correspondência ativa
+            const bestMatch = activeSimilar[0];
+            console.log(`🎯 Redirecionando para melhor correspondência: ${bestMatch.slug}`);
+            window.location.href = `/advogado/${bestMatch.slug}`;
+            return;
+          }
+        }
+
+        // Se chegou até aqui, página não encontrada
+        console.error('❌ Página não encontrada após todas as tentativas');
+        setError(`Página não encontrada. Slug procurado: "${slug}"`);
+        
       } catch (err) {
         console.error('💥 Erro ao carregar página:', err);
         setError(`Erro técnico: ${err.message}`);

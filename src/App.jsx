@@ -10,6 +10,7 @@ import LawyerLogin from './components/LawyerLogin';
 import ClientLogin from './components/ClientLogin';
 import LawyerPageDebug from './components/LawyerPageDebug';
 import RouteTest from './components/RouteTest';
+import SlugMatcher from './components/SlugMatcher';
 
 // Componente para proteger rotas de dashboard
 const DashboardRoute = ({ userType }) => {
@@ -83,6 +84,9 @@ function App() {
           
           {/* Teste de roteamento - TEMPORÁRIO */}
           <Route path="/teste-rota/:slug" element={<RouteTest />} />
+          
+          {/* Análise de slug - TEMPORÁRIO */}
+          <Route path="/slug-matcher/:slug" element={<SlugMatcher />} />
         </Routes>
       </Router>
     </AuthProvider>
