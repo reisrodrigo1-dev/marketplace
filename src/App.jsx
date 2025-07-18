@@ -8,6 +8,7 @@ import PublicLawyerPage from './components/PublicLawyerPage';
 import UserTypeSelection from './components/UserTypeSelection';
 import LawyerLogin from './components/LawyerLogin';
 import ClientLogin from './components/ClientLogin';
+import LawyerPageDebug from './components/LawyerPageDebug';
 
 // Componente para proteger rotas de dashboard
 const DashboardRoute = ({ userType }) => {
@@ -75,6 +76,9 @@ function App() {
           
           {/* Página pública do advogado */}
           <Route path="/advogado/:slug" element={<PublicLawyerPage />} />
+          
+          {/* Debug de páginas - TEMPORÁRIO */}
+          <Route path="/debug-paginas" element={<LawyerPageDebug />} />
         </Routes>
       </Router>
     </AuthProvider>
