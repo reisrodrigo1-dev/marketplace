@@ -60,10 +60,14 @@ const UltimasNoticiasFlix = () => {
                 <div key={article.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative group cursor-pointer">
                     <img
-                      src={article.image || 'https://via.placeholder.com/400x250?text=Notícia+Jurídica'}
+                      src={article.image || '/img/noticia-fallback.jpg'}
                       alt={article.title}
                       className="w-full h-48 object-cover"
-                      onError={e => { e.target.src = 'https://via.placeholder.com/400x250?text=Notícia+Jurídica'; }}
+                      onError={e => {
+                        if (!e.target.src.endsWith('/img/noticia-fallback.jpg')) {
+                          e.target.src = '/img/noticia-fallback.jpg';
+                        }
+                      }}
                     />
                     <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
                       📰 Notícia
