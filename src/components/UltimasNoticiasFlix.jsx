@@ -7,19 +7,18 @@ const UltimasNoticiasFlix = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadNews = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const newsData = await fetchLegalNews(12);
+    setLoading(true);
+    setError(null);
+    Promise.resolve(fetchLegalNews(12))
+      .then(newsData => {
         setNews(newsData);
-      } catch (err) {
+      })
+      .catch(() => {
         setError('Erro ao carregar notícias jurídicas');
-      } finally {
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    };
-    loadNews();
+      });
   }, []);
 
   return (
