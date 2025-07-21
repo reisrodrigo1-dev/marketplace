@@ -6,6 +6,7 @@ import JuriAI from './JuriAI';
 import Calendar from './Calendar';
 import JobsScreen from './JobsScreen';
 import DireitoHubFlix from './DireitoHubFlix';
+import UltimasNoticiasFlix from './UltimasNoticiasFlix';
 import UserProfile from './UserProfile';
 import LawyerPagesManager from './LawyerPagesManager';
 import LawyerAppointments from './LawyerAppointments';
@@ -304,6 +305,21 @@ const AdminDashboard = () => {
                 </svg>
                 Vagas de Emprego
               </button>
+
+              {/* Botão Últimas Notícias */}
+              <button
+                onClick={() => setActiveTab('news')}
+                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
+                  activeTab === 'news'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h4a1 1 0 011 1v5m-6 0V9a1 1 0 011-1h4a1 1 0 011 1v11" />
+                </svg>
+                Últimas Notícias
+              </button>
               
               <button
                 onClick={() => setActiveTab('direitohub-flix')}
@@ -471,8 +487,13 @@ const AdminDashboard = () => {
             <JobsScreen />
           )}
           
+
           {activeTab === 'direitohub-flix' && (
             <DireitoHubFlix />
+          )}
+
+          {activeTab === 'news' && (
+            <UltimasNoticiasFlix />
           )}
           
           {activeTab === 'lawyer-pages' && (
