@@ -257,7 +257,10 @@ const LawyerPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage =
       } else {
         // Criar nova página
         // Gerar slug único
-        const baseSlug = formData.nomeAdvogado.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const baseSlug =
+          formData.tipoPagina === 'escritorio'
+            ? formData.nomeEscritorio.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+            : formData.nomeAdvogado.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         let slug = baseSlug;
         let counter = 1;
         

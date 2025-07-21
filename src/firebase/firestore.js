@@ -1452,6 +1452,19 @@ const lawyerPageService = {
 
 // Serviço de agendamentos
 const appointmentService = {
+  // Atualizar agendamento (atribuir advogado, etc)
+  async updateAppointment(appointmentId, updateData) {
+    try {
+      await updateDoc(doc(db, 'appointments', appointmentId), {
+        ...updateData,
+        updatedAt: serverTimestamp()
+      });
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao atualizar agendamento:', error);
+      return { success: false, error: error.message };
+    }
+  },
   // Criar agendamento
   async createAppointment(appointmentData) {
     try {
@@ -1460,7 +1473,10 @@ const appointmentService = {
         ...appointmentData,
         status: 'pendente',
         createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp(),
+        // Suporte para agendamento atribuído a outro advogado
+        assignedLawyerId: appointmentData.assignedLawyerId || null,
+        assignedLawyerName: appointmentData.assignedLawyerName || null
       });
       return { success: true, id: appointmentRef.id };
     } catch (error) {
@@ -1499,23 +1515,36 @@ const appointmentService = {
   // Obter agendamentos por advogado
   async getAppointmentsByLawyer(lawyerId) {
     try {
-      const q = query(
+      // Buscar agendamentos onde o advogado é o dono OU foi atribuído
+      const q1 = query(
         collection(db, 'appointments'),
         where('lawyerUserId', '==', lawyerId)
       );
-      
-      const querySnapshot = await getDocs(q);
-      const appointments = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate?.() || new Date(),
-        appointmentDate: doc.data().appointmentDate?.toDate?.() || new Date(doc.data().appointmentDate)
-      }));
-      
+      const q2 = query(
+        collection(db, 'appointments'),
+        where('assignedLawyerId', '==', lawyerId)
+      );
+
+      const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+      const appointments = [
+        ...snap1.docs,
+        ...snap2.docs
+      ].reduce((acc, doc) => {
+        // Evitar duplicatas
+        if (!acc.some(a => a.id === doc.id)) {
+          acc.push({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+            updatedAt: doc.data().updatedAt?.toDate?.() || new Date(),
+            appointmentDate: doc.data().appointmentDate?.toDate?.() || new Date(doc.data().appointmentDate)
+          });
+        }
+        return acc;
+      }, []);
+
       // Sort by createdAt in JavaScript instead of Firestore
       appointments.sort((a, b) => b.createdAt - a.createdAt);
-      
       return { success: true, data: appointments };
     } catch (error) {
       console.error('Erro ao buscar agendamentos do advogado:', error);

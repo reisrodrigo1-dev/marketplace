@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { appointmentService, userService } from '../firebase/firestore';
+import { appointmentService, userService, collaborationService } from '../firebase/firestore';
 
 const AppointmentModal = ({ isOpen, onClose, lawyerData, selectedDate, selectedTime }) => {
+  // Para páginas do tipo escritório, buscar advogados colaboradores
+  const [collaborators, setCollaborators] = useState([]);
+  const [selectedLawyerId, setSelectedLawyerId] = useState('');
   const { user, userData, isAuthenticated } = useAuth();
   const [showLoginMessage, setShowLoginMessage] = useState(false);
   const [caseDescription, setCaseDescription] = useState('');
@@ -11,6 +14,31 @@ const AppointmentModal = ({ isOpen, onClose, lawyerData, selectedDate, selectedT
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Login check, 2: Case details, 3: Price acceptance, 4: Confirmation
   
+  useEffect(() => {
+    if (isOpen && lawyerData?.tipoPagina === 'escritorio' && lawyerData?.id) {
+      // Buscar colaboradores advogados da página escritório
+      const fetchCollaborators = async () => {
+        try {
+          const result = await collaborationService.getOwnedCollaborations(lawyerData.userId);
+          if (result.success) {
+            // Filtrar só advogados desta página
+            const lawyers = result.data.filter(
+              c => c.pageId === lawyerData.id && c.role === 'lawyer' && c.collaboratorData
+            );
+            setCollaborators(lawyers);
+          } else {
+            setCollaborators([]);
+          }
+        } catch {
+          setCollaborators([]);
+        }
+      };
+      fetchCollaborators();
+    } else {
+      setCollaborators([]);
+    }
+  }, [isOpen, lawyerData]);
+
   if (!isOpen) return null;
 
   // Verificar se é cliente
@@ -105,6 +133,14 @@ const AppointmentModal = ({ isOpen, onClose, lawyerData, selectedDate, selectedT
     setLoading(true);
     
     try {
+      // Se for escritório e um advogado foi selecionado, atribuir
+      let assignedLawyerId = null;
+      let assignedLawyerName = null;
+      if (lawyerData?.tipoPagina === 'escritorio' && selectedLawyerId) {
+        const selectedLawyer = collaborators.find(c => c.collaboratorData?.uid === selectedLawyerId);
+        assignedLawyerId = selectedLawyerId;
+        assignedLawyerName = selectedLawyer?.collaboratorData?.name || '';
+      }
       const appointmentData = {
         lawyerUserId: lawyerData.userId,
         lawyerName: lawyerData.nomeAdvogado,
@@ -117,19 +153,18 @@ const AppointmentModal = ({ isOpen, onClose, lawyerData, selectedDate, selectedT
         caseDescription: caseDescription.trim(),
         proposedPrice: lawyerData.valorConsulta,
         status: 'pendente',
-        // Campo para compatibilidade com filtros
         selectedPageId: lawyerData.id,
-        // Informações da página de origem
         paginaOrigem: {
           id: lawyerData.id,
           nomePagina: lawyerData.nomePagina || lawyerData.nomeAdvogado,
           tipoPagina: lawyerData.tipoPagina || 'advogado',
           slug: lawyerData.slug
-        }
+        },
+        assignedLawyerId,
+        assignedLawyerName
       };
 
       const result = await appointmentService.createAppointment(appointmentData);
-      
       if (result.success) {
         setStep(4);
       } else {
@@ -193,6 +228,24 @@ const AppointmentModal = ({ isOpen, onClose, lawyerData, selectedDate, selectedT
 
         {/* Content */}
         <div className="p-6">
+          {/* Se for escritório, mostrar seleção de advogado */}
+          {lawyerData?.tipoPagina === 'escritorio' && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Escolha o advogado responsável pelo atendimento</label>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                value={selectedLawyerId}
+                onChange={e => setSelectedLawyerId(e.target.value)}
+              >
+                <option value="">Selecione um advogado</option>
+                {collaborators.map(c => (
+                  <option key={c.collaboratorData.uid} value={c.collaboratorData.uid}>
+                    {c.collaboratorData.name} ({c.collaboratorData.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* Debug Info - remover em produção */}
           <div className="bg-gray-100 p-3 rounded mb-4 text-xs">
             <strong>Debug:</strong> 
