@@ -79,7 +79,7 @@ const getMockLegalNews = (limit) => {
       description: 'Supremo Tribunal Federal estabelece precedente importante sobre privacidade e proteção de dados na era digital.',
       content: 'Em decisão histórica, o STF reconheceu a necessidade de atualizar a interpretação constitucional para os direitos digitais...',
       url: 'https://example.com/stf-direitos-digitais',
-      image: 'https://via.placeholder.com/400x250?text=STF+Decisão',
+      image: '/img/noticia-fallback.jpg',
       publishedAt: '2025-01-16T10:30:00Z',
       source: 'Supremo Tribunal Federal',
       author: 'Assessoria de Imprensa'
@@ -90,7 +90,7 @@ const getMockLegalNews = (limit) => {
       description: 'Marco legal das startups traz mudanças significativas para o empreendedorismo digital no Brasil.',
       content: 'A lei 14.195/2021, conhecida como Marco Legal das Startups, estabelece novas regras...',
       url: 'https://example.com/lei-startups',
-      image: 'https://via.placeholder.com/400x250?text=Lei+Startups',
+      image: '/img/noticia-fallback.jpg',
       publishedAt: '2025-01-15T14:20:00Z',
       source: 'Diário Oficial',
       author: 'Redação Jurídica'
@@ -101,7 +101,7 @@ const getMockLegalNews = (limit) => {
       description: 'Tribunal Superior do Trabalho estabelece diretrizes claras sobre direitos dos trabalhadores em home office.',
       content: 'A súmula 478 do TST esclarece pontos importantes sobre jornada de trabalho...',
       url: 'https://example.com/tst-trabalho-remoto',
-      image: 'https://via.placeholder.com/400x250?text=TST+Súmula',
+      image: '/img/noticia-fallback.jpg',
       publishedAt: '2025-01-14T09:15:00Z',
       source: 'Tribunal Superior do Trabalho',
       author: 'Gabinete de Comunicação'
@@ -112,7 +112,7 @@ const getMockLegalNews = (limit) => {
       description: 'Autoridade Nacional de Proteção de Dados divulga guia atualizado para compliance empresarial.',
       content: 'A ANPD publicou novas orientações sobre adequação à Lei Geral de Proteção de Dados...',
       url: 'https://example.com/anpd-lgpd-diretrizes',
-      image: 'https://via.placeholder.com/400x250?text=LGPD+Diretrizes',
+      image: '/img/noticia-fallback.jpg',
       publishedAt: '2025-01-13T16:45:00Z',
       source: 'ANPD',
       author: 'Assessoria Técnica'
@@ -123,7 +123,7 @@ const getMockLegalNews = (limit) => {
       description: 'Conselho Nacional de Justiça moderniza procedimentos do processo judicial eletrônico.',
       content: 'A resolução 345/2022 do CNJ estabelece novos padrões para o PJe...',
       url: 'https://example.com/cnj-processo-eletronico',
-      image: 'https://via.placeholder.com/400x250?text=CNJ+Resolução',
+      image: '/img/noticia-fallback.jpg',
       publishedAt: '2025-01-12T11:30:00Z',
       source: 'Conselho Nacional de Justiça',
       author: 'Secretaria de Comunicação'
@@ -134,7 +134,7 @@ const getMockLegalNews = (limit) => {
       description: 'Estudo revela crescimento do uso de IA em escritórios de advocacia brasileiros.',
       content: 'Pesquisa da OAB mostra que 65% dos escritórios já utilizam alguma forma de IA...',
       url: 'https://example.com/advocacia-inteligencia-artificial',
-      image: 'https://via.placeholder.com/400x250?text=IA+Advocacia',
+      image: '/img/noticia-fallback.jpg',
       publishedAt: '2025-01-11T08:20:00Z',
       source: 'OAB Nacional',
       author: 'Comissão de Tecnologia'
