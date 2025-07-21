@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { clientService } from '../firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { caseService } from '../firebase/firestore';
 import DataJudSearchModal from './DataJudSearchModal';
@@ -7,6 +8,7 @@ import ProcessDetails from './ProcessDetails';
 import CalendarModal from './CalendarModal';
 import { temAudiencia } from '../services/calendarService';
 import { processCalendarIntegration } from '../services/processCalendarIntegration';
+import { appointmentService } from '../firebase/firestore';
 
 const ProcessesScreen = () => {
   const { user } = useAuth();
@@ -22,7 +24,242 @@ const ProcessesScreen = () => {
   const [showProcessDetails, setShowProcessDetails] = useState(false);
   const [processForDetails, setProcessForDetails] = useState(null);
 
-  // Dados fictícios para demonstração - incluindo exemplo com DataJud
+  // Estados para associação de cliente
+  const [showAssociateModal, setShowAssociateModal] = useState(false);
+  const [selectedProcessForAssociation, setSelectedProcessForAssociation] = useState(null);
+  const [clientSearch, setClientSearch] = useState('');
+  const [clientSuggestions, setClientSuggestions] = useState([]);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
+  const [associations, setAssociations] = useState([]);
+
+  // Estado para exibir clientes do banco na tela
+  const [clientesBanco, setClientesBanco] = useState([]);
+  const [clientesRawResult, setClientesRawResult] = useState(null);
+  useEffect(() => {
+    async function fetchAllClientsAndAppointments() {
+      if (user?.uid) {
+        try {
+          // Buscar clientes
+          const clientsResult = await clientService.getClients(user.uid);
+          if (!clientsResult.success) {
+            setClientesBanco([]);
+            setClientesRawResult({ error: clientsResult.error });
+            return;
+          }
+          // Buscar agendamentos
+          const appointmentsResult = await appointmentService.getAppointmentsByLawyer(user.uid);
+          if (!appointmentsResult.success) {
+            setClientesBanco(clientsResult.data);
+            setClientesRawResult(clientsResult);
+            return;
+          }
+          // Organizar agendamentos por email do cliente
+          const appointmentsByClient = {};
+          appointmentsResult.data.forEach(appointment => {
+            const email = appointment.clientEmail;
+            if (!appointmentsByClient[email]) {
+              appointmentsByClient[email] = [];
+            }
+            appointmentsByClient[email].push(appointment);
+          });
+          // Enriquecer clientes igual à tela ClientsScreen
+          const enrichedClients = clientsResult.data.map(client => {
+            const clientAppointments = appointmentsByClient[client.email] || [];
+            const paidAppointments = clientAppointments.filter(apt => 
+              apt.status === 'pago' || apt.status === 'confirmado' || apt.status === 'finalizado'
+            );
+            const totalSpent = paidAppointments.reduce((total, apt) => {
+              const value = parseFloat(apt.finalPrice || apt.estimatedPrice || 0);
+              return total + value;
+            }, 0);
+            const lastAppointment = clientAppointments.length > 0 
+              ? clientAppointments.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate))[0]
+              : null;
+            return {
+              ...client,
+              totalAppointments: clientAppointments.length,
+              totalSpent: totalSpent,
+              lastContact: lastAppointment ? lastAppointment.appointmentDate : client.firstContactDate,
+              lastAppointmentStatus: lastAppointment?.status
+            };
+          });
+          setClientesBanco(enrichedClients);
+          setClientesRawResult(clientsResult);
+          // Log detalhado dos clientes buscados, incluindo paginaOrigemId e paginaOrigemNome
+          console.log('[Clientes buscados do banco de dados]', enrichedClients.map(c => ({
+            id: c.id,
+            nome: c.nome || c.name,
+            email: c.email,
+            paginaOrigemId: c.paginaOrigemId,
+            paginaOrigemNome: c.paginaOrigemNome,
+            ...c
+          })));
+        } catch (err) {
+          setClientesBanco([]);
+          setClientesRawResult({ error: err?.message || String(err) });
+        }
+      } else {
+        setClientesBanco([]);
+        setClientesRawResult(null);
+      }
+    }
+    fetchAllClientsAndAppointments();
+  }, [user]);
+
+  // Carregar associações ao montar ou quando processos mudam
+  useEffect(() => {
+    async function fetchAssociations() {
+      if (user?.uid && window.clientProcessService?.getAssociations) {
+        const result = await window.clientProcessService.getAssociations(user.uid);
+        console.log('[DEBUG] Resultado de getAssociations:', result);
+        if (result.success && Array.isArray(result.data)) {
+          // Enriquecer cada associação com o nome do cliente
+          const enriched = await Promise.all(result.data.map(async (assoc) => {
+            let clienteNome = '';
+            if (assoc.clienteId && window.clientService?.getClientById) {
+              const clientResult = await window.clientService.getClientById(user.uid, assoc.clienteId);
+              if (clientResult.success && clientResult.data) {
+                clienteNome = clientResult.data.nome || clientResult.data.name || '';
+              }
+            }
+            return { ...assoc, clienteNome };
+          }));
+          setAssociations(enriched);
+        }
+      }
+    }
+    fetchAssociations();
+  }, [user, processes]);
+
+
+  // Atualiza cache local de clientes sempre que o modal de associação abrir
+  useEffect(() => {
+    async function updateClientCache() {
+      if (showAssociateModal && user?.uid && window.clientService?.getClients) {
+        try {
+          const allClientsResult = await window.clientService.getClients(user.uid);
+          if (allClientsResult.success && Array.isArray(allClientsResult.data)) {
+            window.clientList = allClientsResult.data;
+            console.log('[Autocomplete] Cache local de clientes atualizado:', window.clientList);
+          }
+        } catch (err) {
+          console.warn('[Autocomplete] Erro ao atualizar cache local de clientes:', err);
+        }
+      }
+    }
+    updateClientCache();
+  }, [showAssociateModal, user]);
+
+  // Buscar clientes ao digitar usando clientesBanco já carregado
+  useEffect(() => {
+    if (clientSearch.length > 1 && clientesBanco.length > 0) {
+      // Enriquecimento igual à tela Clientes
+      let enrichedClients = clientesBanco.map(client => ({
+        ...client,
+        totalAppointments: client.totalAppointments || (client.appointments ? client.appointments.length : 0),
+        totalSpent: client.totalSpent || (client.appointments ? client.appointments.reduce((sum, a) => sum + (a.valor || 0), 0) : 0),
+        caseTypes: client.caseTypes || (client.cases ? Array.from(new Set(client.cases.map(c => c.area))).filter(Boolean) : []),
+        status: client.status || 'ativo',
+      }));
+
+      // Filtro local igual à tela de clientes
+      const search = clientSearch.toLowerCase();
+      const filtered = enrichedClients.filter(client =>
+        (client.nome && client.nome.toLowerCase().includes(search)) ||
+        (client.name && client.name.toLowerCase().includes(search)) ||
+        (client.email && client.email.toLowerCase().includes(search)) ||
+        (client.phone && client.phone.toLowerCase().includes(search))
+      );
+      setClientSuggestions(filtered);
+    } else {
+      setClientSuggestions([]);
+    }
+  }, [clientSearch, clientesBanco]);
+
+
+  // Função para associar cliente ao processo (com integração backend)
+  const handleAssociateClient = async () => {
+    console.log('[ASSOCIAR] Clique no botão Associar', { selectedProcessForAssociation, selectedClient });
+    if (!selectedProcessForAssociation || !selectedClient) {
+      alert('Processo ou cliente não selecionado!');
+      return;
+    }
+    // Montar objeto com todos os campos necessários
+    // Enriquecer selectedClient com dados do backend (caso não estejam presentes)
+    let paginaOrigemId = selectedClient.paginaOrigemId || selectedClient.paginaId || '';
+    let paginaOrigemNome = selectedClient.paginaOrigemNome || selectedClient.nomePagina || '';
+    // Se não veio do frontend, tenta buscar do backend
+    if ((!paginaOrigemId || !paginaOrigemNome) && window.clientService?.getClientById) {
+      const clientResult = await window.clientService.getClientById(user.uid, selectedClient.id);
+      if (clientResult.success && clientResult.data) {
+        if (!paginaOrigemId) paginaOrigemId = clientResult.data.paginaOrigemId || clientResult.data.paginaId || '';
+        if (!paginaOrigemNome) paginaOrigemNome = clientResult.data.paginaOrigemNome || clientResult.data.nomePagina || '';
+      }
+    }
+    const association = {
+      processoId: selectedProcessForAssociation.id,
+      nomeProcesso: selectedProcessForAssociation.nome || selectedProcessForAssociation.name || '',
+      clienteId: selectedClient.id,
+      advogadoId: user?.uid || '',
+      nomeAdvogado: user?.displayName || user?.name || '',
+      paginaOrigemId,
+      paginaOrigemNome
+    };
+    try {
+      if (window.clientProcessService?.associateClientToProcess) {
+        console.log('[ASSOCIAR] Chamando associateClientToProcess', association);
+        const result = await window.clientProcessService.associateClientToProcess(association);
+        console.log('[ASSOCIAR] Resultado da associação:', result);
+        alert('Resultado da associação: ' + JSON.stringify(result));
+        if (result.success) {
+          let clienteNome = selectedClient.nome || selectedClient.name;
+          if (!clienteNome && window.clientService?.getClientById) {
+            const clientResult = await window.clientService.getClientById(user.uid, selectedClient.id);
+            if (clientResult.success && clientResult.data) {
+              clienteNome = clientResult.data.nome || clientResult.data.name;
+            }
+          }
+          setAssociations(prev => ([
+            ...prev.filter(a => a.processoId !== selectedProcessForAssociation.id),
+            { ...association, clienteNome }
+          ]));
+          alert('Cliente associado com sucesso!');
+          setShowAssociateModal(false);
+          setSelectedClient(null);
+          setSelectedProcessForAssociation(null);
+          setClientSearch('');
+        } else {
+          alert('Erro ao associar cliente: ' + (result.error || 'Erro desconhecido.'));
+        }
+      } else {
+        alert('Serviço associateClientToProcess não disponível!');
+      }
+    } catch (err) {
+      console.error('[ASSOCIAR] Erro ao associar cliente:', err);
+      alert('Erro ao associar cliente: ' + (err?.message || JSON.stringify(err)));
+    }
+  };
+
+
+  // Helper para buscar nome do cliente associado ao processo (busca backend se necessário)
+  const getClientNameForProcess = (processId) => {
+    const assoc = associations.find(a => a.processoId === processId);
+    if (!assoc) return null;
+    if (assoc.clienteNome) return assoc.clienteNome;
+    // Busca do backend se não tiver nome
+    if (window.clientService?.getClientById && assoc.clienteId) {
+      // Busca síncrona não é possível, então retorna placeholder e atualiza depois
+      window.clientService.getClientById(user.uid, assoc.clienteId).then(result => {
+        if (result.success && result.data) {
+          assoc.clienteNome = result.data.nome || result.data.name || '';
+          setAssociations([...associations]);
+        }
+      });
+      return 'Buscando cliente...';
+    }
+    return 'Cliente associado';
+  };
   const mockProcesses = [
     {
       id: '1',
@@ -418,6 +655,72 @@ const ProcessesScreen = () => {
 
   return (
     <div>
+      {/* Exibir clientes buscados do banco de dados (visível) */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
+        <div className="font-bold text-yellow-700 mb-2">Clientes buscados do banco de dados:</div>
+        <div className="text-xs text-yellow-800 mb-2">user.uid: <b>{user?.uid || 'N/A'}</b></div>
+        <details className="mb-2">
+          <summary className="cursor-pointer text-yellow-700 underline">Ver resultado bruto de getClients</summary>
+          <pre className="bg-yellow-100 p-2 rounded overflow-x-auto text-xs">{JSON.stringify(clientesRawResult, null, 2)}</pre>
+        </details>
+        <details className="mb-2">
+          <summary className="cursor-pointer text-yellow-700 underline">Ver window.clientService</summary>
+          <pre className="bg-yellow-100 p-2 rounded overflow-x-auto text-xs">{JSON.stringify({
+            typeofClientService: typeof window.clientService,
+            hasGetClients: !!window.clientService?.getClients,
+            getClientsType: typeof window.clientService?.getClients
+          }, null, 2)}</pre>
+        </details>
+        {clientesBanco.length === 0 ? (
+          <div className="text-yellow-700">Nenhum cliente encontrado.</div>
+        ) : (
+          <ul className="text-xs text-yellow-800 space-y-1">
+            {clientesBanco.map(c => (
+              <li key={c.id}>
+                <b>{c.nome || c.name}</b> | Email: {c.email} | Telefone: {c.phone} | Status: {c.status || 'ativo'}
+              </li>
+            ))}
+          </ul>
+        )}
+        {/* Exibir associações cliente-processo */}
+        <div className="mt-4">
+          <div className="font-bold text-yellow-700 mb-2">Associações cliente-processo:</div>
+          {associations.length === 0 ? (
+            <div className="text-yellow-700">Nenhuma associação encontrada.</div>
+          ) : (
+            <ul className="text-xs text-yellow-800 space-y-1">
+              {associations.map((a, idx) => {
+                let nome = a.clienteNome;
+                if ((!nome || nome.trim() === '') && a.clienteId && window.clientService?.getClientById && user?.uid) {
+                  window.clientService.getClientById(user.uid, a.clienteId).then(result => {
+                    if (result.success && result.data) {
+                      a.clienteNome = result.data.nome || result.data.name || '';
+                      setAssociations(prev => [...prev]);
+                    }
+                  });
+                  nome = 'Buscando cliente...';
+                }
+                // Log detalhado no console
+                console.log('[ASSOCIAÇÃO] Dados completos:', {
+                  processoId: a.processoId,
+                  nomeProcesso: a.nomeProcesso || '',
+                  clienteId: a.clienteId,
+                  clienteNome: nome || '',
+                  advogadoId: a.advogadoId || user?.uid,
+                  nomeAdvogado: a.nomeAdvogado || user?.displayName || user?.name || '',
+                  paginaOrigemId: a.paginaOrigemId || '',
+                  paginaOrigemNome: a.paginaOrigemNome || a.nomePagina || '',
+                });
+                return (
+                  <li key={String(a.processoId) + '-' + String(a.clienteId) + '-' + idx}>
+                    Processo: <b>{String(a.processoId)}</b> | Nome Processo: <b>{a.nomeProcesso || ''}</b> | Cliente ID: <b>{a.clienteId}</b> | Cliente Nome: <b>{nome ? String(nome) : 'N/A'}</b> | Advogado: <b>{a.nomeAdvogado || user?.displayName || user?.name || a.advogadoId || user?.uid}</b> | Página: <b>ID: {a.paginaOrigemId || 'N/A'} Nome: {a.paginaOrigemNome || a.nomePagina || 'N/A'}</b>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Gerenciamento de Processos</h1>
         <div className="flex gap-3">
@@ -455,7 +758,7 @@ const ProcessesScreen = () => {
             disabled={loading || processes.length === 0}
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v16a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v16a2 2 0 002 2z" />
             </svg>
             Sincronizar Calendário
           </button>
@@ -512,42 +815,9 @@ const ProcessesScreen = () => {
                       <h3 className="text-lg font-semibold text-gray-900">
                         {process.isFromDataJud ? (process.classe?.nome || process.title) : process.title}
                       </h3>
-                      
-                      {/* Indicador de processo do DataJud */}
-                      {process.isFromDataJud && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          DataJud
-                        </span>
-                      )}
-                      
-                      {/* Indicador de audiência */}
-                      {temAudiencia(process) && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          Audiência
-                        </span>
-                      )}
-                      
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(process.status)}`}>
-                        {process.status}
-                      </span>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(process.priority)}`}>
-                        {process.priority === 'alta' ? 'Alta' : process.priority === 'media' ? 'Média' : 'Baixa'}
-                      </span>
+                      {/* ...existing code... */}
                     </div>
-                    
-                    <p className="text-sm text-gray-600 mb-3">
-                      {process.isFromDataJud 
-                        ? `Processo importado do DataJud - ${process.tribunalNome || process.tribunal || 'Tribunal'} - ${process.grau || 'Grau não informado'}`
-                        : process.description
-                      }
-                    </p>
-                    
+                    {/* ...existing code... */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="font-medium text-gray-700">Número:</span>
@@ -556,84 +826,179 @@ const ProcessesScreen = () => {
                       <div>
                         <span className="font-medium text-gray-700">Cliente:</span>
                         <p className="text-gray-600">
-                          {process.isFromDataJud ? 'Dados sigilosos (DataJud)' : process.client}
+                          {/* Exibe nome do cliente associado se houver associação */}
+                          {
+                            (() => {
+                              const assoc = associations.find(a => String(a.processoId) === String(process.id));
+                              if (assoc) {
+                                if (assoc.clienteNome && assoc.clienteNome.trim() !== '') return assoc.clienteNome;
+                                // Se não houver nome, mostrar o ID do cliente
+                                if (assoc.clienteId) return `ID: ${assoc.clienteId}`;
+                                // Buscar nome do cliente pelo id se não houver nome
+                                if (assoc.clienteId && window.clientService?.getClientById && user?.uid) {
+                                  window.clientService.getClientById(user.uid, assoc.clienteId).then(result => {
+                                    if (result.success && result.data) {
+                                      assoc.clienteNome = result.data.nome || result.data.name || '';
+                                      setAssociations(prev => [...prev]);
+                                    }
+                                  });
+                                  return `ID: ${assoc.clienteId}`;
+                                }
+                                return 'Buscando cliente...';
+                              }
+                              return process.isFromDataJud ? 'Dados sigilosos (DataJud)' : process.client;
+                            })()
+                          }
+                          <button
+                            className="ml-3 px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs"
+                            onClick={() => {
+                              setSelectedProcessForAssociation(process);
+                              // Se houver apenas um cliente, já sugere e seleciona
+                              if (clientesBanco.length === 1) {
+                                setClientSearch(clientesBanco[0].nome || clientesBanco[0].name || '');
+                                setSelectedClient(clientesBanco[0]);
+                                setHighlightedSuggestion(0);
+                              } else if (clientesBanco.length > 1) {
+                                setClientSearch(clientesBanco[0].nome || clientesBanco[0].name || '');
+                                setSelectedClient(clientesBanco[0]);
+                                setHighlightedSuggestion(0);
+                              } else {
+                                setClientSearch('');
+                                setSelectedClient(null);
+                                setHighlightedSuggestion(-1);
+                              }
+                              setShowAssociateModal(true);
+                            }}
+                          >
+                            Associar Cliente
+                          </button>
                         </p>
                       </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Tribunal:</span>
-                        <p className="text-gray-600">
-                          {process.isFromDataJud ? (process.tribunalNome || process.tribunal || process.court) : process.court}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="font-medium text-gray-700">Próxima Audiência:</span>
-                        <p className="text-gray-600">{formatDate(process.nextHearing)}</p>
-                      </div>
+                      {/* ...existing code... */}
                     </div>
-                    
-                    {/* Informações específicas do DataJud */}
-                    {process.isFromDataJud && (
-                      <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                          {process.classe && (
-                            <div>
-                              <span className="font-medium text-yellow-700">Classe:</span>
-                              <p className="text-yellow-600">{process.classe.nome}</p>
-                            </div>
-                          )}
-                          {process.grau && (
-                            <div>
-                              <span className="font-medium text-yellow-700">Grau:</span>
-                              <p className="text-yellow-600">{process.grau}</p>
-                            </div>
-                          )}
-                          {process.orgaoJulgador && (
-                            <div>
-                              <span className="font-medium text-yellow-700">Órgão Julgador:</span>
-                              <p className="text-yellow-600">{process.orgaoJulgador.nome}</p>
-                            </div>
-                          )}
-                          {process.sistema && (
-                            <div>
-                              <span className="font-medium text-yellow-700">Sistema:</span>
-                              <p className="text-yellow-600">{process.sistema.nome}</p>
-                            </div>
-                          )}
-                          {process.dataAjuizamento && (
-                            <div>
-                              <span className="font-medium text-yellow-700">Data Ajuizamento:</span>
-                              <p className="text-yellow-600">{formatDate(process.dataAjuizamento)}</p>
-                            </div>
-                          )}
-                          {process.movimentos && process.movimentos.length > 0 && (
-                            <div>
-                              <span className="font-medium text-yellow-700">Movimentos:</span>
-                              <p className="text-yellow-600">{process.movimentos.length} movimentos</p>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Assuntos do processo */}
-                        {process.assuntos && process.assuntos.length > 0 && (
-                          <div className="mt-3">
-                            <span className="font-medium text-yellow-700 block mb-2">Assuntos:</span>
-                            <div className="flex flex-wrap gap-1">
-                              {process.assuntos.map((assunto, index) => (
-                                <span key={index} className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">
-                                  {assunto.nome}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
-                      <span>Iniciado em: {formatDate(process.startDate)}</span>
-                      <span>Última atualização: {formatDate(process.lastUpdate)}</span>
-                    </div>
+                    {/* ...existing code... */}
                   </div>
+      {/* Modal de associação de cliente */}
+      {showAssociateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Associar Cliente ao Processo</h2>
+            <input
+              type="text"
+              placeholder="Buscar cliente por nome ou email"
+              value={clientSearch}
+              autoFocus
+              onChange={e => {
+                setClientSearch(e.target.value);
+                setHighlightedSuggestion(-1);
+              }}
+              onKeyDown={e => {
+                if (clientSuggestions.length === 0) return;
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setHighlightedSuggestion(prev => Math.min(prev + 1, clientSuggestions.length - 1));
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setHighlightedSuggestion(prev => Math.max(prev - 1, 0));
+                } else if (e.key === 'Enter') {
+                  if (highlightedSuggestion >= 0 && highlightedSuggestion < clientSuggestions.length) {
+                    setSelectedClient(clientSuggestions[highlightedSuggestion]);
+                  }
+                }
+              }}
+              className="w-full px-3 py-2 border rounded mb-3"
+            />
+            {/* Campo travado da página de origem do cliente selecionado */}
+            {selectedClient && (
+              <div className="mb-3">
+                <label className="block text-xs font-semibold text-gray-600 mb-1">ID da Página de Origem</label>
+                <input
+                  type="text"
+                  value={selectedClient.paginaOrigemId || selectedClient.paginaId || ''}
+                  readOnly
+                  className="w-full px-3 py-2 border rounded bg-gray-100 text-gray-700 cursor-not-allowed"
+                />
+              </div>
+            )}
+            {clientSearch.length > 1 && (
+              clientSuggestions.length > 0 ? (
+                <ul className="border rounded mb-3 max-h-64 overflow-y-auto bg-white shadow divide-y divide-gray-100">
+                  {clientSuggestions.map((client, idx) => (
+                    <li
+                      key={client.id}
+                      className={`p-3 cursor-pointer flex flex-col gap-1 hover:bg-blue-50 ${
+                        (selectedClient?.id === client.id ? 'bg-blue-100 ' : '') +
+                        (highlightedSuggestion === idx ? 'bg-blue-200 ' : '')
+                      }`}
+                      onMouseEnter={() => setHighlightedSuggestion(idx)}
+                      onMouseLeave={() => setHighlightedSuggestion(-1)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedClient?.id === client.id}
+                          onChange={async () => {
+                            let paginaOrigemId = '';
+                            let paginaOrigemNome = '';
+                            if (window.clientService?.getClientById && user?.uid) {
+                              const clientResult = await window.clientService.getClientById(user.uid, client.id);
+                              if (clientResult.success && clientResult.data) {
+                                paginaOrigemId = clientResult.data.paginaOrigemId || '';
+                                paginaOrigemNome = clientResult.data.paginaOrigemNome || clientResult.data.nomePagina || '';
+                              }
+                            }
+                            setSelectedClient({ ...client, paginaOrigemId, paginaOrigemNome });
+                          }}
+                          className="form-checkbox h-4 w-4 text-blue-600"
+                        />
+                        <span className="font-medium text-gray-900 text-base">{client.nome || client.name}</span>
+                        {client.userCode && (
+                          <span className="px-2 py-0.5 text-xs font-mono font-semibold bg-blue-100 text-blue-800 rounded">{client.userCode}</span>
+                        )}
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${client.status === 'ativo' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>{client.status === 'ativo' ? 'Ativo' : 'Inativo'}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-4 text-xs text-gray-600 mt-1">
+                        <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>{client.email}</span>
+                        <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>{client.phone || 'Não informado'}</span>
+                        <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a2 2 0 002-2h4a2 2 0 012 2v4m0 4v10a1 1 0 01-1 1H9a1 1 0 01-1-1V11a1 1 0 011-1h6a1 1 0 011 1z" /></svg>{client.totalAppointments || 0} consultas</span>
+                        <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" /></svg>{client.totalSpent !== undefined ? (client.totalSpent.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })) : 'R$ 0,00'}</span>
+                        {client.caseTypes && client.caseTypes.length > 0 && (
+                          <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4V7a4 4 0 00-8 0v4a4 4 0 004 4z" /></svg>Áreas: {client.caseTypes.join(', ')}</span>
+                        )}
+                        {/* Página de origem do cliente */}
+                        <span className="flex items-center gap-1"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4V7a4 4 0 00-8 0v4a4 4 0 004 4z" /></svg>Página de origem: <b>ID:</b> {client.paginaOrigemId || client.paginaId || 'N/A'} <b>Nome:</b> {client.paginaOrigemNome || client.nomePagina || 'N/A'}</span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-gray-500 text-sm mb-3 px-2">Nenhum cliente encontrado</div>
+              )
+            )}
+            {!(window.clientProcessService && window.clientProcessService.associateClientToProcess) && (
+              <div className="mb-3 p-2 bg-red-100 text-red-700 rounded text-sm font-medium flex items-center gap-2">
+                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-1.414 1.414M6.343 17.657l-1.414-1.414M5.636 5.636l1.414 1.414M17.657 17.657l1.414-1.414M12 8v4m0 4h.01" /></svg>
+                Serviço de associação de cliente ao processo não está disponível no sistema. Contate o administrador ou verifique a configuração do ambiente.
+              </div>
+            )}
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => setShowAssociateModal(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={handleAssociateClient}
+                disabled={!selectedClient || !(window.clientProcessService && window.clientProcessService.associateClientToProcess)}
+              >
+                Associar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
                   
                   <div className="flex items-center gap-2 ml-4">
                     {/* Botão para visualizar detalhes completos */}
@@ -1115,6 +1480,7 @@ const ProcessModal = ({ process, onClose, onSave }) => {
                 )}
                 {process.movimentos && process.movimentos.length > 0 && (
                   <div className="md:col-span-2">
+
                     <span className="font-medium text-yellow-700">Movimentos:</span>
                     <p className="text-yellow-600">{process.movimentos.length} movimentos processuais</p>
                   </div>

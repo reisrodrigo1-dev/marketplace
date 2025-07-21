@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Hero from './Hero';
+import FindLawyerSection from './FindLawyerSection';
 import Solutions from './Solutions';
 import Blog from './Blog';
 import HowTo from './HowTo';
@@ -18,6 +19,7 @@ const HomePage = () => {
     <div className="min-h-screen bg-white">
       <Header onLoginClick={handleLoginClick} />
       <Hero />
+      <FindLawyerSection />
       <Solutions />
       <Blog />
       <HowTo />

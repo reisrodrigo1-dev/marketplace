@@ -449,6 +449,11 @@ const ClientDashboard = () => {
             </div>
           </div>
 
+          {/* Aviso de versão global */}
+          <div className="w-full bg-yellow-200 text-yellow-900 text-center py-2 text-sm font-semibold shadow-sm z-40">
+            ⚠️ Sistema em Versão V.1.6.0 BETA — Algumas funcionalidades estão em teste. Caso encontre instabilidades, reporte ao suporte.
+          </div>
+
       {/* Navigation */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -117,6 +117,8 @@ const AppointmentModal = ({ isOpen, onClose, lawyerData, selectedDate, selectedT
         caseDescription: caseDescription.trim(),
         proposedPrice: lawyerData.valorConsulta,
         status: 'pendente',
+        // Campo para compatibilidade com filtros
+        selectedPageId: lawyerData.id,
         // Informações da página de origem
         paginaOrigem: {
           id: lawyerData.id,

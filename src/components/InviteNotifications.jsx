@@ -1,3 +1,13 @@
+  const handleDeleteInvite = async (inviteId) => {
+    if (!window.confirm('Tem certeza que deseja excluir este convite?')) return;
+    try {
+      await collaborationService.deleteInvite(inviteId);
+      setSentInvites(prev => prev.filter(invite => invite.id !== inviteId));
+    } catch (error) {
+      console.error('Erro ao excluir convite:', error);
+      alert('Erro ao excluir convite. Tente novamente.');
+    }
+  };
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { collaborationService } from '../firebase/firestore';
@@ -301,7 +311,15 @@ const InviteNotifications = () => {
                       )}
                     </p>
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-4 flex flex-col items-end gap-2">
+                    {/* Botão de excluir convite */}
+                    <button
+                      className="px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 text-xs"
+                      onClick={() => handleDeleteInvite(invite.id)}
+                      title="Excluir convite"
+                    >
+                      Excluir
+                    </button>
                     {invite.status === 'pending' && (
                       <div className="text-xs text-gray-500 italic">
                         ⏳ Aguardando resposta

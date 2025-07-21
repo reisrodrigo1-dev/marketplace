@@ -72,6 +72,44 @@ const userService = {
 
 // Serviço de clientes (para futuro uso)
 const clientService = {
+  // Buscar cliente por ID
+  async getClientById(clientId) {
+    try {
+      const clientRef = doc(db, 'clients', clientId);
+      const clientSnap = await getDoc(clientRef);
+      if (!clientSnap.exists()) {
+        return { success: false, error: 'Cliente não encontrado' };
+      }
+      return { success: true, data: { id: clientSnap.id, ...clientSnap.data() } };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+  // Buscar clientes por nome ou email (autocomplete)
+  async searchClients(userId, searchTerm) {
+    try {
+      // Busca todos os clientes do usuário
+      const q = query(
+        collection(db, 'clients'),
+        where('userId', '==', userId)
+      );
+      const querySnapshot = await getDocs(q);
+      const term = searchTerm.trim().toLowerCase();
+      // Filtra no cliente por nome ou email contendo o termo (case-insensitive)
+      const clients = querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(client =>
+          (client.nome && client.nome.toLowerCase().includes(term)) ||
+          (client.name && client.name.toLowerCase().includes(term)) ||
+          (client.email && client.email.toLowerCase().includes(term))
+        );
+      // Ordena por nome
+      clients.sort((a, b) => (a.nome || a.name || '').localeCompare(b.nome || b.name || ''));
+      return { success: true, data: clients };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
   // Criar cliente
   async createClient(userId, clientData) {
     try {
@@ -1369,6 +1407,46 @@ const lawyerPageService = {
       console.error('❌ Erro ao buscar página por ID:', error);
       return { success: false, error: error.message };
     }
+  },
+
+  // Alias para compatibilidade com componentes existentes
+  async getUserPages(userId) {
+    return await this.getPagesByUser(userId);
+  },
+
+  // Buscar todas as páginas ativas para o diretório público
+  async getAllActivePages() {
+    try {
+      console.log('🔍 Buscando todas as páginas ativas...');
+      
+      const q = query(
+        collection(db, 'lawyerPages'),
+        where('isActive', '==', true)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const pages = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        pages.push({
+          id: doc.id,
+          ...data,
+          // Converter timestamps para Date se existirem
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+          updatedAt: data.updatedAt?.toDate?.() || new Date()
+        });
+      });
+      
+      // Ordenar por data de criação (mais recente primeiro)
+      pages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      console.log('✅ Páginas ativas encontradas:', pages.length);
+      return { success: true, data: pages };
+    } catch (error) {
+      console.error('❌ Erro ao buscar páginas ativas:', error);
+      return { success: false, error: error.message };
+    }
   }
 };
 
@@ -1562,7 +1640,17 @@ const appointmentService = {
       const appointmentDoc = await getDoc(appointmentRef);
       if (appointmentDoc.exists()) {
         const appointmentData = appointmentDoc.data();
-        
+        let pageInfo = null;
+        if (appointmentData.selectedPageId) {
+          try {
+            const pageResult = await lawyerPageService.getPageById(appointmentData.selectedPageId);
+            if (pageResult.success && pageResult.data) {
+              pageInfo = pageResult.data;
+            }
+          } catch (e) {
+            console.error('Erro ao buscar dados da página para registro financeiro:', e);
+          }
+        }
         // Registrar no sistema financeiro
         if (appointmentData.finalPrice && appointmentData.finalPrice > 0) {
           const financialRef = doc(collection(db, 'financial'));
@@ -1574,6 +1662,9 @@ const appointmentService = {
             lawyerId: appointmentData.lawyerUserId,
             clientId: appointmentData.clientUserId,
             appointmentId: appointmentId,
+            pageId: appointmentData.selectedPageId || null,
+            pageName: pageInfo?.nomePagina || null,
+            pageSpecialization: pageInfo?.especialidade || null,
             date: serverTimestamp(),
             status: 'confirmado',
             paymentMethod: paymentData.method || 'online',
@@ -1589,6 +1680,11 @@ const appointmentService = {
       console.error('Erro ao confirmar pagamento:', error);
       return { success: false, error: error.message };
     }
+  },
+
+  // Alias para compatibilidade com componentes existentes
+  async getLawyerAppointments(lawyerId) {
+    return await this.getAppointmentsByLawyer(lawyerId);
   }
 };
 
@@ -2457,7 +2553,7 @@ const collaborationService = {
       // Owner sempre pode ver, colaborador precisa ter permissão financeira
       const canView = isOwner || 
                      role === 'lawyer' || 
-                     (role === 'financial' && permissions.includes('financial'));
+                     role === 'financial';
       
       return {
         success: true,
@@ -2515,7 +2611,7 @@ const collaborationService = {
           
           // Verificar se tem permissão financeira
           if (collaboration.role === 'lawyer' || 
-              (collaboration.role === 'financial' && collaboration.permissions.includes('financial'))) {
+              collaboration.role === 'financial') {
             
             console.log('✅ getPagesWithFinancialAccess: Colaboração tem acesso financeiro');
             
@@ -2601,6 +2697,17 @@ const collaborationService = {
       return { success: true };
     } catch (error) {
       console.error('❌ Erro ao atualizar perfil do colaborador:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Excluir convite enviado
+  async deleteInvite(inviteId) {
+    try {
+      await deleteDoc(doc(db, 'collaboration_invites', inviteId));
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao excluir convite:', error);
       return { success: false, error: error.message };
     }
   }

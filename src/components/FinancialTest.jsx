@@ -90,6 +90,127 @@ const FinancialTest = () => {
     }
   };
 
+  // Nova função para verificar relação agendamentos x pagamentos
+  const checkAppointmentPaymentRelation = async () => {
+    if (!user) {
+      alert('Usuário não logado');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('🔍 VERIFICANDO RELAÇÃO AGENDAMENTOS x PAGAMENTOS');
+      
+      const { 
+        collection, 
+        getDocs, 
+        query, 
+        where 
+      } = await import('firebase/firestore');
+      const { db } = await import('../firebase/config');
+      
+      // 1. Buscar agendamentos do advogado
+      console.log('📅 Buscando agendamentos...');
+      const appointmentsQuery = query(
+        collection(db, 'appointments'),
+        where('lawyerUserId', '==', user.uid)
+      );
+      const appointmentsSnapshot = await getDocs(appointmentsQuery);
+      
+      console.log(`📊 Total de agendamentos: ${appointmentsSnapshot.size}`);
+      
+      const appointments = [];
+      appointmentsSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        appointments.push({ id: doc.id, ...data });
+        
+        console.log(`📅 Agendamento ${doc.id}:`, {
+          clientName: data.clientName,
+          status: data.status,
+          finalPrice: data.finalPrice,
+          selectedPageId: data.selectedPageId || 'VAZIO',
+          hasSelectedPageId: !!data.selectedPageId
+        });
+      });
+      
+      // 2. Buscar pagamentos do advogado
+      console.log('💰 Buscando pagamentos...');
+      const paymentsQuery = query(
+        collection(db, 'financial'),
+        where('lawyerId', '==', user.uid),
+        where('type', '==', 'receita')
+      );
+      const paymentsSnapshot = await getDocs(paymentsQuery);
+      
+      console.log(`📊 Total de pagamentos: ${paymentsSnapshot.size}`);
+      
+      const payments = [];
+      paymentsSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        payments.push({ id: doc.id, ...data });
+        
+        console.log(`💰 Pagamento ${doc.id}:`, {
+          appointmentId: data.appointmentId,
+          clientName: data.clientName,
+          amount: data.amount,
+          pageId: data.pageId || 'VAZIO',
+          hasPageId: !!data.pageId
+        });
+      });
+      
+      // 3. Verificar correspondência
+      console.log('🔗 VERIFICANDO CORRESPONDÊNCIA:');
+      
+      const paymentsWithoutPageId = payments.filter(p => !p.pageId);
+      const appointmentsWithPageId = appointments.filter(a => a.selectedPageId);
+      
+      console.log(`❌ Pagamentos sem pageId: ${paymentsWithoutPageId.length}`);
+      console.log(`✅ Agendamentos com selectedPageId: ${appointmentsWithPageId.length}`);
+      
+      // 4. Tentar corrigir pagamentos sem pageId
+      let correctionsPossible = 0;
+      paymentsWithoutPageId.forEach(payment => {
+        if (payment.appointmentId) {
+          const relatedAppointment = appointments.find(apt => apt.id === payment.appointmentId);
+          if (relatedAppointment && relatedAppointment.selectedPageId) {
+            console.log(`🔧 CORREÇÃO POSSÍVEL - Pagamento ${payment.id}:`, {
+              appointmentId: payment.appointmentId,
+              currentPageId: payment.pageId || 'VAZIO',
+              shouldBePageId: relatedAppointment.selectedPageId,
+              clientName: payment.clientName
+            });
+            correctionsPossible++;
+          }
+        }
+      });
+      
+      console.log(`🔧 Total de correções possíveis: ${correctionsPossible}`);
+      
+      const result = {
+        totalAppointments: appointments.length,
+        totalPayments: payments.length,
+        paymentsWithoutPageId: paymentsWithoutPageId.length,
+        appointmentsWithPageId: appointmentsWithPageId.length,
+        correctionsPossible
+      };
+      
+      setTestResult(result);
+      alert(`🔍 ANÁLISE COMPLETA!\n\n` +
+        `📅 Agendamentos: ${result.totalAppointments}\n` +
+        `💰 Pagamentos: ${result.totalPayments}\n` +
+        `❌ Pagamentos sem pageId: ${result.paymentsWithoutPageId}\n` +
+        `✅ Agendamentos com pageId: ${result.appointmentsWithPageId}\n` +
+        `🔧 Correções possíveis: ${result.correctionsPossible}\n\n` +
+        `Veja o console para detalhes!`);
+      
+    } catch (error) {
+      console.error('💥 Erro na análise:', error);
+      alert(`Erro: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const runAdvancedTest = async () => {
     if (!user) {
       alert('Usuário não logado');
@@ -252,6 +373,14 @@ const FinancialTest = () => {
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Teste Completo
+        </button>
+
+        <button
+          onClick={checkAppointmentPaymentRelation}
+          disabled={loading}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          🔍 Analisar Relação Agendamentos x Pagamentos
         </button>
 
         {testResult && testResult.directQuery && testResult.directQuery.count === 0 && (

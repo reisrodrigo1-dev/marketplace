@@ -80,13 +80,50 @@ const FinancialDashboard = () => {
       console.log('📊 Resultado resumo:', summaryResult);
 
       if (paymentsResult.success) {
+        // Log detalhado de todos os pagamentos para debug
+        console.log('🔍 TODOS OS PAGAMENTOS CARREGADOS:');
+        (paymentsResult.data || []).forEach((payment, index) => {
+          console.log(`📄 Pagamento ${index + 1}:`, {
+            id: payment.id,
+            amount: payment.amount,
+            pageId: payment.pageId || 'VAZIO',
+            appointmentId: payment.appointmentId,
+            clientName: payment.clientName,
+            date: payment.date,
+            hasPageId: !!payment.pageId
+          });
+        });
+        
         // Aplicar filtro por página nos pagamentos
         let filteredPayments = paymentsResult.data;
         if (pageFilter !== 'todas') {
-          filteredPayments = paymentsResult.data.filter(payment => 
-            payment.pageId === pageFilter
-          );
-          console.log(`🔽 Filtro aplicado: ${filteredPayments.length} de ${paymentsResult.data.length} pagamentos`);
+          filteredPayments = paymentsResult.data.filter(payment => {
+            const hasValidPageId = payment.pageId && payment.pageId !== '';
+            const pageMatch = hasValidPageId && payment.pageId === pageFilter;
+            
+            if (hasValidPageId && !pageMatch) {
+              console.log(`❌ Pagamento ${payment.id} não corresponde ao filtro:`, {
+                pagamentoPageId: payment.pageId,
+                filtroPageId: pageFilter,
+                clientName: payment.clientName
+              });
+            } else if (pageMatch) {
+              console.log(`✅ Pagamento ${payment.id} incluído no filtro:`, {
+                pageId: payment.pageId,
+                clientName: payment.clientName,
+                amount: payment.amount
+              });
+            } else if (!hasValidPageId) {
+              console.log(`⚠️ Pagamento ${payment.id} sem pageId válido:`, {
+                pageId: payment.pageId,
+                clientName: payment.clientName
+              });
+            }
+            
+            return pageMatch;
+          });
+          
+          console.log(`🔽 Filtro aplicado: ${filteredPayments.length} de ${paymentsResult.data.length} pagamentos para página ${pageFilter}`);
         }
         setRecentPayments(filteredPayments);
         console.log(`✅ ${filteredPayments.length} pagamentos carregados (filtrados)`);
@@ -329,7 +366,7 @@ const FinancialDashboard = () => {
                 <option value="todas">Todas as páginas</option>
                 {lawyerPages.map((page) => (
                   <option key={page.id} value={page.id}>
-                    {page.title || page.specialization || 'Página sem título'}
+                    {page.nomePagina || 'Página sem nome'}
                   </option>
                 ))}
               </select>

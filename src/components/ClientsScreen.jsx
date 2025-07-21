@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { clientService, appointmentService, lawyerPageService } from '../firebase/firestore';
+import { clientService, appointmentService, lawyerPageService, caseService } from '../firebase/firestore';
 import ClientCodeDisplay from './ClientCodeDisplay';
 
 const ClientsScreen = () => {
+  const [clientProcesses, setClientProcesses] = useState([]);
   const { user } = useAuth();
   const [clients, setClients] = useState([]);
   const [clientsAppointments, setClientsAppointments] = useState({});
@@ -263,8 +264,29 @@ const ClientsScreen = () => {
       setSelectedClientAppointments(appointments.sort((a, b) => 
         new Date(b.appointmentDate) - new Date(a.appointmentDate)
       ));
+      // Carregar processos associados via associação
+      if (window.clientProcessService?.getAssociationsByClient) {
+        window.clientProcessService.getAssociationsByClient(client.id).then(assocResult => {
+          if (assocResult.success && assocResult.data.length > 0) {
+            const processIds = assocResult.data.map(a => a.processoId);
+            caseService.getCases(user.uid).then(procResult => {
+              if (procResult.success) {
+                const filtered = procResult.data.filter(proc => processIds.includes(proc.id));
+                setClientProcesses(filtered);
+              } else {
+                setClientProcesses([]);
+              }
+            });
+          } else {
+            setClientProcesses([]);
+          }
+        });
+      } else {
+        setClientProcesses([]);
+      }
     } else {
       setSelectedClientAppointments([]);
+      setClientProcesses([]);
     }
     setShowClientModal(true);
   };
@@ -808,6 +830,25 @@ const ClientsScreen = () => {
                       </div>
                       <div className="text-sm text-purple-800">Consultas Realizadas</div>
                     </div>
+                  </div>
+
+                  {/* Processos Associados */}
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">⚖️ Processos do Cliente</h4>
+                    {clientProcesses.length > 0 ? (
+                      <ul className="space-y-2">
+                        {clientProcesses.map(proc => (
+                          <li key={proc.id} className="bg-white border border-gray-200 rounded p-3 flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div>
+                              <span className="font-semibold text-blue-700">{proc.number}</span> — {proc.title}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1 md:mt-0">{proc.status}</div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="text-gray-500 text-sm">Nenhum processo associado a este cliente.</div>
+                    )}
                   </div>
 
                   {/* Histórico de Agendamentos */}

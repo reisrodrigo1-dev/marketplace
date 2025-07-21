@@ -5,6 +5,7 @@ import HomePage from './components/HomePage';
 import AdminDashboard from './components/AdminDashboard';
 import ClientDashboard from './components/ClientDashboard';
 import PublicLawyerPage from './components/PublicLawyerPage';
+import FindLawyerPage from './components/FindLawyerPage';
 import UserTypeSelection from './components/UserTypeSelection';
 import LawyerLogin from './components/LawyerLogin';
 import ClientLogin from './components/ClientLogin';
@@ -78,6 +79,9 @@ function App() {
           
           {/* Página pública do advogado */}
           <Route path="/advogado/:slug" element={<PublicLawyerPage />} />
+          
+          {/* Página de busca de advogados */}
+          <Route path="/encontrar-advogado" element={<FindLawyerPage />} />
           
           {/* Debug de páginas - TEMPORÁRIO */}
           <Route path="/debug-paginas" element={<LawyerPageDebug />} />
