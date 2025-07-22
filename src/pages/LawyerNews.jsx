@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { fetchLegalNews } from '../services/newsService';
+import LegalDebateModal from './LegalDebateModal';
 
 const LawyerNews = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDebateModal, setShowDebateModal] = useState(false);
+  const [selectedNews, setSelectedNews] = useState(null);
 
   useEffect(() => {
     const loadNews = async () => {
@@ -22,12 +25,22 @@ const LawyerNews = () => {
     loadNews();
   }, []);
 
+  const handleOpenDebate = (article) => {
+    setSelectedNews(article);
+    setShowDebateModal(true);
+  };
+
+  const handleCloseDebate = () => {
+    setShowDebateModal(false);
+    setSelectedNews(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-10">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-10 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Últimas notícias</h1>
-          <p className="text-lg text-gray-600">Acompanhe as principais novidades do mundo jurídico</p>
+          <p className="text-lg text-gray-600">Acompanhe as principais nosvidades do mundo jurídico</p>
         </div>
         {loading ? (
           <div className="text-center py-12">
@@ -68,7 +81,7 @@ const LawyerNews = () => {
                   <p className="text-gray-700 text-base mb-4 line-clamp-3">
                     {article.description}
                   </p>
-                  <div className="mt-auto">
+                  <div className="flex gap-2 mt-auto">
                     <a
                       href={article.url}
                       target="_blank"
@@ -80,11 +93,23 @@ const LawyerNews = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                     </a>
+                    <button
+                      className="px-4 py-2 bg-yellow-400 text-blue-900 font-semibold rounded shadow hover:bg-yellow-300 transition text-sm"
+                      onClick={() => handleOpenDebate(article)}
+                    >
+                      O QUE VC FARIA?
+                    </button>
                   </div>
                 </div>
               </article>
             ))}
           </div>
+        )}
+        {showDebateModal && selectedNews && (
+          <LegalDebateModal
+            news={selectedNews}
+            onClose={handleCloseDebate}
+          />
         )}
       </div>
     </div>

@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { fetchLegalNews } from '../services/newsService';
+import LegalDebateModal from './LegalDebateModal';
 
 const UltimasNoticiasFlix = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDebateModal, setShowDebateModal] = useState(false);
+  const [selectedNews, setSelectedNews] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -99,6 +102,12 @@ const UltimasNoticiasFlix = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                       </svg>
                     </a>
+                    <button
+                      className="ml-2 px-4 py-2 bg-yellow-400 text-blue-900 font-semibold rounded shadow hover:bg-yellow-300 transition text-sm"
+                      onClick={() => { setSelectedNews(article); setShowDebateModal(true); }}
+                    >
+                      O QUE VC FARIA?
+                    </button>
                   </div>
                 </div>
               ))}
@@ -113,6 +122,12 @@ const UltimasNoticiasFlix = () => {
           )}
         </div>
       </div>
+      {showDebateModal && selectedNews && (
+        <LegalDebateModal
+          news={selectedNews}
+          onClose={() => { setShowDebateModal(false); setSelectedNews(null); }}
+        />
+      )}
     </div>
   );
 };

@@ -306,6 +306,18 @@ const AdminDashboard = () => {
                 Vagas de Emprego
               </button>
 
+              {/* Botão para Histórico de Debates Juróticos */}
+              <button
+                onClick={() => navigate('/debate-history')}
+                className="w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors text-gray-700 hover:bg-yellow-100"
+              >
+                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V10a2 2 0 012-2h2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 16v-4m0 0l-2 2m2-2l2 2" />
+                </svg>
+                Histórico de Debates
+              </button>
+
               {/* Botão Últimas Notícias */}
               <button
                 onClick={() => setActiveTab('news')}

@@ -190,6 +190,13 @@ const LawyerAppointments = () => {
 
   // Filtrar agendamentos por status, data e página
   const filteredAppointments = appointments.filter(appointment => {
+    // Garante que o advogado logado é dono OU foi atribuído ao agendamento
+    if (
+      appointment.lawyerUserId !== user.uid &&
+      appointment.assignedLawyerId !== user.uid
+    ) {
+      return false;
+    }
     // Filtro por status
     if (filter !== 'todos' && appointment.status !== filter) {
       return false;
@@ -205,18 +212,16 @@ const LawyerAppointments = () => {
     // Filtro por data
     if (dateFilter !== 'todos') {
       const appointmentDate = parseAppointmentDate(appointment.appointmentDate);
-      if (!appointmentDate) return false; // Se a data for inválida, não incluir no filtro
-      
+      if (!appointmentDate) return false;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
       switch (dateFilter) {
-        case 'hoje':
+        case 'hoje': {
           const todayEnd = new Date(today);
           todayEnd.setHours(23, 59, 59, 999);
           return appointmentDate >= today && appointmentDate <= todayEnd;
-          
-        case 'semana':
+        }
+        case 'semana': {
           const startOfWeek = new Date(today);
           const dayOfWeek = today.getDay();
           startOfWeek.setDate(today.getDate() - dayOfWeek);
@@ -224,14 +229,14 @@ const LawyerAppointments = () => {
           endOfWeek.setDate(startOfWeek.getDate() + 6);
           endOfWeek.setHours(23, 59, 59, 999);
           return appointmentDate >= startOfWeek && appointmentDate <= endOfWeek;
-          
-        case 'mes':
+        }
+        case 'mes': {
           const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
           const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
           endOfMonth.setHours(23, 59, 59, 999);
           return appointmentDate >= startOfMonth && appointmentDate <= endOfMonth;
-          
-        case 'range':
+        }
+        case 'range': {
           if (customDateRange.startDate && customDateRange.endDate) {
             const startDate = new Date(customDateRange.startDate);
             startDate.setHours(0, 0, 0, 0);
@@ -239,13 +244,12 @@ const LawyerAppointments = () => {
             endDate.setHours(23, 59, 59, 999);
             return appointmentDate >= startDate && appointmentDate <= endDate;
           }
-          return true;
-          
+          return false;
+        }
         default:
           return true;
       }
     }
-    
     return true;
   });
 

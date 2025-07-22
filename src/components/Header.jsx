@@ -50,6 +50,9 @@ const Header = ({ onLoginClick, showBackButton = false, onBackClick }) => {
               <a href="#ia" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
                 INTELIGÊNCIA ARTIFICIAL
               </a>
+              <a href="/debate-history" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
+                HISTÓRICO DE DEBATES
+              </a>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -156,6 +159,9 @@ const Header = ({ onLoginClick, showBackButton = false, onBackClick }) => {
                 </a>
                 <a href="#ia" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
                   INTELIGÊNCIA ARTIFICIAL
+                </a>
+                <a href="/debate-history" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
+                  HISTÓRICO DE DEBATES
                 </a>
                 
                 <div className="pt-2 space-y-2">
