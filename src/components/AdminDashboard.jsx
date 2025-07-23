@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import DebateHistory from '../pages/DebateHistory';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ProcessesScreen from './ProcessesScreen';
@@ -308,8 +309,12 @@ const AdminDashboard = () => {
 
               {/* Botão para Histórico de Debates Juróticos */}
               <button
-                onClick={() => navigate('/debate-history')}
-                className="w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors text-gray-700 hover:bg-yellow-100"
+                onClick={() => setActiveTab('debate-history')}
+                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
+                  activeTab === 'debate-history'
+                    ? 'bg-yellow-100 text-yellow-700'
+                    : 'text-gray-700 hover:bg-yellow-100'
+                }`}
               >
                 <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V10a2 2 0 012-2h2" />
@@ -383,7 +388,6 @@ const AdminDashboard = () => {
           {activeTab === 'dashboard' && (
             <div>
               <h1 className="text-2xl font-inter-bold text-gray-900 mb-8">Dashboard</h1>
-              
               {/* Cards de estatísticas */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -399,7 +403,6 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </div>
-                
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center">
                     <div className="p-3 bg-green-100 rounded-lg">
@@ -413,7 +416,6 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </div>
-                
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center">
                     <div className="p-3 bg-yellow-100 rounded-lg">
@@ -427,7 +429,6 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                 </div>
-                
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center">
                     <div className="p-3 bg-red-100 rounded-lg">
@@ -442,7 +443,6 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-              
               {/* Atividades recentes */}
               <div className="bg-white rounded-lg shadow-sm border">
                 <div className="p-6 border-b">
@@ -468,6 +468,11 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
+          )}
+          {activeTab === 'debate-history' && (
+            <Suspense fallback={<div className="text-gray-500">Carregando histórico de debates...</div>}>
+              <DebateHistory />
+            </Suspense>
           )}
           
           {activeTab === 'clients' && (

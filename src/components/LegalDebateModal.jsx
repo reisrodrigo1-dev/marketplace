@@ -37,9 +37,13 @@ const LegalDebateModal = ({ news, onClose }) => {
     setChat(updatedChat);
     setUserInput('');
     try {
+      // IA deve agir como advogado adversário, justificando e tentando defender/atacar
       const iaRole = side === 'defender' ? 'atacante' : 'defensor';
+      const userSide = side === 'defender' ? 'defesa' : 'ataque';
+      const iaSide = side === 'defender' ? 'ataque' : 'defesa';
+      const prompt = `Você é um advogado que representa o lado ${iaSide} (adversário) em um debate jurídico sobre a seguinte notícia: "${news.title} - ${news.description}". Argumente de forma convincente, sempre pelo lado oposto ao do usuário, justificando sua posição com base em fundamentos jurídicos, leis, precedentes e estratégias reais de advocacia. Rebata os argumentos do usuário, tente convencer o "juiz" e nunca concorde passivamente. Seja combativo, detalhado e estratégico, como em um tribunal. O usuário está representando o lado ${userSide}.`;
       const messages = [
-        { role: 'system', content: `Você é um advogado que irá ${iaRole} a situação apresentada na notícia: "${news.title} - ${news.description}". Argumente sempre pelo lado oposto ao do usuário.` },
+        { role: 'system', content: prompt },
         ...updatedChat.map(msg => ({
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.text
@@ -54,7 +58,7 @@ const LegalDebateModal = ({ news, onClose }) => {
         body: JSON.stringify({
           model: 'gpt-3.5-turbo',
           messages,
-          max_tokens: 300
+          max_tokens: 350
         })
       });
       const data = await response.json();

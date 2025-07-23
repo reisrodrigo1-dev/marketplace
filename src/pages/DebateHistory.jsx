@@ -10,7 +10,13 @@ const DebateHistory = () => {
   useEffect(() => {
     const fetchDebates = async () => {
       const snapshot = await getDocs(collection(db, 'legalDebates'));
-      setDebates(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      const debatesArr = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      debatesArr.sort((a, b) => {
+        const aDate = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+        const bDate = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+        return bDate - aDate;
+      });
+      setDebates(debatesArr);
     };
     fetchDebates();
   }, [db]);
@@ -27,16 +33,17 @@ const DebateHistory = () => {
     setEditName('');
   };
 
+  const [openId, setOpenId] = useState(null);
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold text-blue-700 mb-8">Histórico de Debates Jurídicos</h1>
       {debates.length === 0 ? (
         <div className="text-gray-500">Nenhum debate salvo.</div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-2">
           {debates.map(debate => (
-            <div key={debate.id} className="bg-white rounded shadow p-6">
-              <div className="flex items-center gap-3 mb-2">
+            <div key={debate.id} className="bg-white rounded shadow p-4 cursor-pointer hover:bg-yellow-50 transition" onClick={() => setOpenId(openId === debate.id ? null : debate.id)}>
+              <div className="flex items-center gap-3">
                 {editingId === debate.id ? (
                   <>
                     <input
@@ -45,37 +52,37 @@ const DebateHistory = () => {
                       onChange={e => setEditName(e.target.value)}
                       placeholder="Nome do debate"
                     />
-                    <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={() => handleSaveName(debate.id)}>Salvar</button>
-                    <button className="px-3 py-1 bg-gray-300 rounded" onClick={() => setEditingId(null)}>Cancelar</button>
+                    <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={e => {e.stopPropagation(); handleSaveName(debate.id);}}>Salvar</button>
+                    <button className="px-3 py-1 bg-gray-300 rounded" onClick={e => {e.stopPropagation(); setEditingId(null);}}>Cancelar</button>
                   </>
                 ) : (
                   <>
                     <span className="font-bold text-lg text-blue-700">{debate.name || 'Sem nome'}</span>
-                    <button className="px-2 py-1 bg-yellow-400 text-blue-900 rounded" onClick={() => handleEditName(debate.id, debate.name)}>Editar nome</button>
+                    <button className="px-2 py-1 bg-yellow-400 text-blue-900 rounded" onClick={e => {e.stopPropagation(); handleEditName(debate.id, debate.name);}}>Editar nome</button>
                   </>
                 )}
+                <span className="ml-auto text-xs text-gray-500">{debate.createdAt?.toDate ? debate.createdAt.toDate().toLocaleString('pt-BR') : ''}</span>
               </div>
-              <div className="mb-2 text-gray-700 text-sm">
+              <div className="text-gray-700 text-sm mt-1">
                 <span className="font-semibold">Notícia:</span> {debate.news?.title || ''}
+                <span className="ml-4 font-semibold">Lado:</span> {debate.side}
               </div>
-              <div className="mb-2 text-gray-700 text-sm">
-                <span className="font-semibold">Lado:</span> {debate.side}
-              </div>
-              <div className="mb-2 text-gray-700 text-sm">
-                <span className="font-semibold">Data:</span> {debate.createdAt?.toDate ? debate.createdAt.toDate().toLocaleString('pt-BR') : ''}
-              </div>
-              <div className="mb-2 text-gray-700 text-sm">
-                <span className="font-semibold">Resumo do Debate:</span>
-                <ul className="list-disc ml-6">
-                  {debate.chat?.map((msg, idx) => (
-                    <li key={idx}><span className={msg.sender === 'user' ? 'text-blue-700' : 'text-red-700'}>{msg.sender === 'user' ? 'Você' : 'IA'}:</span> {msg.text}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mb-2 text-gray-700 text-sm">
-                <span className="font-semibold">Análise/Veredito:</span>
-                <div className="bg-gray-100 p-2 rounded mt-1 whitespace-pre-line">{debate.analysis}</div>
-              </div>
+              {openId === debate.id && (
+                <div className="mt-4">
+                  <div className="mb-2 text-gray-700 text-sm">
+                    <span className="font-semibold">Resumo do Debate:</span>
+                    <ul className="list-disc ml-6">
+                      {debate.chat?.map((msg, idx) => (
+                        <li key={idx}><span className={msg.sender === 'user' ? 'text-blue-700' : 'text-red-700'}>{msg.sender === 'user' ? 'Você' : 'IA'}:</span> {msg.text}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="mb-2 text-gray-700 text-sm">
+                    <span className="font-semibold">Análise/Veredito:</span>
+                    <div className="bg-gray-100 p-2 rounded mt-1 whitespace-pre-line">{debate.analysis}</div>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
