@@ -13,7 +13,15 @@ const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
  * 3. Chat de argumentos (IA assume lado oposto)
  * 4. Análise final da IA
  */
-const LegalDebateModal = ({ news, onClose }) => {
+/**
+ * LegalDebateModal
+ * Modal para simulação de discussão jurídica baseada em um processo.
+ * Props:
+ * - process: dados do processo (pode ser notícia ou processo)
+ * - onClose: fecha modal
+ * - onSaveDebate: callback para salvar debate no Firestore
+ */
+const LegalDebateModal = ({ process, onClose, onSaveDebate }) => {
   const [step, setStep] = useState(1);
   const [side, setSide] = useState(null); // 'defender' ou 'atacar'
   const [chat, setChat] = useState([]);
@@ -21,7 +29,7 @@ const LegalDebateModal = ({ news, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [finalAnalysis, setFinalAnalysis] = useState(null);
   const [modalSize, setModalSize] = useState('max-w-3xl p-10');
-  const [debateName, setDebateName] = useState('');
+  const [debateName, setDebateName] = useState(process?.title || process?.number || '');
 
   // Handler para escolha de lado
   const handleChooseSide = (chosenSide) => {
@@ -41,7 +49,7 @@ const LegalDebateModal = ({ news, onClose }) => {
       const iaRole = side === 'defender' ? 'atacante' : 'defensor';
       const userSide = side === 'defender' ? 'defesa' : 'ataque';
       const iaSide = side === 'defender' ? 'ataque' : 'defesa';
-      const prompt = `Você é um advogado que representa o lado ${iaSide} (adversário) em um debate jurídico sobre a seguinte notícia: "${news.title} - ${news.description}". Argumente de forma convincente, sempre pelo lado oposto ao do usuário, justificando sua posição com base em fundamentos jurídicos, leis, precedentes e estratégias reais de advocacia. Rebata os argumentos do usuário, tente convencer o "juiz" e nunca concorde passivamente. Seja combativo, detalhado e estratégico, como em um tribunal. O usuário está representando o lado ${userSide}.`;
+      const prompt = `Você é um advogado que representa o lado ${iaSide} (adversário) em um debate jurídico sobre o seguinte processo: "${process.title || process.number} - ${process.description || process.court || ''}". Argumente de forma convincente, sempre pelo lado oposto ao do usuário, justificando sua posição com base em fundamentos jurídicos, leis, precedentes e estratégias reais de advocacia. Rebata os argumentos do usuário, tente convencer o "juiz" e nunca concorde passivamente. Seja combativo, detalhado e estratégico, como em um tribunal. O usuário está representando o lado ${userSide}.`;
       const messages = [
         { role: 'system', content: prompt },
         ...updatedChat.map(msg => ({
@@ -111,6 +119,17 @@ const LegalDebateModal = ({ news, onClose }) => {
       const parsed = parseAnalysis(analysisText);
       setFinalAnalysis(parsed);
       setStep(3);
+      // Salvar conversa no Firestore via callback
+      if (onSaveDebate) {
+        await onSaveDebate({
+          name: debateName,
+          processId: process.id,
+          processTitle: process.title || process.number,
+          side,
+          chat,
+          analysis: analysisText,
+        });
+      }
     } catch (err) {
       setFinalAnalysis({
         strengths: 'Erro ao obter análise.',
@@ -119,20 +138,6 @@ const LegalDebateModal = ({ news, onClose }) => {
         verdict: ''
       });
       setStep(3);
-    }
-    // Salvar conversa no Firestore
-    try {
-      const db = getFirestore();
-      await addDoc(collection(db, 'legalDebates'), {
-        name: debateName,
-        news: news,
-        side,
-        chat,
-        analysis: analysisText,
-        createdAt: Timestamp.now()
-      });
-    } catch (e) {
-      // Erro ao salvar, pode logar se quiser
     }
     setLoading(false);
   };
@@ -151,11 +156,14 @@ const LegalDebateModal = ({ news, onClose }) => {
               type="text"
               value={debateName}
               onChange={e => setDebateName(e.target.value)}
-              placeholder="Ex: Debate sobre STF e liberdade de expressão"
+              placeholder="Ex: Debate sobre o processo {process.title || process.number}"
             />
-            <p className="mb-4 text-gray-700">Resumo da notícia:</p>
-            <div className="bg-gray-100 p-3 rounded mb-4 text-sm">{news?.summary || 'Resumo da notícia selecionada.'}</div>
-            <p className="mb-2">Você deseja <span className="font-semibold">defender</span> ou <span className="font-semibold">atacar</span> esta situação?</p>
+            <p className="mb-4 text-gray-700">Resumo do processo:</p>
+            <div className="bg-gray-100 p-3 rounded mb-4 text-sm">
+              <b>{process.title || process.number}</b><br />
+              {process.description || process.court || ''}
+            </div>
+            <p className="mb-2">Você deseja <span className="font-semibold">defender</span> ou <span className="font-semibold">atacar</span> este processo?</p>
             <div className="flex gap-4 mt-2">
               <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={() => handleChooseSide('defender')} disabled={!debateName.trim()}>Defender</button>
               <button className="px-4 py-2 bg-red-600 text-white rounded" onClick={() => handleChooseSide('atacar')} disabled={!debateName.trim()}>Atacar</button>

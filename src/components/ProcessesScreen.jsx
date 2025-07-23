@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import LegalDebateModal from './LegalDebateModal';
+import { getFirestore, collection, addDoc, Timestamp } from 'firebase/firestore';
 import { clientService } from '../firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { caseService } from '../firebase/firestore';
@@ -11,6 +13,27 @@ import { processCalendarIntegration } from '../services/processCalendarIntegrati
 import { appointmentService } from '../firebase/firestore';
 
 const ProcessesScreen = () => {
+  // Estado para modal de debate jurídico
+  const [showDebateModal, setShowDebateModal] = useState(false);
+  const [debateProcess, setDebateProcess] = useState(null);
+
+  // Função para salvar debate no Firestore (associado ao processo)
+  const handleSaveDebate = async (debateData) => {
+    // debateData: { name, side, chat, analysis, processId, processTitle }
+    try {
+      await addDoc(collection(getFirestore(), 'legalDebates'), {
+        name: debateData.name,
+        processId: debateData.processId,
+        processTitle: debateData.processTitle,
+        side: debateData.side,
+        chat: debateData.chat,
+        analysis: debateData.analysis,
+        createdAt: Timestamp.now(),
+      });
+    } catch (e) {
+      alert('Erro ao salvar debate: ' + (e?.message || e));
+    }
+  };
   const { user } = useAuth();
   const [processes, setProcesses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -815,9 +838,36 @@ const ProcessesScreen = () => {
                       <h3 className="text-lg font-semibold text-gray-900">
                         {process.isFromDataJud ? (process.classe?.nome || process.title) : process.title}
                       </h3>
-                      {/* ...existing code... */}
+                      
+                      {/* Botão para debate jurídico */}
+                      <button
+                        className="ml-2 px-3 py-1 bg-yellow-400 text-yellow-900 rounded font-semibold hover:bg-yellow-500 transition-colors text-xs flex items-center gap-1"
+                        onClick={() => {
+                          setDebateProcess(process);
+                          setShowDebateModal(true);
+                        }}
+                        title="Simular debate jurídico deste processo"
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V10a2 2 0 012-2h2" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 16v-4m0 0l-2 2m2-2l2 2" />
+                        </svg>
+                        Debater este processo
+                      </button>
+  
+      {/* Modal de Debate Jurídico */}
+      {showDebateModal && debateProcess && (
+        <LegalDebateModal
+          process={debateProcess}
+          onClose={() => {
+            setShowDebateModal(false);
+            setDebateProcess(null);
+          }}
+          onSaveDebate={handleSaveDebate}
+        />
+      )}
                     </div>
-                    {/* ...existing code... */}
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                       <div>
                         <span className="font-medium text-gray-700">Número:</span>
@@ -874,9 +924,10 @@ const ProcessesScreen = () => {
                           </button>
                         </p>
                       </div>
-                      {/* ...existing code... */}
+      
                     </div>
-                    {/* ...existing code... */}
+                      
+                    
                   </div>
       {/* Modal de associação de cliente */}
       {showAssociateModal && (
