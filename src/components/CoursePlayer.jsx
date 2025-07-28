@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAlunoAuth } from '../contexts/AlunoAuthContext';
 import { notesService } from '../firebase/notesService';
+import { progressoService } from '../firebase/progressoService';
 
 // CoursePlayer: Hotmart/Alura-style course viewer
 // Props: course (object with modules/lessons), onBack (function)
@@ -87,6 +87,28 @@ const CoursePlayer = ({ course, onBack }) => {
       });
     }
   }, [selectedLessonIdx, lessons]);
+
+  // Sincroniza progresso com Firestore
+  useEffect(() => {
+    if (!aluno || !course?.id) return;
+    progressoService.getProgresso({ alunoId: aluno.uid, cursoId: course.id }).then(res => {
+      if (res.success && Array.isArray(res.aulasConcluidas)) {
+        setCompletedLessons(res.aulasConcluidas);
+      }
+    });
+    // eslint-disable-next-line
+  }, [aluno, course?.id]);
+
+  // Salva progresso ao marcar aula como concluída
+  useEffect(() => {
+    if (!aluno || !course?.id) return;
+    progressoService.saveProgresso({
+      alunoId: aluno.uid,
+      cursoId: course.id,
+      aulasConcluidas: Array.from(new Set(completedLessons))
+    });
+    // eslint-disable-next-line
+  }, [completedLessons]);
 
   return (
     <div className="flex flex-col md:flex-row min-h-[80vh] bg-gray-100">

@@ -87,16 +87,26 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
     }
   }, [propSalesData, searchParams]);
 
-  // Atualiza produtosDetalhes se vier por prop
+  // Atualiza produtosDetalhes se vier por prop (apenas se não for preview)
   useEffect(() => {
-    if (propSalesData && propSalesData.produtosSelecionados && propSalesData.produtosSelecionados.length > 0) {
-      console.log('IDs recebidos (prop):', propSalesData.produtosSelecionados);
+    if (
+      propSalesData &&
+      propSalesData.produtosSelecionados &&
+      propSalesData.produtosSelecionados.length > 0 &&
+      !isPreview
+    ) {
       courseService.getCoursesByIds(propSalesData.produtosSelecionados).then(result => {
-        console.log('Produtos retornados (prop):', result);
         if (result.success) setProdutosDetalhes(result.data);
       });
+    } else if (
+      isPreview &&
+      propSalesData &&
+      Array.isArray(propSalesData.produtosDetalhes) &&
+      propSalesData.produtosDetalhes.length > 0
+    ) {
+      setProdutosDetalhes(propSalesData.produtosDetalhes);
     }
-  }, [propSalesData]);
+  }, [propSalesData, isPreview]);
 
   useEffect(() => {
     if (salesData?.userId && !isPreview) {

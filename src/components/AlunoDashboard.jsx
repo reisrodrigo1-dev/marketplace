@@ -3,6 +3,8 @@ import { useAlunoAuth } from '../contexts/AlunoAuthContext';
 import { alunoService } from '../firebase/alunoService';
 import CoursePlayer from './CoursePlayer';
 import { courseService } from '../firebase/courseService';
+import AlunoCourseCard from './AlunoCourseCard';
+import { progressoService } from '../firebase/progressoService';
 
 // Dashboard do Aluno: mostra cursos comprados e acesso por página
 const AlunoDashboard = ({ paginaId }) => {
@@ -90,58 +92,107 @@ function getYoutubeEmbedUrl(url) {
     );
   }
 
+  // Função para simular progresso (substitua por real futuramente)
+  function getProgressoDoCurso(acesso) {
+    // Exemplo: progresso fake aleatório
+    // return Math.floor(Math.random() * 100);
+    // TODO: buscar progresso real do aluno neste curso
+    return acesso.progresso || 0;
+  }
+
+  // Busca progresso real de todos os cursos do aluno
+  const [progressoCursos, setProgressoCursos] = useState({});
+  useEffect(() => {
+    async function fetchProgresso() {
+      if (!aluno || !acessos.length) return;
+      const progressoObj = {};
+      for (const acesso of acessos) {
+        // Busca estrutura do curso para contar aulas
+        const result = await courseService.getCoursesByIds([acesso.cursoId]);
+        if (result.success && result.data.length > 0) {
+          const course = result.data[0];
+          const allLessonIds = (course.sections || []).flatMap(sec => (sec.lessons || []).map(lesson => lesson.id));
+          const res = await progressoService.getProgresso({ alunoId: aluno.uid, cursoId: acesso.cursoId });
+          const concluidas = (res.aulasConcluidas || []).filter(id => allLessonIds.includes(id));
+          progressoObj[acesso.id] = allLessonIds.length ? Math.round((concluidas.length / allLessonIds.length) * 100) : 0;
+        } else {
+          progressoObj[acesso.id] = 0;
+        }
+      }
+      setProgressoCursos(progressoObj);
+    }
+    fetchProgresso();
+    // eslint-disable-next-line
+  }, [aluno, acessos]);
+
   return (
     <div className="max-w-5xl mx-auto py-10 px-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-700">
+          <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-700 border-4 border-yellow-300 shadow-lg">
             {aluno.displayName?.[0] || aluno.email[0]}
           </div>
           <div className="text-left">
-            <div className="font-bold text-lg text-blue-900">{aluno.displayName || aluno.email}</div>
-            <div className="text-gray-600 text-sm">{aluno.email}</div>
+            <div className="font-bold text-2xl text-blue-900 mb-1">Olá, {aluno.displayName || aluno.email}!</div>
+            <div className="text-gray-600 text-sm mb-1">{aluno.email}</div>
             <button className="text-xs text-blue-700 underline mt-1" onClick={() => setShowProfile(v => !v)}>
               {showProfile ? 'Ocultar Perfil' : 'Ver Perfil'}
             </button>
           </div>
         </div>
-        <button
-          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300"
-          onClick={logout}
-        >
-          Sair
-        </button>
+        <div className="flex flex-col items-end gap-2">
+          <button
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300"
+            onClick={logout}
+          >
+            Sair
+          </button>
+          <a href="#" className="text-xs text-blue-600 underline hover:text-blue-800">Precisa de ajuda?</a>
+        </div>
       </div>
       {showProfile && (
-        <div className="bg-gray-50 border rounded-lg p-4 mb-8 text-left">
-          <div><span className="font-semibold">Nome:</span> {aluno.displayName || 'Não informado'}</div>
-          <div><span className="font-semibold">Email:</span> {aluno.email}</div>
-          <div><span className="font-semibold">ID do Aluno:</span> {aluno.uid}</div>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8 text-left animate-fade-in">
+          <div className="mb-1"><span className="font-semibold">Nome:</span> {aluno.displayName || 'Não informado'}</div>
+          <div className="mb-1"><span className="font-semibold">Email:</span> {aluno.email}</div>
+          <div className="mb-1"><span className="font-semibold">ID do Aluno:</span> {aluno.uid}</div>
         </div>
       )}
-      <h2 className="text-2xl font-bold mb-6 text-blue-900">Meus Cursos nesta Página</h2>
+      <h2 className="text-2xl font-bold mb-6 text-blue-900 flex items-center gap-2">
+        <span className="material-icons text-yellow-400 text-3xl">school</span>
+        Meus Cursos nesta Página
+      </h2>
       {loading ? (
-        <div className="text-center text-gray-500">Carregando...</div>
+        <div className="text-center text-gray-500 animate-pulse">Carregando...</div>
       ) : acessos.length === 0 ? (
         <div className="text-center text-gray-600">Você ainda não possui cursos nesta página.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {acessos.map(acesso => (
-            <div key={acesso.id} className="bg-white rounded-lg shadow border p-6 flex flex-col justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{acesso.cursoTitulo}</h3>
-                <p className="text-gray-700 text-sm mb-2">{acesso.cursoDescricao}</p>
-                <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium mb-2">Acesso concedido em {new Date(acesso.dataAcesso).toLocaleDateString('pt-BR')}</span>
+        <>
+          {/* Conquistas e feedback visual */}
+          <div className="mb-8 flex flex-wrap gap-4 items-center">
+            {acessos.filter(a => (a.progresso || 0) >= 100).length > 0 && (
+              <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold flex items-center gap-2 animate-bounce-in">
+                <span className="material-icons text-green-500">emoji_events</span>
+                Parabéns! Você concluiu {acessos.filter(a => (a.progresso || 0) >= 100).length} curso(s) 🎉
               </div>
-              <button
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 text-center"
-                onClick={() => setSelectedCourse(acesso)}
-              >
-                Acessar Curso
-              </button>
-            </div>
-          ))}
-        </div>
+            )}
+            {/* Espaço para alertas de novidades, promoções, etc. */}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {acessos.map(acesso => {
+              const progresso = progressoCursos[acesso.id] ?? 0;
+              const concluido = progresso >= 100;
+              return (
+                <AlunoCourseCard
+                  key={acesso.id}
+                  acesso={acesso}
+                  progresso={progresso}
+                  concluido={concluido}
+                  onContinue={() => setSelectedCourse(acesso)}
+                />
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

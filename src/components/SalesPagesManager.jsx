@@ -6,6 +6,7 @@ import InviteNotifications from './InviteNotifications';
 import CollaboratorAccess from './CollaboratorAccess';
 import CollaborationManager from './CollaborationManager';
 import CollaboratorManager from './CollaboratorManager';
+import Modal from './Modal';
 
 export default function SalesPagesManager() {
   const [showBuilder, setShowBuilder] = useState(false);
@@ -62,21 +63,7 @@ export default function SalesPagesManager() {
 
       {/* Main content */}
       <div className="grid grid-cols-1 gap-6">
-        {showBuilder ? (
-          <SalesPageBuilder
-            onBack={() => { setShowBuilder(false); setEditingPage(null); }}
-            editingPage={editingPage}
-            onPageUpdated={async (id) => {
-              // Atualiza a lista após edição
-              const userId = user?.uid;
-              if (!userId) return;
-              const result = await salesPageService.getUserSalesPages(userId);
-              if (result.success) setSalesPages(result.data);
-              setShowBuilder(false);
-              setEditingPage(null);
-            }}
-          />
-        ) : salesPages.length === 0 ? (
+        {showBuilder ? null : salesPages.length === 0 ? (
           <div className="text-center py-10">
             <h2 className="text-lg font-semibold text-gray-800">
               Nenhuma página de vendas encontrada
@@ -133,6 +120,31 @@ export default function SalesPagesManager() {
           ))
         )}
       </div>
+
+      <Modal isOpen={showBuilder} onClose={() => { setShowBuilder(false); setEditingPage(null); }} title={editingPage ? 'Editar Página de Vendas' : 'Criar Página de Vendas'}>
+        <SalesPageBuilder
+          onBack={() => { setShowBuilder(false); setEditingPage(null); }}
+          editingPage={editingPage}
+          onPageCreated={async (id) => {
+            // Atualiza a lista após criação
+            const userId = user?.uid;
+            if (!userId) return;
+            const result = await salesPageService.getUserSalesPages(userId);
+            if (result.success) setSalesPages(result.data);
+            setShowBuilder(false);
+            setEditingPage(null);
+          }}
+          onPageUpdated={async (id) => {
+            // Atualiza a lista após edição
+            const userId = user?.uid;
+            if (!userId) return;
+            const result = await salesPageService.getUserSalesPages(userId);
+            if (result.success) setSalesPages(result.data);
+            setShowBuilder(false);
+            setEditingPage(null);
+          }}
+        />
+      </Modal>
     </div>
   );
 }
