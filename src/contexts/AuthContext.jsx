@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
             const basicUserData = {
               name: firebaseUser.displayName || 'Usuário',
               email: firebaseUser.email,
-              userType: userType || 'cliente', // Usa o tipo recebido, não força cliente
+              userType: 'cliente',
               profilePicture: firebaseUser.photoURL
             };
             
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
           const fallbackData = {
             name: firebaseUser.displayName || 'Usuário',
             email: firebaseUser.email,
-            userType: userType || 'cliente', // Usa o tipo recebido, não força cliente
+            userType: 'cliente',
             profilePicture: firebaseUser.photoURL
           };
           setUserData(fallbackData);
