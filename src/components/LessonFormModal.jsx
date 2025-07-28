@@ -1,14 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function LessonFormModal({ isOpen, onClose, onSave, initialData }) {
-  const [title, setTitle] = useState(initialData?.title || '');
-  const [youtubeUrl, setYoutubeUrl] = useState(initialData?.youtubeUrl || '');
-  const [description, setDescription] = useState(initialData?.description || '');
-  const [pdfUrl, setPdfUrl] = useState(initialData?.pdfUrl || '');
-  const [quizQuestion, setQuizQuestion] = useState(initialData?.quizQuestion || '');
-  const [quizOptions, setQuizOptions] = useState(initialData?.quizOptions || Array(5).fill(''));
-  const [quizCorrect, setQuizCorrect] = useState(initialData?.quizCorrect ?? null);
+  const [title, setTitle] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [description, setDescription] = useState('');
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [quizQuestion, setQuizQuestion] = useState('');
+  const [quizOptions, setQuizOptions] = useState(Array(5).fill(''));
+  const [quizCorrect, setQuizCorrect] = useState(null);
   const [showYoutubePreview, setShowYoutubePreview] = useState(false);
+
+  useEffect(() => {
+    setTitle(initialData?.title || '');
+    setYoutubeUrl(initialData?.youtubeUrl || '');
+    setDescription(initialData?.description || '');
+    setPdfUrl(initialData?.pdfUrl || '');
+    setQuizQuestion(initialData?.quizQuestion || '');
+    setQuizOptions(initialData?.quizOptions || Array(5).fill(''));
+    setQuizCorrect(initialData?.quizCorrect ?? null);
+  }, [initialData, isOpen]);
 
   const handleOptionChange = (idx, value) => {
     const newOptions = [...quizOptions];

@@ -50,7 +50,21 @@ const salesPageService = {
       const q = query(collection(db, 'salesPages'), where('slug', '==', slug), limit(1));
       const querySnapshot = await getDocs(q);
       if (!querySnapshot.empty) {
-        return { success: true, data: querySnapshot.docs[0].data() };
+        return { success: true, data: { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() } };
+      }
+      return { success: false, error: 'Página não encontrada.' };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Buscar página de vendas por id
+  async getSalesPageById(id) {
+    try {
+      const docRef = doc(db, 'salesPages', id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { success: true, data: { id: docSnap.id, ...docSnap.data() } };
       }
       return { success: false, error: 'Página não encontrada.' };
     } catch (error) {

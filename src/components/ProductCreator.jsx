@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,6 +16,7 @@ const courseSchema = z.object({
 });
 
 export default function ProductCreator({ faseada }) {
+  const { user } = useAuth();
   const [coverUrl, setCoverUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,8 +50,9 @@ export default function ProductCreator({ faseada }) {
           coverUrl: imageUrl || editCourse.coverUrl,
           priceOriginal: data.priceOriginal,
           priceSale: data.priceSale,
+          userId: user?.uid || editCourse.userId || '',
         });
-        setCourses((prev) => prev.map(c => c.id === editCourse.id ? { ...editCourse, title: data.title, description: data.description, coverUrl: imageUrl || editCourse.coverUrl, priceOriginal: data.priceOriginal, priceSale: data.priceSale } : c));
+        setCourses((prev) => prev.map(c => c.id === editCourse.id ? { ...editCourse, title: data.title, description: data.description, coverUrl: imageUrl || editCourse.coverUrl, priceOriginal: data.priceOriginal, priceSale: data.priceSale, userId: user?.uid || editCourse.userId || '' } : c));
         setEditCourse(null);
       } else {
         // Criar novo curso completo
@@ -62,6 +65,7 @@ export default function ProductCreator({ faseada }) {
           status: 'rascunho',
           sections: [],
           createdAt: new Date(),
+          userId: user?.uid || '',
         };
         const docRef = await addDoc(collection(db, 'courses'), newCourseObj);
         const newCourse = {
@@ -98,6 +102,8 @@ export default function ProductCreator({ faseada }) {
     setShowCreateForm(true);
     setValue('title', course.title);
     setValue('description', course.description);
+    setValue('priceOriginal', course.priceOriginal ?? '');
+    setValue('priceSale', course.priceSale ?? '');
     setCoverUrl(course.coverUrl || '');
   }
 
@@ -164,7 +170,10 @@ export default function ProductCreator({ faseada }) {
           {error && <p className="text-red-500 mt-2">{error}</p>}
         </form>
         {/* Gerenciar módulos/seções do curso */}
-        <CourseManager course={editCourse} onUpdateCourse={setEditCourse} />
+        <CourseManager course={editCourse} onUpdateCourse={updated => {
+          setEditCourse(updated);
+          setCourses(prev => prev.map(c => c.id === updated.id ? updated : c));
+        }} />
       </div>
     );
   }
@@ -266,7 +275,7 @@ export default function ProductCreator({ faseada }) {
                           <h3 className="text-lg font-semibold text-gray-900">{course.title}</h3>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${course.status === 'rascunho' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>{course.status === 'rascunho' ? 'Rascunho' : 'Publicado'}</span>
                         </div>
-                        <p className="text-sm text-gray-600">{course.description}</p>
+                        <p className="text-sm text-gray-600 line-clamp-2 max-w-xs" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis'}}>{course.description}</p>
                         <div className="flex gap-2 mt-1">
                           {course.priceOriginal && (
                             <span className="text-gray-400 line-through">R$ {course.priceOriginal}</span>
@@ -290,6 +299,18 @@ export default function ProductCreator({ faseada }) {
                         </svg>
                         Excluir
                       </button>
+                      <button
+                        onClick={async () => {
+                          const db = getFirestore();
+                          const newStatus = course.status === 'publicado' ? 'rascunho' : 'publicado';
+                          await updateDoc(doc(db, 'courses', course.id), { status: newStatus });
+                          setCourses(prev => prev.map(c => c.id === course.id ? { ...c, status: newStatus } : c));
+                        }}
+                        className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium font-bold transition ${course.status === 'publicado' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                        title={course.status === 'publicado' ? 'Despublicar' : 'Publicar'}
+                      >
+                        {course.status === 'publicado' ? 'Despublicar' : 'Publicar'}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -307,9 +328,16 @@ export default function ProductCreator({ faseada }) {
       <h2 className="text-4xl font-bold mb-10 text-blue-600 font-inter-bold text-center">{editCourse ? 'Editar Curso' : 'Criar Novo Curso'}</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
         <div>
-          <label className="block font-bold mb-3 text-xl text-gray-800 font-inter-bold">Título do Curso</label>
-          <input {...register('title')} className="w-full border-2 border-blue-300 rounded-xl px-5 py-4 text-xl focus:ring-2 focus:ring-blue-400 font-inter-medium bg-blue-50 placeholder:text-blue-300" placeholder="Ex: Direito Empresarial na Prática" />
-          {errors.title && <p className="text-red-500 text-base mt-2">{errors.title.message}</p>}
+          <label htmlFor="course-title" className="block font-bold mb-3 text-xl text-gray-800 font-inter-bold">Título do Curso</label>
+          <input
+            id="course-title"
+            {...register('title')}
+            className="w-full border-2 border-blue-300 rounded-xl px-5 py-4 text-xl focus:ring-2 focus:ring-blue-400 font-inter-medium bg-blue-50 placeholder:text-blue-300"
+            placeholder="Ex: Direito Empresarial na Prática"
+            aria-invalid={!!errors.title}
+            aria-describedby={errors.title ? 'course-title-error' : undefined}
+          />
+          {errors.title && <p id="course-title-error" className="text-red-500 text-base mt-2">{errors.title.message}</p>}
         </div>
         <div>
           <label className="block font-bold mb-3 text-xl text-gray-800 font-inter-bold">Descrição</label>
