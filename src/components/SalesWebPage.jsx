@@ -169,11 +169,15 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Cronômetro de oferta */}
-      <div className="w-full bg-black text-white py-4 flex flex-col items-center justify-center gap-2">
+      {/* Cronômetro de oferta, urgência e escassez */}
+      <div className="w-full bg-black text-white py-4 flex flex-col items-center justify-center gap-2" role="region" aria-label="Oferta especial">
         <div className="flex items-center gap-4">
-          <span className="text-2xl font-mono font-bold tracking-widest">{countdown}</span>
+          <span className="text-2xl font-mono font-bold tracking-widest" aria-live="polite">{countdown}</span>
           <span className="text-lg font-semibold">Oferta especial expira em 30 minutos!</span>
+        </div>
+        <div className="flex flex-col md:flex-row items-center gap-3 mt-2">
+          <span className="bg-red-600 text-white px-4 py-2 rounded-full font-bold animate-pulse" aria-live="polite">Apenas 7 vagas restantes!</span>
+          <span className="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-full font-bold animate-pulse">23 pessoas estão vendo agora</span>
         </div>
         <span
           className="mt-3 font-bold rounded-2xl px-10 py-5 shadow-lg text-center block"
@@ -272,6 +276,41 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
         </section>
       )}
 
+      {/* Seção de Benefícios */}
+      <section className="py-10 bg-blue-50 border-b border-blue-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h3 className="text-2xl font-bold text-blue-900 mb-6">Por que escolher este produto?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex flex-col items-center text-center">
+              <span className="text-4xl mb-2" role="img" aria-label="Acesso imediato">⚡</span>
+              <span className="font-semibold text-blue-800">Acesso imediato</span>
+              <span className="text-sm text-blue-700 mt-1">Comece a aprender assim que finalizar sua inscrição.</span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <span className="text-4xl mb-2" role="img" aria-label="Certificado">🎓</span>
+              <span className="font-semibold text-blue-800">Certificado reconhecido</span>
+              <span className="text-sm text-blue-700 mt-1">Receba certificado válido ao concluir o curso.</span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <span className="text-4xl mb-2" role="img" aria-label="Suporte">🤝</span>
+              <span className="font-semibold text-blue-800">Suporte dedicado</span>
+              <span className="text-sm text-blue-700 mt-1">Equipe pronta para tirar suas dúvidas rapidamente.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Seção de Garantia */}
+      <section className="py-10 bg-green-50 border-b border-green-100">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-3 bg-white border border-green-200 rounded-lg px-6 py-4 shadow">
+            <span className="text-3xl" role="img" aria-label="Garantia">✅</span>
+            <span className="text-lg font-bold text-green-800">7 dias de garantia incondicional</span>
+          </div>
+          <p className="mt-4 text-green-700">Se não ficar satisfeito, devolvemos 100% do seu dinheiro. Sem perguntas.</p>
+        </div>
+      </section>
+
       {/* Seção de Produtos */}
       <section className="py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -323,6 +362,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
                 lineHeight: 1.2,
                 ...pulseStyle
               }}
+              tabIndex="0"
             >
               {randomCtas[2]}
             </span>
@@ -331,7 +371,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8">
+      <footer className="bg-gray-900 text-white py-8" role="contentinfo">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-400">
             © {new Date().getFullYear()} {nomePagina}. Todos os direitos reservados.
@@ -341,6 +381,11 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
           </p>
         </div>
       </footer>
+
+      {/* SEO e Performance: meta tags e lazy loading */}
+      {/* Para Next.js/React Helmet, mas exemplo para React puro: */}
+      {typeof document !== 'undefined' && document.title !== (titulo || nomePagina) && (document.title = (titulo || nomePagina))}
+      {/* Imagens já usam lazy loading nativo em navegadores modernos, mas pode-se adicionar loading="lazy" em imagens grandes se necessário. */}
     </div>
   );
 };

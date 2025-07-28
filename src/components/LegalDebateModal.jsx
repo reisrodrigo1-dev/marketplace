@@ -49,7 +49,12 @@ const LegalDebateModal = ({ process, onClose, onSaveDebate }) => {
       const iaRole = side === 'defender' ? 'atacante' : 'defensor';
       const userSide = side === 'defender' ? 'defesa' : 'ataque';
       const iaSide = side === 'defender' ? 'ataque' : 'defesa';
-      const prompt = `Você é um advogado que representa o lado ${iaSide} (adversário) em um debate jurídico sobre o seguinte processo: "${process.title || process.number} - ${process.description || process.court || ''}". Argumente de forma convincente, sempre pelo lado oposto ao do usuário, justificando sua posição com base em fundamentos jurídicos, leis, precedentes e estratégias reais de advocacia. Rebata os argumentos do usuário, tente convencer o "juiz" e nunca concorde passivamente. Seja combativo, detalhado e estratégico, como em um tribunal. O usuário está representando o lado ${userSide}.`;
+      // Prompt ajustado para debate de processo: IA só pode usar informações do processo, não inventar fatos
+      let prompt = `Você é um advogado que representa o lado ${iaSide} (adversário) em um debate jurídico sobre o seguinte processo. Avalie e debata apenas com base nas informações fornecidas abaixo. Não invente fatos, dados ou argumentos que não estejam presentes no contexto. Seja objetivo, profissional e fundamente sua argumentação apenas no que está descrito.\n\nContexto do processo:\nTítulo: ${process.title || process.number}\nDescrição: ${process.description || process.court || ''}`;
+      if (process.classe?.nome) prompt += `\nClasse: ${process.classe.nome}`;
+      if (process.assuntos?.length) prompt += `\nAssuntos: ${process.assuntos.map(a => a.nome).join(', ')}`;
+      if (process.movimentos?.length) prompt += `\nMovimentos: ${process.movimentos.map(m => m.nome).join(', ')}`;
+      prompt += `\n\nDebate:`;
       const messages = [
         { role: 'system', content: prompt },
         ...updatedChat.map(msg => ({
@@ -128,6 +133,7 @@ const LegalDebateModal = ({ process, onClose, onSaveDebate }) => {
           side,
           chat,
           analysis: analysisText,
+          debateType: 'process',
         });
       }
     } catch (err) {

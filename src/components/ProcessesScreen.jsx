@@ -838,7 +838,6 @@ const ProcessesScreen = () => {
                       <h3 className="text-lg font-semibold text-gray-900">
                         {process.isFromDataJud ? (process.classe?.nome || process.title) : process.title}
                       </h3>
-                      
                       {/* Botão para debate jurídico */}
                       <button
                         className="ml-2 px-3 py-1 bg-yellow-400 text-yellow-900 rounded font-semibold hover:bg-yellow-500 transition-colors text-xs flex items-center gap-1"
@@ -854,7 +853,18 @@ const ProcessesScreen = () => {
                         </svg>
                         Debater este processo
                       </button>
-  
+                      {/* Botão consultar pasta do processo */}
+                      <button
+                        className="ml-2 px-3 py-1 bg-gray-200 text-gray-800 rounded font-semibold hover:bg-gray-300 transition-colors text-xs flex items-center gap-1"
+                        title="Consultar pasta do processo"
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4h16v16H4V4z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 8h8v8H8V8z" />
+                        </svg>
+                        Consultar pasta do processo
+                      </button>
+
       {/* Modal de Debate Jurídico */}
       {showDebateModal && debateProcess && (
         <LegalDebateModal

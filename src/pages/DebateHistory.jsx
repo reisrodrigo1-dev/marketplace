@@ -64,7 +64,13 @@ const DebateHistory = () => {
                 <span className="ml-auto text-xs text-gray-500">{debate.createdAt?.toDate ? debate.createdAt.toDate().toLocaleString('pt-BR') : ''}</span>
               </div>
               <div className="text-gray-700 text-sm mt-1">
-                <span className="font-semibold">Notícia:</span> {debate.news?.title || ''}
+                <span className="font-semibold">Tipo:</span> {debate.debateType === 'process' ? 'Processo' : 'Notícia'}
+                {debate.debateType === 'process' ? (
+                  <span className="ml-4 font-semibold">Processo:</span>
+                ) : (
+                  <span className="ml-4 font-semibold">Notícia:</span>
+                )}
+                {debate.debateType === 'process' ? (debate.processTitle || debate.processId) : (debate.news?.title || '')}
                 <span className="ml-4 font-semibold">Lado:</span> {debate.side}
               </div>
               {openId === debate.id && (
