@@ -62,7 +62,11 @@ export default function ProductsScreen() {
               <div key={prod.id} className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 flex flex-col justify-between hover:shadow-xl transition-shadow">
                 <div>
                   <h3 className="text-xl font-bold text-blue-700 mb-2">{prod.nome || prod.titulo}</h3>
-                  <p className="text-gray-600 mb-3">{prod.descricao}</p>
+                  <p className="text-gray-600 mb-3">
+                    {prod.descricao && prod.descricao.length > 120 
+                      ? `${prod.descricao.substring(0, 120)}...` 
+                      : prod.descricao}
+                  </p>
                   {prod.preco && (
                     <p className="text-green-700 font-semibold mb-2">Preço: R$ {prod.preco}</p>
                   )}
