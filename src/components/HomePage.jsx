@@ -4,7 +4,7 @@ import Header from './Header';
 import Hero from './Hero';
 import FindLawyerSection from './FindLawyerSection';
 import Solutions from './Solutions';
-import Blog from './Blog';
+// import Blog from './Blog';
 import HowTo from './HowTo';
 import Footer from './Footer';
 import NewsList from './NewsList';
@@ -68,24 +68,8 @@ const HomePage = () => {
       <Hero />
       <FindLawyerSection />
       <Solutions />
-      <Blog />
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2">
-          <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold text-blue-600">Notícias</h2>
-              <button
-                className="px-4 py-2 bg-yellow-400 text-blue-900 font-semibold rounded shadow hover:bg-yellow-300 transition"
-                onClick={handleOpenManualDebate}
-              >
-                O QUE VC FARIA?
-              </button>
-            </div>
-            <p className="text-gray-700 mt-1 text-base">Principais manchetes jurídicas dsdsdo momento</p>
-          </div>
-        </div>
-        <NewsList />
-      </div>
+      {/* <Blog /> Removido conforme solicitado */}
+      {/* Seção de Notícias e botão 'O QUE VC FARIA?' removidos conforme solicitado */}
       <HowTo />
       <Footer />
       {showManualDebate && (

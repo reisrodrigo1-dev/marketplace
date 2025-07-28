@@ -53,6 +53,9 @@ const Header = ({ onLoginClick, showBackButton = false, onBackClick }) => {
               <a href="/debate-history" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
                 HISTÓRICO DE DEBATES
               </a>
+              <a href="/minha-pagina-de-vendas" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
+                MINHA PÁGINA DE VENDAS
+              </a>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -162,6 +165,9 @@ const Header = ({ onLoginClick, showBackButton = false, onBackClick }) => {
                 </a>
                 <a href="/debate-history" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
                   HISTÓRICO DE DEBATES
+                </a>
+                <a href="/minha-pagina-de-vendas" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
+                  MINHA PÁGINA DE VENDAS
                 </a>
                 
                 <div className="pt-2 space-y-2">

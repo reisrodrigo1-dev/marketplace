@@ -10,10 +10,12 @@ import DireitoHubFlix from './DireitoHubFlix';
 import UltimasNoticiasFlix from './UltimasNoticiasFlix';
 import UserProfile from './UserProfile';
 import LawyerPagesManager from './LawyerPagesManager';
+import SalesPageManager from './SalesPageManager';
 import LawyerAppointments from './LawyerAppointments';
 import ClientsScreen from './ClientsScreen';
 import FinancialDashboardWithPermissions from './FinancialDashboardWithPermissions';
 import FinancialTest from './FinancialTest';
+import ProductCreator from './ProductCreator';
 import FinancesPage from './FinancesPage';
 import UserCodeDisplay from './UserCodeDisplay';
 
@@ -366,6 +368,38 @@ const AdminDashboard = () => {
                 Página do Advogado
               </button>
               
+              {/* Novo Dropdown 'Criador de Conteúdo' */}
+              <div className="relative group">
+                <button
+                  className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
+                    activeTab === 'content-creator' 
+                      ? 'bg-yellow-100 text-yellow-700' 
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20h9" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Criador de Conteúdo
+                  <svg className="w-4 h-4 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <div className="absolute left-0 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity z-10">
+                  <button
+                    onClick={() => setActiveTab('meus-produtos')}
+                    className={`w-full text-left px-4 py-2 text-sm font-inter-medium rounded-lg hover:bg-yellow-50 ${activeTab === 'meus-produtos' ? 'bg-yellow-100 text-yellow-700' : 'text-gray-700'}`}
+                  >Meus Produtos</button>
+                  <button
+                    onClick={() => setActiveTab('minha-pagina-vendas')}
+                    className={`w-full text-left px-4 py-2 text-sm font-inter-medium rounded-lg hover:bg-yellow-50 ${activeTab === 'minha-pagina-vendas' ? 'bg-yellow-100 text-yellow-700' : 'text-gray-700'}`}
+                  >Minha Página de Vendas</button>
+                  <button
+                    onClick={() => setActiveTab('financeiro')}
+                    className={`w-full text-left px-4 py-2 text-sm font-inter-medium rounded-lg hover:bg-yellow-50 ${activeTab === 'financeiro' ? 'bg-yellow-100 text-yellow-700' : 'text-gray-700'}`}
+                  >Financeiro</button>
+                </div>
+              </div>
+              
               <button
                 onClick={() => setActiveTab('financial')}
                 className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
@@ -516,6 +550,10 @@ const AdminDashboard = () => {
           {activeTab === 'lawyer-pages' && (
             <LawyerPagesManager onBack={() => setActiveTab('dashboard')} />
           )}
+
+          {activeTab === 'minha-pagina-vendas' && (
+            <SalesPageManager onBack={() => setActiveTab('dashboard')} />
+          )}
           
           {activeTab === 'appointments' && (
             <LawyerAppointments />
@@ -523,6 +561,10 @@ const AdminDashboard = () => {
           
           {activeTab === 'financial' && (
             <FinancesPage />
+          )}
+
+          {activeTab === 'meus-produtos' && (
+            <ProductCreator faseada enableLessonsPerModule />
           )}
         </div>
       </div>

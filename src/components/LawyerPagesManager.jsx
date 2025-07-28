@@ -337,7 +337,7 @@ const LawyerPagesManager = ({ onBack }) => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Gerenciar Páginas do Advogado</h1>
               <p className="text-gray-600 mt-1">
-                Crie e gerencie suas páginas profissionais personalizadas
+                Crie e gserencie suas páginas profissionais personalizadas
               </p>
             </div>
             <div className="flex items-center space-x-4">

@@ -12,6 +12,10 @@ import ClientLogin from './components/ClientLogin';
 import LawyerPageDebug from './components/LawyerPageDebug';
 import RouteTest from './components/RouteTest';
 import SlugMatcher from './components/SlugMatcher';
+import SalesPagesManager from './components/SalesPagesManager';
+import SalesWebPage from './components/SalesWebPage';
+import SalesPageDebug from './components/SalesPageDebug';
+import SalesPageBuilder from './components/SalesPageBuilder';
 
 // Componente para proteger rotas de dashboard
 const DashboardRoute = ({ userType }) => {
@@ -91,6 +95,13 @@ function App() {
           
           {/* Análise de slug - TEMPORÁRIO */}
           <Route path="/slug-matcher/:slug" element={<SlugMatcher />} />
+          
+          {/* Página Minha Página de Vendas */}
+          <Route path="/minha-pagina-de-vendas" element={<SalesPagesManager />} />
+          {/* Exemplo: outras rotas para os componentes duplicados */}
+          <Route path="/minha-pagina-de-vendas/web" element={<SalesWebPage />} />
+          <Route path="/minha-pagina-de-vendas/debug" element={<SalesPageDebug />} />
+          <Route path="/minha-pagina-de-vendas/builder" element={<SalesPageBuilder />} />
         </Routes>
       </Router>
     </AuthProvider>
