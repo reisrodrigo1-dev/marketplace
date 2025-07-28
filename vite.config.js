@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -7,9 +8,16 @@ export default defineConfig({
   server: {
     port: 5173,
     host: '0.0.0.0',
+    strictPort: false,
     allowedHosts: 'all',
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': '*',
+      'Access-Control-Allow-Headers': '*'
+    },
     hmr: {
       clientPort: 443,
+      host: 'localhost'
     },
     proxy: {
       '/api/datajud': {
@@ -21,5 +29,10 @@ export default defineConfig({
         }
       }
     }
+  },
+  preview: {
+    port: 5173,
+    host: '0.0.0.0',
+    strictPort: false
   }
 })
