@@ -9,7 +9,13 @@ export default defineConfig({
     port: 5173,
     host: '0.0.0.0',
     strictPort: false,
-    allowedHosts: 'all',
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '0.0.0.0',
+      '.replit.dev',
+      'a2813bf1-b224-4756-abe5-622334e68e03-00-33etfl79b10ns.picard.replit.dev'
+    ],
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': '*',
@@ -33,6 +39,16 @@ export default defineConfig({
   preview: {
     port: 5173,
     host: '0.0.0.0',
-    strictPort: false
+    strictPort: false,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '0.0.0.0',
+      '.replit.dev',
+      'a2813bf1-b224-4756-abe5-622334e68e03-00-33etfl79b10ns.picard.replit.dev'
+    ]
+  },
+  define: {
+    global: 'globalThis'
   }
 })
