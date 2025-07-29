@@ -345,6 +345,7 @@ export default function SalesPagesManager() {
                             </div>
                           </div>
                         </div>
+                      </div>
                     
 
                     {/* Métricas */}
