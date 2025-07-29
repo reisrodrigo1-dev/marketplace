@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAlunoAuth } from '../contexts/AlunoAuthContext';
 import { alunoService } from '../firebase/alunoService';
 import { courseService } from '../firebase/courseService';
@@ -9,7 +9,8 @@ import AlunoCourseCard from './AlunoCourseCard';
 import { progressoService } from '../firebase/progressoService';
 
 const SalesPageAlunoDashboard = () => {
-  const { paginaId } = useParams();
+  const [searchParams] = useSearchParams();
+  const paginaId = searchParams.get('paginaId');
   const { aluno, logout } = useAlunoAuth();
   const [acessos, setAcessos] = useState([]);
   const [loading, setLoading] = useState(true);
