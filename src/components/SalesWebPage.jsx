@@ -223,12 +223,21 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
     titulo,
     descricao,
     corPrincipal,
+    corSecundaria,
+    corDestaque,
     videos = [],
     contatoWhatsapp,
     contatoEmail,
     imagemCapa,
     logoUrl
   } = pageData;
+
+  // Cores padrão caso não estejam definidas
+  const cores = {
+    principal: corPrincipal || '#6366f1',
+    secundaria: corSecundaria || '#8b5cf6', 
+    destaque: corDestaque || '#10b981'
+  };
 
   const getYoutubeId = (url) => {
     if (!url) return '';
@@ -245,7 +254,10 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
   return (
     <div className="min-h-screen bg-white">
       {/* Barra de Urgência Fixa */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-red-600 to-red-700 text-white py-2 shadow-lg">
+      <div 
+        className="fixed top-0 left-0 right-0 z-50 text-white py-2 shadow-lg"
+        style={{ background: `linear-gradient(to right, ${cores.principal}, ${cores.secundaria})` }}
+      >
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-center gap-2 text-center">
           <div className="flex items-center gap-2">
             <span className="animate-pulse text-yellow-300">🔥</span>
@@ -269,14 +281,23 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
       <div className="h-16 md:h-12"></div>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white py-20 relative overflow-hidden">
+      <section 
+        className="text-white py-20 relative overflow-hidden"
+        style={{ background: `linear-gradient(135deg, #1f2937, ${cores.principal}aa, #1f2937)` }}
+      >
         <div className="absolute inset-0 bg-black opacity-30"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             
             {/* Badge de Credibilidade */}
-            <div className="inline-flex items-center bg-blue-600/20 border border-blue-400/30 rounded-full px-6 py-2 mb-6">
-              <span className="text-blue-300 mr-2">✓</span>
+            <div 
+              className="inline-flex items-center rounded-full px-6 py-2 mb-6"
+              style={{ 
+                backgroundColor: `${cores.principal}20`, 
+                border: `1px solid ${cores.principal}30` 
+              }}
+            >
+              <span className="mr-2" style={{ color: `${cores.principal}` }}>✓</span>
               <span className="text-sm font-medium">
                 {pageData.heroBadge || 'Mais de 1.000 advogados transformaram suas carreiras'}
               </span>
@@ -328,8 +349,17 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
             <div className="text-center">
               <button 
                 onClick={() => handleComprar(mainProduct)}
-                className="inline-block bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold text-xl px-12 py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden"
-                style={pulseStyle}
+                className="inline-block text-white font-bold text-xl px-12 py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden"
+                style={{
+                  background: `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`,
+                  ...pulseStyle
+                }}
+                onMouseEnter={e => {
+                  e.target.style.background = `linear-gradient(to right, ${cores.principal}, ${cores.destaque})`;
+                }}
+                onMouseLeave={e => {
+                  e.target.style.background = `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`;
+                }}
               >
                 <span className="relative z-10">
                   {randomCtas[0]}
@@ -359,25 +389,25 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
           {/* Números de Impacto */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
             <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">
+              <div className="text-4xl font-bold mb-2" style={{ color: cores.principal }}>
                 {pageData.provaSocial?.numeroAdvogados || '1.247'}
               </div>
               <div className="text-gray-600">Advogados Formados</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">
+              <div className="text-4xl font-bold mb-2" style={{ color: cores.destaque }}>
                 {pageData.provaSocial?.honorariosGerados || 'R$ 2.3M'}
               </div>
               <div className="text-gray-600">Em Honorários Gerados</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-purple-600 mb-2">
+              <div className="text-4xl font-bold mb-2" style={{ color: cores.secundaria }}>
                 {pageData.provaSocial?.taxaSatisfacao || '94%'}
               </div>
               <div className="text-gray-600">Taxa de Satisfação</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-orange-600 mb-2">
+              <div className="text-4xl font-bold mb-2" style={{ color: cores.principal }}>
                 {pageData.provaSocial?.tempoResultado || '30 dias'}
               </div>
               <div className="text-gray-600">Média p/ 1º Resultado</div>
@@ -455,8 +485,17 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
             <div className="text-center mt-12">
               <button 
                 onClick={() => handleComprar(mainProduct)}
-                className="inline-block bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-xl px-10 py-5 rounded-xl shadow-xl transform hover:scale-105 transition-all duration-300"
-                style={pulseStyle}
+                className="inline-block text-white font-bold text-xl px-10 py-5 rounded-xl shadow-xl transform hover:scale-105 transition-all duration-300"
+                style={{
+                  background: `linear-gradient(to right, ${cores.principal}, ${cores.secundaria})`,
+                  ...pulseStyle
+                }}
+                onMouseEnter={e => {
+                  e.target.style.background = `linear-gradient(to right, ${cores.secundaria}, ${cores.principal})`;
+                }}
+                onMouseLeave={e => {
+                  e.target.style.background = `linear-gradient(to right, ${cores.principal}, ${cores.secundaria})`;
+                }}
               >
                 {randomCtas[1]}
               </button>
@@ -542,7 +581,10 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
       </section>
 
       {/* Seção de Oferta Principal */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 to-blue-900 text-white relative overflow-hidden">
+      <section 
+        className="py-20 text-white relative overflow-hidden"
+        style={{ background: `linear-gradient(135deg, #1f2937, ${cores.principal}dd, ${cores.secundaria}dd, #1f2937)` }}
+      >
         <div className="absolute inset-0 bg-black opacity-40"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
@@ -575,7 +617,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
                           </span>
                         )}
                         {produto.priceSale && (
-                          <span className="text-4xl font-bold text-yellow-400">
+                          <span className="text-4xl font-bold" style={{ color: cores.destaque }}>
                             R$ {Number(produto.priceSale).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                           </span>
                         )}
@@ -589,8 +631,17 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
 
                     <button
                       onClick={() => handleComprar(produto)}
-                      className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold text-xl py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
-                      style={pulseStyle}
+                      className="w-full text-white font-bold text-xl py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
+                      style={{
+                        background: `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`,
+                        ...pulseStyle
+                      }}
+                      onMouseEnter={e => {
+                        e.target.style.background = `linear-gradient(to right, ${cores.principal}, ${cores.destaque})`;
+                      }}
+                      onMouseLeave={e => {
+                        e.target.style.background = `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`;
+                      }}
                     >
                       {randomCtas[2]}
                     </button>
@@ -620,8 +671,17 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
 
                 <button
                   onClick={() => handleComprar({})}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold text-xl py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
-                  style={pulseStyle}
+                  className="w-full text-white font-bold text-xl py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
+                  style={{
+                    background: `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`,
+                    ...pulseStyle
+                  }}
+                  onMouseEnter={e => {
+                    e.target.style.background = `linear-gradient(to right, ${cores.principal}, ${cores.destaque})`;
+                  }}
+                  onMouseLeave={e => {
+                    e.target.style.background = `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`;
+                  }}
                 >
                   {randomCtas[2]}
                 </button>
@@ -727,8 +787,17 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
             
             <button
               onClick={() => handleComprar(mainProduct)}
-              className="inline-block bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold text-2xl px-12 py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
-              style={pulseStyle}
+              className="inline-block text-white font-bold text-2xl px-12 py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
+              style={{
+                background: `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`,
+                ...pulseStyle
+              }}
+              onMouseEnter={e => {
+                e.target.style.background = `linear-gradient(to right, ${cores.principal}, ${cores.destaque})`;
+              }}
+              onMouseLeave={e => {
+                e.target.style.background = `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`;
+              }}
             >
               {randomCtas[3]}
             </button>

@@ -56,6 +56,9 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
     titulo: '',
     descricao: '',
     produtosSelecionados: [],
+    corPrincipal: '#6366f1',
+    corSecundaria: '#8b5cf6',
+    corDestaque: '#10b981',
   };
 
   const initialFormData = isEditing ? {
@@ -92,7 +95,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
   const [videoError, setVideoError] = useState('');
 
   const validateStep1 = () => !!formData.nomePagina;
-  const validateStep2 = () => !!formData.corPrincipal;
+  const validateStep2 = () => !!formData.corPrincipal && !!formData.corSecundaria && !!formData.corDestaque;
   const validateStep3 = () => true;
   const validateStep4 = () => formData.produtosSelecionados.length > 0;
 
@@ -322,33 +325,111 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
                     </svg>
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">Personalização Visual</h3>
-                  <p className="text-gray-600">Escolha a cor principal da sua página</p>
+                  <p className="text-gray-600">Escolha as cores da sua página de vendas</p>
                 </div>
 
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-8">
-                  <div className="flex justify-center">
-                    <label className="flex flex-col items-center cursor-pointer group">
-                      <div 
-                        className="w-24 h-24 rounded-full border-4 border-white shadow-2xl mb-4 flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
-                        style={{ background: formData.corPrincipal || '#6366f1' }}
-                      >
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
-                        </svg>
-                      </div>
-                      <input
-                        type="color"
-                        className="w-16 h-12 border-2 border-gray-200 rounded-lg cursor-pointer"
-                        value={formData.corPrincipal || '#6366f1'}
-                        onChange={e => handleInputChange('corPrincipal', e.target.value)}
-                      />
-                      <span className="text-sm font-semibold text-gray-700 mt-3">Clique para escolher</span>
-                    </label>
+                <div className="space-y-6">
+                  {/* Cor Principal */}
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
+                    <h4 className="text-lg font-bold mb-4 text-gray-800">Cor Principal</h4>
+                    <p className="text-sm text-gray-600 mb-4">Esta cor será usada nos botões principais e elementos de destaque</p>
+                    <div className="flex justify-center">
+                      <label className="flex flex-col items-center cursor-pointer group">
+                        <div 
+                          className="w-20 h-20 rounded-full border-4 border-white shadow-lg mb-3 flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                          style={{ background: formData.corPrincipal || '#6366f1' }}
+                        >
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
+                          </svg>
+                        </div>
+                        <input
+                          type="color"
+                          className="w-14 h-10 border-2 border-gray-200 rounded-lg cursor-pointer"
+                          value={formData.corPrincipal || '#6366f1'}
+                          onChange={e => handleInputChange('corPrincipal', e.target.value)}
+                        />
+                      </label>
+                    </div>
                   </div>
-                  {!formData.corPrincipal && (
-                    <div className="text-red-500 text-sm mt-4 text-center font-medium">Escolha uma cor para sua página</div>
-                  )}
+
+                  {/* Cor Secundária */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6">
+                    <h4 className="text-lg font-bold mb-4 text-gray-800">Cor Secundária</h4>
+                    <p className="text-sm text-gray-600 mb-4">Usada em gradientes e elementos de apoio</p>
+                    <div className="flex justify-center">
+                      <label className="flex flex-col items-center cursor-pointer group">
+                        <div 
+                          className="w-20 h-20 rounded-full border-4 border-white shadow-lg mb-3 flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                          style={{ background: formData.corSecundaria || '#8b5cf6' }}
+                        >
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        </div>
+                        <input
+                          type="color"
+                          className="w-14 h-10 border-2 border-gray-200 rounded-lg cursor-pointer"
+                          value={formData.corSecundaria || '#8b5cf6'}
+                          onChange={e => handleInputChange('corSecundaria', e.target.value)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Cor de Destaque */}
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6">
+                    <h4 className="text-lg font-bold mb-4 text-gray-800">Cor de Destaque</h4>
+                    <p className="text-sm text-gray-600 mb-4">Para preços, ofertas especiais e chamadas de ação</p>
+                    <div className="flex justify-center">
+                      <label className="flex flex-col items-center cursor-pointer group">
+                        <div 
+                          className="w-20 h-20 rounded-full border-4 border-white shadow-lg mb-3 flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+                          style={{ background: formData.corDestaque || '#10b981' }}
+                        >
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                        </div>
+                        <input
+                          type="color"
+                          className="w-14 h-10 border-2 border-gray-200 rounded-lg cursor-pointer"
+                          value={formData.corDestaque || '#10b981'}
+                          onChange={e => handleInputChange('corDestaque', e.target.value)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Preview das Cores */}
+                  <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
+                    <h4 className="text-lg font-bold mb-4 text-gray-800">Preview das Cores</h4>
+                    <div className="flex items-center justify-center space-x-4">
+                      <div className="text-center">
+                        <div 
+                          className="w-16 h-16 rounded-lg shadow-md mb-2"
+                          style={{ background: `linear-gradient(135deg, ${formData.corPrincipal || '#6366f1'}, ${formData.corSecundaria || '#8b5cf6'})` }}
+                        ></div>
+                        <span className="text-xs text-gray-600">Gradiente Principal</span>
+                      </div>
+                      <div className="text-center">
+                        <div 
+                          className="w-16 h-16 rounded-lg shadow-md mb-2 flex items-center justify-center text-white font-bold"
+                          style={{ background: formData.corDestaque || '#10b981' }}
+                        >
+                          R$ 497
+                        </div>
+                        <span className="text-xs text-gray-600">Preço/CTA</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {(!formData.corPrincipal || !formData.corSecundaria || !formData.corDestaque) && (
+                  <div className="text-red-500 text-sm mt-4 text-center font-medium">
+                    Escolha todas as cores para sua página
+                  </div>
+                )}
               </div>
             )}
 
