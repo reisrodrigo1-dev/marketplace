@@ -17,6 +17,8 @@ import SalesPagesManager from './components/SalesPagesManager';
 import SalesWebPage from './components/SalesWebPage';
 import SalesPageDebug from './components/SalesPageDebug';
 import SalesPageBuilder from './components/SalesPageBuilder';
+import SalesPageAlunoLogin from './components/SalesPageAlunoLogin';
+import SalesPageAlunoDashboard from './components/SalesPageAlunoDashboard';
 import AlunoDashboard from './components/AlunoDashboard';
 
 // Componente para proteger rotas de dashboard
@@ -106,8 +108,12 @@ function App() {
             <Route path="/minha-pagina-de-vendas/debug" element={<SalesPageDebug />} />
             <Route path="/minha-pagina-de-vendas/builder" element={<SalesPageBuilder />} />
             
-            {/* Rota protegida para o dashboard do aluno por página */}
-            <Route path="/minha-pagina-de-vendas/aluno-dashboard" element={<AlunoDashboardWrapper />} />
+            {/* Rotas para alunos de páginas de vendas */}
+            <Route path="/minha-pagina-de-vendas/aluno-login" element={<SalesPageAlunoLogin />} />
+            <Route path="/minha-pagina-de-vendas/aluno-dashboard" element={<SalesPageAlunoDashboard />} />
+            
+            {/* Rota protegida para o dashboard do aluno por página (compatibilidade) */}
+            <Route path="/minha-pagina-de-vendas/aluno-dashboard-old" element={<AlunoDashboardWrapper />} />
           </Routes>
         </Router>
       </AlunoAuthProvider>

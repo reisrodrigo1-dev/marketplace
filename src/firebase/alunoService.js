@@ -48,5 +48,46 @@ export const alunoService = {
     const snap = await getDocs(q);
     const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     return { success: true, data };
+  },
+
+  // Verifica se um aluno tem acesso a uma página específica
+  async verificarAcessoAluno(alunoId, paginaId) {
+    const q = query(collection(db, COLLECTION), where('alunoId', '==', alunoId), where('paginaId', '==', paginaId));
+    const snap = await getDocs(q);
+    return { success: true, temAcesso: !snap.empty, totalCursos: snap.size };
+  },
+
+  // Lista todos os alunos únicos de uma página (para gestão)
+  async getAlunosUnicosPorPagina(paginaId) {
+    const q = query(collection(db, COLLECTION), where('paginaId', '==', paginaId));
+    const snap = await getDocs(q);
+    const acessos = snap.docs.map(doc => doc.data());
+    
+    // Agrupa por aluno para evitar duplicatas
+    const alunosMap = new Map();
+    acessos.forEach(acesso => {
+      if (!alunosMap.has(acesso.alunoId)) {
+        alunosMap.set(acesso.alunoId, {
+          alunoId: acesso.alunoId,
+          nome: acesso.nome,
+          email: acesso.email,
+          totalCursos: 0,
+          primeiroAcesso: acesso.dataAcesso,
+          ultimoAcesso: acesso.dataAcesso
+        });
+      }
+      const aluno = alunosMap.get(acesso.alunoId);
+      aluno.totalCursos++;
+      
+      // Atualiza datas
+      if (acesso.dataAcesso < aluno.primeiroAcesso) {
+        aluno.primeiroAcesso = acesso.dataAcesso;
+      }
+      if (acesso.dataAcesso > aluno.ultimoAcesso) {
+        aluno.ultimoAcesso = acesso.dataAcesso;
+      }
+    });
+    
+    return { success: true, data: Array.from(alunosMap.values()) };
   }
 };

@@ -203,7 +203,14 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
 
   const handleAcessarComoAluno = () => {
     if (!salesData?.id) return;
-    navigate(`/minha-pagina-de-vendas/aluno-dashboard?paginaId=${salesData.id}`);
+    
+    // Se o aluno já estiver logado, vai direto para o dashboard
+    if (aluno) {
+      navigate(`/minha-pagina-de-vendas/aluno-dashboard?paginaId=${salesData.id}`);
+    } else {
+      // Se não estiver logado, vai para a tela de login
+      navigate(`/minha-pagina-de-vendas/aluno-login?paginaId=${salesData.id}`);
+    }
   };
 
   if (loading) {
