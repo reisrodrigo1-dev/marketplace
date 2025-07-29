@@ -1,9 +1,5 @@
 
-<old_str>import React from "react";
-
-// Card visual para exibir curso do aluno no dashboard
-// Props: acesso (objeto do curso), onContinue (callback), progresso (0-100), concluido (bool)</old_str>
-<new_str>import React from "react";
+import React from "react";
 
 // Card visual para exibir curso do aluno no dashboard
 // Props: acesso (objeto do curso), onContinue (callback), progresso (0-100), concluido (bool)
@@ -113,4 +109,6 @@ const AlunoCourseCard = ({ acesso, progresso, concluido, onContinue }) => {
       </div>
     </div>
   );
-};</new_str>
+};
+
+export default AlunoCourseCard;
