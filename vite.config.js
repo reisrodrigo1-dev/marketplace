@@ -23,7 +23,9 @@ export default defineConfig({
     },
     hmr: {
       clientPort: 443,
-      host: 'localhost'
+      host: 'localhost',
+      timeout: 10000,
+      overlay: false
     },
     proxy: {
       '/api/datajud': {
