@@ -40,7 +40,7 @@ const DashboardRoute = ({ userType }) => {
     if (currentUserType === 'cliente') {
       window.location.href = '/dashboard-cliente';
     } else {
-      window.location.href = '/dashboard-advogado';
+      window.location.href = '/dashboard-criador';
     }
     return null;
   }
@@ -66,7 +66,7 @@ function App() {
           <Route path="/login-cliente" element={<ClientLogin />} />
           
           {/* Rotas de dashboard específicas */}
-          <Route path="/dashboard-advogado" element={<DashboardRoute userType="advogado" />} />
+          <Route path="/dashboard-criador" element={<DashboardRoute userType="advogado" />} />
           <Route path="/dashboard-cliente" element={<DashboardRoute userType="cliente" />} />
           
           {/* Página pública do advogado */}

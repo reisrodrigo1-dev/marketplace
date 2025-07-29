@@ -27,8 +27,8 @@ const DashboardRoute = ({ userType }) => {
     // Redirecionar para login apropriado se não autenticado
     if (userType === 'cliente') {
       window.location.href = '/login-cliente';
-    } else {
-      window.location.href = '/login-advogado';
+            } else {
+              window.location.href = '/login-criador';
     }
     return null;
   }
@@ -40,7 +40,7 @@ const DashboardRoute = ({ userType }) => {
     if (currentUserType === 'cliente') {
       window.location.href = '/dashboard-cliente';
     } else {
-      window.location.href = '/dashboard-advogado';
+      window.location.href = '/dashboard-criador';
     }
     return null;
   }
@@ -62,15 +62,15 @@ function App() {
           <Route path="/" element={<UserTypeSelection />} />
           
           {/* Rotas de login específicas */}
-          <Route path="/login-advogado" element={<LawyerLogin />} />
+          <Route path="/login-criador" element={<LawyerLogin />} />
           <Route path="/login-cliente" element={<ClientLogin />} />
           
           {/* Rotas de dashboard específicas */}
-          <Route path="/dashboard-advogado" element={<DashboardRoute userType="advogado" />} />
+          <Route path="/dashboard-criador" element={<DashboardRoute userType="advogado" />} />
           <Route path="/dashboard-cliente" element={<DashboardRoute userType="cliente" />} />
           
           {/* Página pública do advogado */}
-          <Route path="/advogado/:slug" element={<PublicLawyerPage />} />
+          <Route path="/criador/:slug" element={<PublicLawyerPage />} />
           
           {/* Rota legada - redireciona para seleção */}
           <Route path="/home" element={<UserTypeSelection />} />

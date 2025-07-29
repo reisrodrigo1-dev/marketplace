@@ -54,10 +54,10 @@ const LawyerLogin = () => {
           return;
         }
 
-        const result = await register(formData.email, formData.password, formData.name, 'advogado');
+        const result = await register(formData.email, formData.password, formData.name, 'criador');
         if (result.success) {
           setSuccess('Conta criada com sucesso! Redirecionando...');
-          setTimeout(() => navigate('/dashboard-advogado'), 1500);
+          setTimeout(() => navigate('/dashboard-criador'), 1500);
         } else {
           setError(result.error || 'Erro ao criar conta');
         }
@@ -72,7 +72,7 @@ const LawyerLogin = () => {
         const result = await login(formData.email, formData.password);
         if (result.success) {
           setSuccess('Login realizado com sucesso! Redirecionando...');
-          setTimeout(() => navigate('/dashboard-advogado'), 1500);
+          setTimeout(() => navigate('/dashboard-criador'), 1500);
         } else {
           setError(result.error || 'Erro ao fazer login');
         }
@@ -89,10 +89,10 @@ const LawyerLogin = () => {
     setError('');
 
     try {
-      const result = await loginWithGoogle('advogado');
+      const result = await loginWithGoogle('criador');
       if (result.success) {
         setSuccess('Login com Google realizado com sucesso!');
-        setTimeout(() => navigate('/dashboard-advogado'), 1500);
+        setTimeout(() => navigate('/dashboard-criador'), 1500);
       } else {
         setError(result.error || 'Erro ao fazer login com Google');
       }
@@ -116,7 +116,7 @@ const LawyerLogin = () => {
             />
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {isRegisterMode ? 'Cadastro de Advogado' : 'Login - Advogado'}
+            {isRegisterMode ? 'Cadastro de Criador' : 'Login - Criador'}
           </h1>
           <p className="text-gray-600">
             {isRegisterMode 

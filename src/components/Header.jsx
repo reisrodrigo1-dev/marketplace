@@ -35,26 +35,14 @@ const Header = ({ onLoginClick, showBackButton = false, onBackClick }) => {
             </div>
             
             <div className="hidden lg:flex space-x-6">
-              <a href="#sistemas" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
-                SISTEMAS
+              <a href="#artigos" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={e => e.target.style.color = '#0ea5e9'} onMouseLeave={e => e.target.style.color = '#000'}>
+                ARTIGOS
               </a>
-              <a href="#como-se-faz" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
-                COMO SE FAZ
+              <a href="#videos" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={e => e.target.style.color = '#0ea5e9'} onMouseLeave={e => e.target.style.color = '#000'}>
+                VÍDEOS
               </a>
-              <a href="#sites" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
-                SITES PROFISSIONAIS
-              </a>
-              <a href="#mentorias" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
-                MENTORIAS
-              </a>
-              <a href="#ia" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
-                INTELIGÊNCIA ARTIFICIAL
-              </a>
-              <a href="/debate-history" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
-                HISTÓRICO DE DEBATES
-              </a>
-              <a href="/minha-pagina-de-vendas" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={(e) => e.target.style.color = '#001a7f'} onMouseLeave={(e) => e.target.style.color = '#000'}>
-                MINHA PÁGINA DE VENDAS
+              <a href="#autoridade" className="font-inter-semibold text-sm" style={{color: '#000'}} onMouseEnter={e => e.target.style.color = '#0ea5e9'} onMouseLeave={e => e.target.style.color = '#000'}>
+                AUTORIDADE
               </a>
             </div>
             
@@ -148,28 +136,15 @@ const Header = ({ onLoginClick, showBackButton = false, onBackClick }) => {
           {isMobileMenuOpen && (
             <div className="lg:hidden pb-4" style={{borderTop: '1px solid #000'}}>
               <div className="pt-4 space-y-3">
-                <a href="#sistemas" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
-                  SISTEMAS
+                <a href="#artigos" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
+                  ARTIGOS
                 </a>
-                <a href="#como-se-faz" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
-                  COMO SE FAZ
+                <a href="#videos" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
+                  VÍDEOS
                 </a>
-                <a href="#sites" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
-                  SITES PROFISSIONAIS
+                <a href="#autoridade" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
+                  AUTORIDADE
                 </a>
-                <a href="#mentorias" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
-                  MENTORIAS
-                </a>
-                <a href="#ia" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
-                  INTELIGÊNCIA ARTIFICIAL
-                </a>
-                <a href="/debate-history" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
-                  HISTÓRICO DE DEBATES
-                </a>
-                <a href="/minha-pagina-de-vendas" className="block font-medium text-sm px-2 py-1" style={{color: '#000'}}>
-                  MINHA PÁGINA DE VENDAS
-                </a>
-                
                 <div className="pt-2 space-y-2">
                   {isAuthenticated ? (
                     <>

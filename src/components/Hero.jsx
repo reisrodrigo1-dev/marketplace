@@ -6,7 +6,7 @@ const Hero = () => {
       {/* Background Video */}
       <div className="absolute inset-0 opacity-30">
         <video 
-          src="/videos/video_1_direitoHub_HOME.mp4"
+          src="/videos/video_1_Marketplace_HOME.mp4"
           autoPlay
           loop
           muted

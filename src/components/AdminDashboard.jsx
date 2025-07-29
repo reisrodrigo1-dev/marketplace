@@ -78,7 +78,7 @@ const AdminDashboard = () => {
                   alt="DireitoHub" 
                   className="h-12 w-auto mr-3"
                 />
-                <span className="text-xl font-inter-bold text-gray-900">DireitoHub Admin</span>
+                <span className="text-xl font-inter-bold text-gray-900">Marketplace Admin</span>
               </div>
               
               {/* Código do Advogado */}
@@ -211,165 +211,8 @@ const AdminDashboard = () => {
                 </svg>
                 Dashboard
               </button>
-              
-              <button
-                onClick={() => setActiveTab('clients')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'clients' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                </svg>
-                Clientes
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('cases')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'cases' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Processos
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('documents')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'documents' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707L15.586 5.586A1 1 0 0015 5.293V3a2 2 0 00-2-2H7a2 2 0 00-2 2v16a2 2 0 002 2z" />
-                </svg>
-                Documentos
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('agenda')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'agenda' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v16a2 2 0 002 2z" />
-                </svg>
-                Agenda
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('appointments')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'appointments' 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v16a2 2 0 002 2z" />
-                </svg>
-                Agendamentos
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('juri-ai')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'juri-ai' 
-                    ? 'bg-purple-100 text-purple-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                Juri.AI
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('jobs')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'jobs' 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6.5" />
-                </svg>
-                Vagas de Emprego
-              </button>
 
-              {/* Botão para Histórico de Debates Juróticos */}
-              <button
-                onClick={() => setActiveTab('debate-history')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'debate-history'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : 'text-gray-700 hover:bg-yellow-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V10a2 2 0 012-2h2" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 16v-4m0 0l-2 2m2-2l2 2" />
-                </svg>
-                Histórico de Debates
-              </button>
-
-              {/* Botão Últimas Notícias */}
-              <button
-                onClick={() => setActiveTab('news')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'news'
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h4a1 1 0 011 1v5m-6 0V9a1 1 0 011-1h4a1 1 0 011 1v11" />
-                </svg>
-                Últimas Notícias
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('direitohub-flix')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'direitohub-flix' 
-                    ? 'bg-red-100 text-red-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21.8 8s-.195-1.377-.795-1.984c-.76-.797-1.613-.8-2.004-.847-2.799-.203-6.996-.203-6.996-.203h-.01s-4.197 0-6.996.203c-.391.047-1.243.05-2.004.847C2.395 6.623 2.2 8 2.2 8S2 9.62 2 11.24v1.517c0 1.618.2 3.237.2 3.237s.195 1.378.795 1.985c.761.796 1.76.77 2.205.855 1.6.154 6.8.202 6.8.202s4.203-.006 7.001-.209c.391-.047 1.243-.05 2.004-.847.6-.607.795-1.985.795-1.985s.2-1.618.2-3.237v-1.517C22 9.62 21.8 8 21.8 8zM9.935 14.595V9.405l5.403 2.595-5.403 2.595z"/>
-                </svg>
-                DireitoHub Flix
-              </button>
-              
-              <button
-                onClick={() => setActiveTab('lawyer-pages')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'lawyer-pages' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h4a1 1 0 011 1v5m-6 0V9a1 1 0 011-1h4a1 1 0 011 1v11" />
-                </svg>
-                Página do Advogado
-              </button>
-              
-              {/* Novo Dropdown 'Criador de Conteúdo' */}
+              {/* Dropdown 'Criador de Conteúdo' */}
               <div className="relative group">
                 <button
                   className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
@@ -404,20 +247,6 @@ const AdminDashboard = () => {
                   >Gerenciar Alunos</button>
                 </div>
               </div>
-              
-              <button
-                onClick={() => setActiveTab('financial')}
-                className={`w-full flex items-center px-4 py-3 text-sm font-inter-medium rounded-lg transition-colors ${
-                  activeTab === 'financial' 
-                    ? 'bg-yellow-100 text-yellow-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Finanças
-              </button>
             </div>
           </nav>
         </div>

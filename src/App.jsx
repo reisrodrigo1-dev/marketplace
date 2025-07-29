@@ -41,19 +41,19 @@ const DashboardRoute = ({ userType }) => {
     if (userType === 'cliente') {
       window.location.href = '/login-cliente';
     } else {
-      window.location.href = '/login-advogado';
+      window.location.href = '/login-criador';
     }
     return null;
   }
 
   // Verificar se o usuário tem o tipo correto
-  const currentUserType = userData?.userType || 'advogado';
+  const currentUserType = userData?.userType || 'criador';
   if (currentUserType !== userType) {
     // Redirecionar para dashboard correto
     if (currentUserType === 'cliente') {
       window.location.href = '/dashboard-cliente';
     } else {
-      window.location.href = '/dashboard-advogado';
+      window.location.href = '/dashboard-criador';
     }
     return null;
   }
@@ -79,18 +79,18 @@ function App() {
             <Route path="/escolher-perfil" element={<UserTypeSelection />} />
             
             {/* Rotas de login específicas */}
-            <Route path="/login-advogado" element={<LawyerLogin />} />
+            <Route path="/login-criador" element={<LawyerLogin />} />
             <Route path="/login-cliente" element={<ClientLogin />} />
             
             {/* Rotas de dashboard específicas */}
-            <Route path="/dashboard-advogado" element={<DashboardRoute userType="advogado" />} />
+            <Route path="/dashboard-criador" element={<DashboardRoute userType="advogado" />} />
             <Route path="/dashboard-cliente" element={<DashboardRoute userType="cliente" />} />
             
-            {/* Página pública do advogado */}
-            <Route path="/advogado/:slug" element={<PublicLawyerPage />} />
+            {/* Página pública do criador */}
+            <Route path="/criador/:slug" element={<PublicLawyerPage />} />
             
-            {/* Página de busca de advogados */}
-            <Route path="/encontrar-advogado" element={<FindLawyerPage />} />
+            {/* Página de busca de criadores */}
+            <Route path="/encontrar-criador" element={<FindLawyerPage />} />
             
             {/* Debug de páginas - TEMPORÁRIO */}
             <Route path="/debug-paginas" element={<LawyerPageDebug />} />

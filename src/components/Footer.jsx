@@ -10,14 +10,14 @@ const Footer = () => {
             <div className="flex items-center mb-4">
               <img 
                 src="/logo_direitoHub_Branco.png" 
-                alt="DireitoHub" 
+                alt="Marketplace" 
                 className="h-10 w-auto mr-3"
               />
-              <span className="text-2xl font-inter-bold">DireitoHub</span>
+              <span className="text-2xl font-inter-bold">Marketplace</span>
             </div>
             <p className="text-gray-400 mb-6 max-w-md font-inter-regular">
-              Soluções e tecnologia para turbinar a sua advocacia. 
-              Transforme sua prática jurídica com ferramentas modernas e eficientes.
+              Plataforma para criação, publicação e compartilhamento de conteúdo jurídico. 
+              Construa sua autoridade, ensine e inspire outros profissionais do Direito.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-white transition-colors">
@@ -42,11 +42,9 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-inter-semibold mb-4">Links Rápidos</h3>
             <ul className="space-y-2">
-              <li><a href="#sistemas" className="text-gray-400 hover:text-white transition-colors font-inter-medium">Sistemas</a></li>
-              <li><a href="#como-se-faz" className="text-gray-400 hover:text-white transition-colors font-inter-medium">Como se faz</a></li>
-              <li><a href="#sites" className="text-gray-400 hover:text-white transition-colors font-inter-medium">Sites Profissionais</a></li>
-              <li><a href="#mentorias" className="text-gray-400 hover:text-white transition-colors font-inter-medium">Mentorias</a></li>
-              <li><a href="#ia" className="text-gray-400 hover:text-white transition-colors font-inter-medium">Inteligência Artificial</a></li>
+              <li><a href="#artigos" className="text-gray-400 hover:text-white transition-colors font-inter-medium">Artigos</a></li>
+              <li><a href="#videos" className="text-gray-400 hover:text-white transition-colors font-inter-medium">Vídeos</a></li>
+              <li><a href="#autoridade" className="text-gray-400 hover:text-white transition-colors font-inter-medium">Autoridade</a></li>
             </ul>
           </div>
           
@@ -62,7 +60,7 @@ const Footer = () => {
         </div>
         
         <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-          <p className="font-inter-light">&copy; 2025 DireitoHub. Todos os direitos reservados.</p>
+          <p className="font-inter-light">&copy; 2025 Marketplace. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
