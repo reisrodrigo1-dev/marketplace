@@ -59,6 +59,33 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
     selectedDate: null,
     selectedTime: null
   });
+
+  // Utilitários para converter campos string em arrays/objetos
+  function parseBeneficios(raw) {
+    if (!raw) return undefined;
+    return raw.split('\n').map(line => {
+      const [icon, titulo, descricao] = line.split(';');
+      return icon && titulo && descricao ? { icon: icon.trim(), titulo: titulo.trim(), descricao: descricao.trim() } : null;
+    }).filter(Boolean);
+  }
+  function parseDepoimentos(raw) {
+    if (!raw) return undefined;
+    return raw.split('\n').map(line => {
+      const [nome, especialidade, depoimento, iniciais] = line.split(';');
+      return nome && especialidade && depoimento && iniciais ? { nome: nome.trim(), especialidade: especialidade.trim(), depoimento: depoimento.trim(), iniciais: iniciais.trim() } : null;
+    }).filter(Boolean);
+  }
+  function parseBonus(raw) {
+    if (!raw) return undefined;
+    return raw.split('\n').map(line => line.trim()).filter(Boolean);
+  }
+  function parseFAQ(raw) {
+    if (!raw) return undefined;
+    return raw.split('\n').map(line => {
+      const [pergunta, resposta] = line.split(';');
+      return pergunta && resposta ? { pergunta: pergunta.trim(), resposta: resposta.trim() } : null;
+    }).filter(Boolean);
+  }
   const [occupiedSlots, setOccupiedSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(true);
   const navigate = useNavigate();
@@ -225,6 +252,41 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
   }
 
   const pageData = salesData || {};
+  // Parse campos customizados se existirem
+  const beneficios = pageData.beneficios && Array.isArray(pageData.beneficios)
+    ? pageData.beneficios
+    : parseBeneficios(pageData.beneficiosRaw);
+  const depoimentos = pageData.depoimentos && Array.isArray(pageData.depoimentos)
+    ? pageData.depoimentos
+    : parseDepoimentos(pageData.depoimentosRaw);
+  const bonusItens = pageData.bonus?.itens && Array.isArray(pageData.bonus.itens)
+    ? pageData.bonus.itens
+    : parseBonus(pageData.bonusRaw);
+  const faq = pageData.faq && Array.isArray(pageData.faq)
+    ? pageData.faq
+    : parseFAQ(pageData.faqRaw);
+  // Prova social
+  const provaSocial = pageData.provaSocial || {
+    numeroAdvogados: pageData.numeroAdvogados,
+    honorariosGerados: pageData.honorariosGerados,
+    taxaSatisfacao: pageData.taxaSatisfacao,
+    tempoResultado: pageData.tempoResultado,
+    depoimentos: depoimentos
+  };
+  // Garantia
+  const garantia = pageData.garantia || {
+    titulo: pageData.garantiaTitulo,
+    descricao: pageData.garantiaDescricao,
+    dias: pageData.garantiaDias || '7'
+  };
+  // Bônus
+  const bonus = pageData.bonus || {
+    valor: pageData.bonusValor || 'R$ 897',
+    itens: bonusItens
+  };
+  // Videos
+  const videos = pageData.videos || [];
+  // Restante dos campos
   const {
     nomePagina,
     titulo,
@@ -232,7 +294,6 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
     corPrincipal,
     corSecundaria,
     corDestaque,
-    videos = [],
     contatoWhatsapp,
     contatoEmail,
     imagemCapa,
@@ -339,7 +400,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
 
             {/* Benefícios Principais */}
             <div className="grid md:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
-              {(pageData.beneficios && pageData.beneficios.length > 0 ? pageData.beneficios : [
+              {(beneficios && beneficios.length > 0 ? beneficios : [
                 { icon: '💰', titulo: 'Aumente Seus Honorários', descricao: 'Multiplique sua receita por 3x em até 6 meses' },
                 { icon: '⚡', titulo: 'Resultados Rápidos', descricao: 'Primeiros resultados em 30 dias' },
                 { icon: '🎯', titulo: 'Método Comprovado', descricao: 'Sistema testado por milhares de advogados' }
@@ -397,25 +458,25 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
             <div className="text-center">
               <div className="text-4xl font-bold mb-2" style={{ color: cores.principal }}>
-                {pageData.provaSocial?.numeroAdvogados || '1.247'}
+                {provaSocial?.numeroAdvogados || '1.247'}
               </div>
               <div className="text-gray-600">Advogados Formados</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold mb-2" style={{ color: cores.destaque }}>
-                {pageData.provaSocial?.honorariosGerados || 'R$ 2.3M'}
+                {provaSocial?.honorariosGerados || 'R$ 2.3M'}
               </div>
               <div className="text-gray-600">Em Honorários Gerados</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold mb-2" style={{ color: cores.secundaria }}>
-                {pageData.provaSocial?.taxaSatisfacao || '94%'}
+                {provaSocial?.taxaSatisfacao || '94%'}
               </div>
               <div className="text-gray-600">Taxa de Satisfação</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold mb-2" style={{ color: cores.principal }}>
-                {pageData.provaSocial?.tempoResultado || '30 dias'}
+                {provaSocial?.tempoResultado || '30 dias'}
               </div>
               <div className="text-gray-600">Média p/ 1º Resultado</div>
             </div>
@@ -423,8 +484,8 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
 
           {/* Depoimentos */}
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {(pageData.provaSocial?.depoimentos && pageData.provaSocial.depoimentos.length > 0 ? 
-              pageData.provaSocial.depoimentos : [
+            {(provaSocial?.depoimentos && provaSocial.depoimentos.length > 0 ? 
+              provaSocial.depoimentos : [
                 { nome: 'Dr. Roberto Silva', especialidade: 'Direito Empresarial', depoimento: 'Em 3 meses aumentei meus honorários em 250%. O método é realmente transformador!', iniciais: 'DR' },
                 { nome: 'Dra. Ana Martins', especialidade: 'Direito Trabalhista', depoimento: 'Consegui me especializar e hoje sou referência na minha área. Recomendo!', iniciais: 'AM' },
                 { nome: 'Dr. Carlos Santos', especialidade: 'Direito Civil', depoimento: 'Método prático e direto ao ponto. Resultados desde a primeira semana!', iniciais: 'CS' }
@@ -702,11 +763,11 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
             {/* Bonificações */}
             <div className="bg-yellow-400 text-gray-900 rounded-2xl p-6 mb-8">
               <h3 className="text-xl font-bold mb-4">
-                🎁 BÔNUS EXCLUSIVOS (Valor: {pageData.bonus?.valor || 'R$ 897'})
+                🎁 BÔNUS EXCLUSIVOS (Valor: {bonus?.valor || 'R$ 897'})
               </h3>
               <div className="grid md:grid-cols-3 gap-4 text-sm">
-                {(pageData.bonus?.itens && pageData.bonus.itens.length > 0 ? 
-                  pageData.bonus.itens : 
+                {(bonus?.itens && bonus.itens.length > 0 ? 
+                  bonus.itens : 
                   ['Planilha de Gestão Financeira', 'Kit Modelos de Contratos', 'Acesso ao Grupo VIP']
                 ).filter(item => item).map((item, idx) => (
                   <div key={idx}>✅ {item}</div>
@@ -725,12 +786,12 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
               <span className="text-5xl">🛡️</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-green-800 mb-6">
-              {pageData.garantia?.titulo || `Garantia Incondicional de ${pageData.garantia?.dias || '7'} Dias`}
+              {garantia?.titulo || `Garantia Incondicional de ${garantia?.dias || '7'} Dias`}
             </h2>
             <p className="text-xl text-green-700 mb-8 leading-relaxed">
-              {pageData.garantia?.descricao || (
+              {garantia?.descricao || (
                 <>
-                  Experimente todo o conteúdo por {pageData.garantia?.dias || '7'} dias. Se não ficar completamente satisfeito, 
+                  Experimente todo o conteúdo por {garantia?.dias || '7'} dias. Se não ficar completamente satisfeito, 
                   devolvemos 100% do seu investimento. <strong>Sem perguntas, sem burocracia.</strong>
                 </>
               )}
@@ -759,7 +820,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
           </div>
 
           <div className="max-w-4xl mx-auto space-y-6">
-            {(pageData.faq && pageData.faq.length > 0 ? pageData.faq : [
+            {(faq && faq.length > 0 ? faq : [
               { pergunta: 'Como funciona o acesso ao curso?', resposta: 'Após a confirmação do pagamento, você recebe imediatamente os dados de acesso à nossa plataforma exclusiva, onde poderá assistir às aulas quantas vezes quiser.' },
               { pergunta: 'Por quanto tempo tenho acesso?', resposta: 'O acesso é vitalício! Você paga uma única vez e tem acesso para sempre, incluindo todas as futuras atualizações do conteúdo.' },
               { pergunta: 'E se eu não conseguir resultados?', resposta: 'Oferecemos garantia incondicional de 7 dias. Se não estiver satisfeito, devolvemos 100% do valor investido, sem questionamentos.' },

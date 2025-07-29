@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// Integração OpenAI
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 import SalesWebPage from './SalesWebPage';
 import { useAuth } from '../contexts/AuthContext';
 import { salesPageService } from '../firebase/salesPageService';
@@ -97,6 +99,11 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
   const [videoInput, setVideoInput] = useState('');
   const [videoLinks, setVideoLinks] = useState(formData.videos || []);
   const [videoError, setVideoError] = useState('');
+  // Estado para modal de exemplo IA
+  const [showIaExample, setShowIaExample] = useState(false);
+  // Estados para integração com IA
+  const [iaLoading, setIaLoading] = useState(false);
+  const [iaError, setIaError] = useState('');
 
   const validateStep1 = () => !!formData.nomePagina;
   const validateStep2 = () => !!formData.corPrincipal && !!formData.corSecundaria && !!formData.corDestaque;
@@ -138,6 +145,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
     setCurrentStep((prev) => (prev > 1 ? prev - 1 : prev));
   };
 
+  // Corrige para permitir até a etapa 5 (Preview)
   const nextStep = () => {
     setCurrentStep((prev) => (prev < 5 ? prev + 1 : prev));
   };
@@ -439,6 +447,168 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
 
             {currentStep === 3 && (
               <div className="space-y-8">
+                {/* Briefing IA + Botão */}
+                <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl p-6">
+                  <label className="block text-lg font-bold mb-3 text-gray-800">Briefing para IA (descreva seu curso)</label>
+                  <div className="flex flex-col md:flex-row gap-2 mb-2">
+                    <textarea
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-yellow-100 focus:border-yellow-500 transition-all duration-200"
+                      placeholder="Descreva o curso, público, benefícios, bônus, resultados, etc."
+                      value={formData.iaBriefing || ''}
+                      onChange={e => handleInputChange('iaBriefing', e.target.value)}
+                      rows={4}
+                    />
+                    <button
+                      type="button"
+                      className="md:w-40 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-semibold border border-blue-200 hover:bg-blue-200 transition-all"
+                      onClick={() => setShowIaExample((v) => !v)}
+                    >
+                      {showIaExample ? 'Ocultar exemplo' : 'Ver exemplo'}
+                    </button>
+                  </div>
+                  {showIaExample && (
+                    <div className="mt-2 bg-gray-50 border border-blue-200 rounded-xl p-4 text-sm text-gray-800 whitespace-pre-line">
+                      <strong>Exemplo de briefing:</strong>
+                      <br />
+                      Curso completo de Processo Civil voltado para advogados iniciantes e atuantes que querem dominar a prática processual e aumentar seus honorários.
+
+Com linguagem clara e foco total na prática forense, o curso é ministrado pelo Prof. Dr. Marcelo Oliveira, advogado com mais de 20 anos de experiência na área cível, mestre em Processo Civil e autor de livros jurídicos.
+
+Formato: 100% online, com aulas gravadas e ao vivo, simulados com correção, plantão de dúvidas, modelos prontos de peças processuais e acesso por 1 ano.
+
+Certificação: 60h com validade nacional.
+
+Já impactamos mais de 3.500 advogados em todo o Brasil, com uma taxa de satisfação de 98,7%. Muitos alunos relatam ter triplicado seus honorários após aplicar os conhecimentos.
+
+Bônus inclusos:
+Banco de peças processuais (atualizado)
+E-book com mapas mentais de toda a matéria
+Sessão de mentoria coletiva
+
+Investimento: de R$ 997 por apenas R$ 397 à vista ou em até 12x.
+
+Garantia de 7 dias. Acesse sem risco e veja se é pra você!
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className="mt-2 px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white rounded-xl font-bold shadow hover:scale-105 transition-all disabled:opacity-60"
+                    disabled={!formData.iaBriefing || iaLoading}
+                    onClick={async () => {
+                {/* Modal de exemplo IA */}
+                {showIaExample && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-8 relative">
+                      <button
+                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl font-bold"
+                        onClick={() => setShowIaExample(false)}
+                        aria-label="Fechar"
+                      >×</button>
+                      <h2 className="text-xl font-bold mb-4 text-blue-900">Exemplo de Briefing para IA</h2>
+                      <pre className="bg-gray-100 rounded-lg p-4 text-sm whitespace-pre-wrap text-gray-800">
+Curso completo de Processo Civil voltado para advogados iniciantes e atuantes que querem dominar a prática processual e aumentar seus honorários.
+
+Com linguagem clara e foco total na prática forense, o curso é ministrado pelo Prof. Dr. Marcelo Oliveira, advogado com mais de 20 anos de experiência na área cível, mestre em Processo Civil e autor de livros jurídicos.
+
+Formato: 100% online, com aulas gravadas e ao vivo, simulados com correção, plantão de dúvidas, modelos prontos de peças processuais e acesso por 1 ano.
+
+Certificação: 60h com validade nacional.
+
+Já impactamos mais de 3.500 advogados em todo o Brasil, com uma taxa de satisfação de 98,7%. Muitos alunos relatam ter triplicado seus honorários após aplicar os conhecimentos.
+
+Bônus inclusos:
+
+Banco de peças processuais (atualizado)
+
+E-book com mapas mentais de toda a matéria
+
+Sessão de mentoria coletiva
+
+Investimento: de R$ 997 por apenas R$ 397 à vista ou em até 12x.
+
+Garantia de 7 dias. Acesse sem risco e veja se é pra você!
+                      </pre>
+                    </div>
+                  </div>
+                )}
+// ...existing code...
+// Estado para modal de exemplo IA
+const [showIaExample, setShowIaExample] = useState(false);
+                      setIaLoading(true);
+                      setIaError('');
+                      try {
+                        const prompt = `Você é um copywriter especialista em páginas de vendas de cursos online. Com base no briefing abaixo, gere um JSON com os seguintes campos: heroBadge_text, heroTitle_text, heroSubtitle_text, beneficios_mock (array de strings), ctaPrincipal_text, provaSocial_numeroAdvogados, provaSocial_honorariosGerados, provaSocial_taxaSatisfacao, provaSocial_tempoResultado, depoimentos_mock (array de objetos com nome, texto), videosSection_title, videosSection_subtitle, beneficiosDetalhados_mock (array de strings), ofertaEspecial_badge, produto_mock_title, produto_mock_description, produto_mock_priceOriginal, produto_mock_priceSale, produto_mock_discount, produto_mock_cta, produto_mock_infoPagamento, bonus_mock (array de bônus, com nome e descrição), garantia_titulo, garantia_descricao, garantia_lista (array de tópicos), faq_mock (array com objetos {pergunta, resposta}), ultimaChance_title, ultimaChance_subtitle, ultimaChance_infoPreco. Responda apenas com o JSON.\n\nBriefing:\n${formData.iaBriefing}`;
+                        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${OPENAI_API_KEY}`
+                          },
+                          body: JSON.stringify({
+                            model: 'gpt-4',
+                            messages: [
+                              { role: 'system', content: 'Você é um copywriter especialista em páginas de vendas de cursos online.' },
+                              { role: 'user', content: prompt }
+                            ],
+                            temperature: 0.7,
+                            max_tokens: 1800
+                          })
+                        });
+                        const data = await response.json();
+                        let content = data.choices?.[0]?.message?.content || '';
+                        // Tenta extrair JSON
+                        let json;
+                        try {
+                          json = JSON.parse(content);
+                        } catch {
+                          // Tenta extrair JSON de resposta "formatada"
+                          const match = content.match(/\{[\s\S]*\}/);
+                          if (match) json = JSON.parse(match[0]);
+                        }
+                        if (!json) throw new Error('Não foi possível interpretar a resposta da IA.');
+                        // Preenche campos do formulário
+                        setFormData(prev => ({
+                          ...prev,
+                          heroBadge: json.heroBadge_text,
+                          heroTitle: json.heroTitle_text,
+                          heroSubtitle: json.heroSubtitle_text,
+                          beneficiosRaw: (json.beneficios_mock || []).join('\n'),
+                          ctaPrincipal: json.ctaPrincipal_text,
+                          numeroAdvogados: json.provaSocial_numeroAdvogados,
+                          honorariosGerados: json.provaSocial_honorariosGerados,
+                          taxaSatisfacao: json.provaSocial_taxaSatisfacao,
+                          tempoResultado: json.provaSocial_tempoResultado,
+                          depoimentosRaw: (json.depoimentos_mock || []).map(dep => `${dep.nome||''};${dep.texto||''}`).join('\n'),
+                          videosSectionTitle: json.videosSection_title,
+                          videosSectionSubtitle: json.videosSection_subtitle,
+                          beneficiosDetalhadosRaw: (json.beneficiosDetalhados_mock || []).join('\n'),
+                          ofertaEspecialBadge: json.ofertaEspecial_badge,
+                          produtoTitle: json.produto_mock_title,
+                          produtoDescription: json.produto_mock_description,
+                          produtoPriceOriginal: json.produto_mock_priceOriginal,
+                          produtoPriceSale: json.produto_mock_priceSale,
+                          produtoDiscount: json.produto_mock_discount,
+                          produtoCta: json.produto_mock_cta,
+                          produtoInfoPagamento: json.produto_mock_infoPagamento,
+                          bonusRaw: (json.bonus_mock || []).map(b => `${b.nome||''};${b.descricao||''}`).join('\n'),
+                          garantiaTitulo: json.garantia_titulo,
+                          garantiaDescricao: json.garantia_descricao,
+                          garantiaListaRaw: (json.garantia_lista || []).join('\n'),
+                          faqRaw: (json.faq_mock || []).map(f => `${f.pergunta||''};${f.resposta||''}`).join('\n'),
+                          ultimaChanceTitle: json.ultimaChance_title,
+                          ultimaChanceSubtitle: json.ultimaChance_subtitle,
+                          ultimaChanceInfoPreco: json.ultimaChance_infoPreco
+                        }));
+                      } catch (err) {
+                        setIaError('Erro ao gerar com IA: ' + (err.message || err));
+                      }
+                      setIaLoading(false);
+                    }}
+                  >
+                    {iaLoading ? 'Gerando...' : 'Gerar Página com IA'}
+                  </button>
+                  {iaError && <div className="text-red-600 text-sm mt-2">{iaError}</div>}
+                </div>
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -446,32 +616,119 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
                     </svg>
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">Conteúdo da Página</h3>
-                  <p className="text-gray-600">Adicione textos e vídeos que engajam seus visitantes</p>
+                  <p className="text-gray-600">Adicione textos, benefícios, depoimentos, provas sociais, bônus, garantia, FAQ e vídeos para engajar seus visitantes</p>
                 </div>
 
                 <div className="space-y-6">
+                  {/* Estados para IA */}
+                  {/* ...existing code... */}
+                  {/* Hero Badge */}
                   <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6">
-                    <label className="block text-lg font-bold mb-3 text-gray-800">Título de Destaque</label>
+                    <label className="block text-lg font-bold mb-3 text-gray-800">Hero Badge</label>
                     <input
                       type="text"
                       className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
-                      placeholder="Ex: Transforme sua carreira com nossos cursos!"
-                      value={formData.titulo}
-                      onChange={e => handleInputChange('titulo', e.target.value)}
+                      placeholder="Ex: Mais de 1.000 advogados transformaram suas carreiras"
+                      value={formData.heroBadge || ''}
+                      onChange={e => handleInputChange('heroBadge', e.target.value)}
                     />
                   </div>
-
+                  {/* Hero Title */}
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6">
+                    <label className="block text-lg font-bold mb-3 text-gray-800">Hero Title</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
+                      placeholder="Ex: Transforme sua carreira jurídica em 90 Dias"
+                      value={formData.heroTitle || ''}
+                      onChange={e => handleInputChange('heroTitle', e.target.value)}
+                    />
+                  </div>
+                  {/* Hero Subtitle */}
                   <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-                    <label className="block text-lg font-bold mb-3 text-gray-800">Descrição/Texto de Apresentação</label>
+                    <label className="block text-lg font-bold mb-3 text-gray-800">Hero Subtitle</label>
                     <textarea
                       className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
-                      placeholder="Conte um pouco sobre sua página, seus diferenciais, etc."
-                      value={formData.descricao}
-                      onChange={e => handleInputChange('descricao', e.target.value)}
-                      rows={4}
+                      placeholder="Ex: Descubra o método comprovado que está transformando advogados comuns em especialistas requisitados no mercado jurídico"
+                      value={formData.heroSubtitle || ''}
+                      onChange={e => handleInputChange('heroSubtitle', e.target.value)}
+                      rows={2}
                     />
                   </div>
-
+                  {/* Benefícios (array) */}
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6">
+                    <label className="block text-lg font-bold mb-3 text-gray-800">Benefícios (um por linha, formato: emoji;Título;Descrição)</label>
+                    <textarea
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
+                      placeholder={"Ex:\n💰;Aumente Seus Honorários;Multiplique sua receita por 3x em até 6 meses\n⚡;Resultados Rápidos;Primeiros resultados em 30 dias"}
+                      value={formData.beneficiosRaw || ''}
+                      onChange={e => handleInputChange('beneficiosRaw', e.target.value)}
+                      rows={4}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">Separe cada benefício por linha. Exemplo: 💰;Aumente Seus Honorários;Multiplique sua receita por 3x em até 6 meses</p>
+                  </div>
+                  {/* Depoimentos (array) */}
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
+                    <label className="block text-lg font-bold mb-3 text-gray-800">Depoimentos (um por linha, formato: Nome;Especialidade;Depoimento;Iniciais)</label>
+                    <textarea
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
+                      placeholder={"Ex:\nDr. Roberto Silva;Direito Empresarial;Em 3 meses aumentei meus honorários em 250%. O método é realmente transformador!;DR"}
+                      value={formData.depoimentosRaw || ''}
+                      onChange={e => handleInputChange('depoimentosRaw', e.target.value)}
+                      rows={4}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">Separe cada depoimento por linha. Exemplo: Nome;Especialidade;Depoimento;Iniciais</p>
+                  </div>
+                  {/* Prova Social */}
+                  <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-lg font-bold mb-3 text-gray-800">Nº Advogados Formados</label>
+                      <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg" value={formData.numeroAdvogados || ''} onChange={e => handleInputChange('numeroAdvogados', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-lg font-bold mb-3 text-gray-800">Honorários Gerados</label>
+                      <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg" value={formData.honorariosGerados || ''} onChange={e => handleInputChange('honorariosGerados', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-lg font-bold mb-3 text-gray-800">Taxa de Satisfação</label>
+                      <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg" value={formData.taxaSatisfacao || ''} onChange={e => handleInputChange('taxaSatisfacao', e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="block text-lg font-bold mb-3 text-gray-800">Tempo p/ 1º Resultado</label>
+                      <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg" value={formData.tempoResultado || ''} onChange={e => handleInputChange('tempoResultado', e.target.value)} />
+                    </div>
+                  </div>
+                  {/* Bônus (array) */}
+                  <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-xl p-6">
+                    <label className="block text-lg font-bold mb-3 text-gray-800">Bônus (um por linha)</label>
+                    <textarea
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
+                      placeholder={"Ex:\nPlanilha de Gestão Financeira\nKit Modelos de Contratos\nAcesso ao Grupo VIP"}
+                      value={formData.bonusRaw || ''}
+                      onChange={e => handleInputChange('bonusRaw', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  {/* Garantia */}
+                  <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6">
+                    <label className="block text-lg font-bold mb-3 text-gray-800">Título da Garantia</label>
+                    <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg mb-2" value={formData.garantiaTitulo || ''} onChange={e => handleInputChange('garantiaTitulo', e.target.value)} />
+                    <label className="block text-lg font-bold mb-3 text-gray-800">Descrição da Garantia</label>
+                    <textarea className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg" value={formData.garantiaDescricao || ''} onChange={e => handleInputChange('garantiaDescricao', e.target.value)} rows={2} />
+                  </div>
+                  {/* FAQ (array) */}
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6">
+                    <label className="block text-lg font-bold mb-3 text-gray-800">FAQ (um por linha, formato: Pergunta;Resposta)</label>
+                    <textarea
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
+                      placeholder={"Ex:\nComo funciona o acesso ao curso?;Após a confirmação do pagamento, você recebe imediatamente os dados de acesso à nossa plataforma exclusiva, onde poderá assistir às aulas quantas vezes quiser."}
+                      value={formData.faqRaw || ''}
+                      onChange={e => handleInputChange('faqRaw', e.target.value)}
+                      rows={4}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">Separe cada FAQ por linha. Exemplo: Pergunta;Resposta</p>
+                  </div>
+                  {/* Vídeos (YouTube) */}
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
                     <label className="block text-lg font-bold mb-3 text-gray-800">Vídeos (YouTube)</label>
                     <div className="flex gap-3 mb-4">
@@ -512,7 +769,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
               </div>
             )}
 
-            {currentStep === 7 && (
+            {currentStep === 4 && (
               <div className="space-y-8">
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -580,7 +837,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
               </div>
             )}
 
-            {currentStep === 8 && (
+            {currentStep === 5 && (
               <div className="w-full">
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
