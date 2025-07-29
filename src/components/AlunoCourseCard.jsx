@@ -1,9 +1,16 @@
-
 import React from "react";
 
 // Card visual para exibir curso do aluno no dashboard
-// Props: acesso (objeto do curso), onContinue (callback), progresso (0-100), concluido (bool)
-const AlunoCourseCard = ({ acesso, progresso, concluido, onContinue }) => {
+// Props: acesso (objeto do curso), onContinue (callback), progresso (0-100), concluido (bool), pageColors (objeto de cores)
+
+export default function AlunoCourseCard({ acesso, onContinue, progresso = 0, concluido = false, pageColors = null }) {
+  // Cores padrão caso não sejam fornecidas
+  const colors = pageColors || {
+    principal: '#1e40af',
+    secundaria: '#3b82f6',
+    destaque: '#059669'
+  };
+
   const getProgressColor = () => {
     if (concluido) return 'bg-green-500';
     if (progresso > 50) return 'bg-blue-500';
@@ -24,32 +31,45 @@ const AlunoCourseCard = ({ acesso, progresso, concluido, onContinue }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 group">
-      {/* Imagem/Thumbnail do curso */}
-      <div className="relative h-48 bg-gradient-to-br from-blue-400 via-purple-500 to-indigo-600 flex items-center justify-center">
-        {acesso.thumbnail ? (
-          <img 
-            src={acesso.thumbnail} 
-            alt={acesso.titulo}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="text-white text-6xl opacity-80">
-            📚
+    <div 
+      className="group bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border transform hover:-translate-y-1"
+      style={{ 
+        borderColor: concluido ? colors.destaque : colors.principal + '30'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = colors.principal;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = concluido ? colors.destaque : colors.principal + '30';
+      }}
+    >
+      {/* Header do Card */}
+      <div 
+        className="p-4 border-b"
+        style={{ 
+          background: `linear-gradient(135deg, ${colors.principal}08, ${colors.secundaria}08)`,
+          borderBottomColor: colors.principal + '20'
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md"
+            style={{ 
+              background: `linear-gradient(135deg, ${colors.principal}, ${colors.secundaria})` 
+            }}
+          >
+            {acesso.nomeProduto?.[0] || '📚'}
           </div>
-        )}
-        
-        {/* Badge de Status */}
-        <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor()}`}>
-          {getStatusText()}
-        </div>
-
-        {/* Ícone de Play no centro */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-20">
-          <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center shadow-lg">
-            <svg className="w-6 h-6 text-blue-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
+          <div className="flex-1">
+            <h3 className="font-bold text-lg text-gray-800 line-clamp-1 transition-colors group-hover:opacity-80">
+              {acesso.nomeProduto || 'Curso sem nome'}
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">
+              {acesso.compradoEm ? 
+                `Adquirido em ${new Date(acesso.compradoEm.seconds * 1000).toLocaleDateString('pt-BR')}` :
+                'Data não disponível'
+              }
+            </p>
           </div>
         </div>
       </div>
@@ -59,22 +79,32 @@ const AlunoCourseCard = ({ acesso, progresso, concluido, onContinue }) => {
         <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
           {acesso.titulo || 'Curso sem título'}
         </h3>
-        
+
         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
           {acesso.descricao || 'Descrição não disponível'}
         </p>
 
         {/* Barra de Progresso */}
         <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Progresso</span>
-            <span className="text-sm font-bold text-gray-800">{progresso}%</span>
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-gray-600">Progresso do Curso</span>
+            <span 
+              className="text-sm font-bold"
+              style={{ color: concluido ? colors.destaque : colors.principal }}
+            >
+              {progresso}%
+            </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
             <div 
-              className={`h-2 rounded-full transition-all duration-500 ${getProgressColor()}`}
-              style={{ width: `${progresso}%` }}
-            ></div>
+              className="h-full rounded-full transition-all duration-500"
+              style={{ 
+                width: `${Math.min(progresso, 100)}%`,
+                background: concluido 
+                  ? `linear-gradient(135deg, ${colors.destaque}, ${colors.destaque}dd)` 
+                  : `linear-gradient(135deg, ${colors.principal}, ${colors.secundaria})`
+              }}
+            />
           </div>
         </div>
 
@@ -95,20 +125,42 @@ const AlunoCourseCard = ({ acesso, progresso, concluido, onContinue }) => {
 
         {/* Botão de Ação */}
         <button
-          onClick={onContinue}
-          className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
-            concluido 
-              ? 'bg-green-600 hover:bg-green-700 text-white' 
-              : progresso > 0 
-                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                : 'bg-gray-800 hover:bg-gray-900 text-white'
-          } hover:shadow-lg transform hover:-translate-y-0.5`}
+          onClick={() => onContinue && onContinue()}
+          className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+          style={{ 
+            background: concluido
+              ? `linear-gradient(135deg, ${colors.destaque}, ${colors.destaque}dd)`
+              : progresso > 0
+              ? `linear-gradient(135deg, ${colors.principal}, ${colors.secundaria})`
+              : `linear-gradient(135deg, #6b7280, #4b5563)`
+          }}
+          onMouseEnter={(e) => {
+            if (concluido) {
+              e.target.style.background = `linear-gradient(135deg, ${colors.destaque}dd, ${colors.destaque}bb)`;
+            } else if (progresso > 0) {
+              e.target.style.background = `linear-gradient(135deg, ${colors.secundaria}, ${colors.principal})`;
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (concluido) {
+              e.target.style.background = `linear-gradient(135deg, ${colors.destaque}, ${colors.destaque}dd)`;
+            } else if (progresso > 0) {
+              e.target.style.background = `linear-gradient(135deg, ${colors.principal}, ${colors.secundaria})`;
+            } else {
+              e.target.style.background = `linear-gradient(135deg, #6b7280, #4b5563)`;
+            }
+          }}
         >
-          {concluido ? '✅ Revisar Curso' : progresso > 0 ? '▶️ Continuar' : '🚀 Iniciar Curso'}
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-lg">
+              {concluido ? '🎉' : progresso > 0 ? '📖' : '🚀'}
+            </span>
+            <span>
+              {concluido ? 'Revisar Curso' : progresso > 0 ? 'Continuar Estudando' : 'Começar Curso'}
+            </span>
+          </div>
         </button>
       </div>
     </div>
   );
 };
-
-export default AlunoCourseCard;

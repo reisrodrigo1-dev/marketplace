@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAlunoAuth } from '../contexts/AlunoAuthContext';
 import { alunoService } from '../firebase/alunoService';
 import { courseService } from '../firebase/courseService';
+import { salesPageService } from '../firebase/salesPageService';
 import CoursePlayer from './CoursePlayer';
 import AlunoCourseCard from './AlunoCourseCard';
 import { progressoService } from '../firebase/progressoService';
@@ -21,6 +22,38 @@ const SalesPageAlunoDashboard = () => {
     nome: '',
     endereco: ''
   });
+  const [salesPageData, setSalesPageData] = useState(null);
+  const [pageColors, setPageColors] = useState({
+    principal: '#1e40af',
+    secundaria: '#3b82f6', 
+    destaque: '#059669'
+  });
+
+  // Carrega dados da página de vendas para estilização
+  useEffect(() => {
+    if (!paginaId) return;
+    
+    const fetchSalesPageData = async () => {
+      try {
+        const result = await salesPageService.getSalesPageById(paginaId);
+        if (result.success) {
+          setSalesPageData(result.data);
+          
+          // Define as cores da página ou usa padrões profissionais
+          const cores = {
+            principal: result.data.corPrincipal || '#1e40af',
+            secundaria: result.data.corSecundaria || '#3b82f6',
+            destaque: result.data.corDestaque || '#059669'
+          };
+          setPageColors(cores);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dados da página de vendas:', error);
+      }
+    };
+    
+    fetchSalesPageData();
+  }, [paginaId]);
 
   // Carrega os acessos do aluno para esta página
   useEffect(() => {
@@ -170,13 +203,23 @@ const SalesPageAlunoDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen"
+      style={{ 
+        background: `linear-gradient(135deg, ${pageColors.principal}08, ${pageColors.secundaria}08, ${pageColors.destaque}08)` 
+      }}
+    >
       <div className="max-w-6xl mx-auto py-8 px-4">
         {/* Header do Dashboard */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border-t-4" style={{ borderTopColor: pageColors.principal }}>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+              <div 
+                className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-lg"
+                style={{ 
+                  background: `linear-gradient(135deg, ${pageColors.principal}, ${pageColors.secundaria})` 
+                }}
+              >
                 {aluno.displayName?.[0] || aluno.email[0].toUpperCase()}
               </div>
               <div>
@@ -185,7 +228,8 @@ const SalesPageAlunoDashboard = () => {
                 </h1>
                 <p className="text-gray-600">{aluno.email}</p>
                 <button 
-                  className="text-sm text-blue-600 hover:text-blue-800 underline mt-1" 
+                  className="text-sm underline mt-1 hover:opacity-80 transition-opacity" 
+                  style={{ color: pageColors.principal }}
                   onClick={() => setShowProfile(v => !v)}
                 >
                   {showProfile ? 'Ocultar Perfil' : 'Ver Perfil'}
@@ -194,25 +238,37 @@ const SalesPageAlunoDashboard = () => {
             </div>
             <div className="flex flex-col items-end gap-2">
               <button
-                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                className="px-6 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: pageColors.principal }}
                 onClick={logout}
               >
                 Sair
               </button>
-              <a href="#" className="text-sm text-blue-600 hover:text-blue-800 underline">
+              <a 
+                href="#" 
+                className="text-sm underline hover:opacity-80 transition-opacity"
+                style={{ color: pageColors.destaque }}
+              >
                 Precisa de ajuda?
               </a>
             </div>
           </div>
 
           {showProfile && (
-            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 animate-fade-in">
+            <div 
+              className="mt-6 rounded-lg p-4 animate-fade-in border"
+              style={{ 
+                backgroundColor: `${pageColors.principal}08`,
+                borderColor: `${pageColors.principal}30`
+              }}
+            >
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Informações do Perfil</h3>
                 {!editingProfile ? (
                   <button
                     onClick={() => setEditingProfile(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
+                    className="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-opacity text-sm"
+                    style={{ backgroundColor: pageColors.principal }}
                   >
                     Editar Perfil
                   </button>
@@ -220,7 +276,8 @@ const SalesPageAlunoDashboard = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={handleSaveProfile}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-sm"
+                      className="px-4 py-2 text-white rounded-lg font-medium hover:opacity-90 transition-opacity text-sm"
+                      style={{ backgroundColor: pageColors.destaque }}
                     >
                       Salvar
                     </button>
@@ -252,7 +309,19 @@ const SalesPageAlunoDashboard = () => {
                       type="text"
                       value={profileData.nome}
                       onChange={(e) => setProfileData(prev => ({ ...prev, nome: e.target.value }))}
-                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg transition-colors"
+                      style={{ 
+                        '--tw-ring-color': pageColors.principal,
+                        '--tw-border-opacity': '1'
+                      }}
+                      onFocus={(e) => {
+                        e.target.style.borderColor = pageColors.principal;
+                        e.target.style.boxShadow = `0 0 0 3px ${pageColors.principal}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#d1d5db';
+                        e.target.style.boxShadow = 'none';
+                      }}
                       placeholder="Seu nome completo"
                     />
                   ) : (
@@ -287,7 +356,15 @@ const SalesPageAlunoDashboard = () => {
                     <textarea
                       value={profileData.endereco}
                       onChange={(e) => setProfileData(prev => ({ ...prev, endereco: e.target.value }))}
-                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg transition-colors"
+                      onFocus={(e) => {
+                        e.target.style.borderColor = pageColors.principal;
+                        e.target.style.boxShadow = `0 0 0 3px ${pageColors.principal}20`;
+                      }}
+                      onBlur={(e) => {
+                        e.target.style.borderColor = '#d1d5db';
+                        e.target.style.boxShadow = 'none';
+                      }}
                       placeholder="Seu endereço completo"
                       rows="2"
                     />
@@ -306,9 +383,14 @@ const SalesPageAlunoDashboard = () => {
         </div>
 
         {/* Seção dos Cursos */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border-t-4" style={{ borderTopColor: pageColors.destaque }}>
           <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+            <div 
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ 
+                background: `linear-gradient(135deg, ${pageColors.destaque}, ${pageColors.secundaria})` 
+              }}
+            >
               <span className="text-white text-lg">📚</span>
             </div>
             Meus Cursos
@@ -329,42 +411,69 @@ const SalesPageAlunoDashboard = () => {
             <>
               {/* Estatísticas dos Cursos */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                <div 
+                  className="p-4 rounded-xl border"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${pageColors.principal}08, ${pageColors.principal}15)`,
+                    borderColor: `${pageColors.principal}30`
+                  }}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-blue-600 font-semibold text-sm">Total de Cursos</p>
-                      <p className="text-2xl font-bold text-blue-800">{acessos.length}</p>
+                      <p className="font-semibold text-sm" style={{ color: pageColors.principal }}>Total de Cursos</p>
+                      <p className="text-2xl font-bold" style={{ color: pageColors.principal }}>{acessos.length}</p>
                     </div>
-                    <div className="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center">
-                      <span className="text-blue-700 text-xl">📚</span>
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${pageColors.principal}20` }}
+                    >
+                      <span className="text-xl" style={{ color: pageColors.principal }}>📚</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+                <div 
+                  className="p-4 rounded-xl border"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${pageColors.destaque}08, ${pageColors.destaque}15)`,
+                    borderColor: `${pageColors.destaque}30`
+                  }}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-green-600 font-semibold text-sm">Concluídos</p>
-                      <p className="text-2xl font-bold text-green-800">
+                      <p className="font-semibold text-sm" style={{ color: pageColors.destaque }}>Concluídos</p>
+                      <p className="text-2xl font-bold" style={{ color: pageColors.destaque }}>
                         {Object.values(progressoCursos).filter(p => p >= 100).length}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
-                      <span className="text-green-700 text-xl">✅</span>
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${pageColors.destaque}20` }}
+                    >
+                      <span className="text-xl" style={{ color: pageColors.destaque }}>✅</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-xl border border-yellow-200">
+                <div 
+                  className="p-4 rounded-xl border"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${pageColors.secundaria}08, ${pageColors.secundaria}15)`,
+                    borderColor: `${pageColors.secundaria}30`
+                  }}
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-yellow-600 font-semibold text-sm">Em progresso</p>
-                      <p className="text-2xl font-bold text-yellow-800">
+                      <p className="font-semibold text-sm" style={{ color: pageColors.secundaria }}>Em progresso</p>
+                      <p className="text-2xl font-bold" style={{ color: pageColors.secundaria }}>
                         {Object.values(progressoCursos).filter(p => p > 0 && p < 100).length}
                       </p>
                     </div>
-                    <div className="w-12 h-12 bg-yellow-200 rounded-full flex items-center justify-center">
-                      <span className="text-yellow-700 text-xl">⏳</span>
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${pageColors.secundaria}20` }}
+                    >
+                      <span className="text-xl" style={{ color: pageColors.secundaria }}>⏳</span>
                     </div>
                   </div>
                 </div>
@@ -381,6 +490,7 @@ const SalesPageAlunoDashboard = () => {
                       acesso={acesso}
                       progresso={progresso}
                       concluido={concluido}
+                      pageColors={pageColors}
                       onContinue={() => setSelectedCourse(acesso)}
                     />
                   );
@@ -389,10 +499,16 @@ const SalesPageAlunoDashboard = () => {
 
               {/* Mensagem de Parabéns se houver cursos concluídos */}
               {Object.values(progressoCursos).filter(p => p >= 100).length > 0 && (
-                <div className="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 text-center">
+                <div 
+                  className="mt-8 border rounded-xl p-6 text-center"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${pageColors.destaque}08, ${pageColors.destaque}15)`,
+                    borderColor: `${pageColors.destaque}30`
+                  }}
+                >
                   <div className="text-4xl mb-3">🎉</div>
-                  <h3 className="text-xl font-bold text-green-800 mb-2">Parabéns!</h3>
-                  <p className="text-green-700">
+                  <h3 className="text-xl font-bold mb-2" style={{ color: pageColors.destaque }}>Parabéns!</h3>
+                  <p style={{ color: pageColors.destaque }}>
                     Você concluiu {Object.values(progressoCursos).filter(p => p >= 100).length} curso(s). 
                     Continue assim e alcance seus objetivos!
                   </p>
