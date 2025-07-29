@@ -336,6 +336,76 @@ export const alunoService = {
     }
   },
 
+  // Atualiza perfil de um aluno específico
+  async atualizarPerfilAluno(alunoId, dadosAtualizacao) {
+    try {
+      console.log('📝 Atualizando perfil do aluno:', alunoId, dadosAtualizacao);
+
+      // Atualizar todos os acessos do aluno
+      const acessosQuery = query(
+        collection(db, 'acessos'),
+        where('alunoId', '==', alunoId)
+      );
+      const acessosSnapshot = await getDocs(acessosQuery);
+
+      const updatePromises = acessosSnapshot.docs.map(doc => {
+        return updateDoc(doc.ref, {
+          nome: dadosAtualizacao.nome || dadosAtualizacao.name,
+          telefone: dadosAtualizacao.telefone,
+          cpf: dadosAtualizacao.cpf,
+          dataNascimento: dadosAtualizacao.dataNascimento,
+          endereco: dadosAtualizacao.endereco,
+          updatedAt: serverTimestamp()
+        });
+      });
+
+      await Promise.all(updatePromises);
+
+      console.log('✅ Perfil do aluno atualizado com sucesso');
+      return { success: true };
+    } catch (error) {
+      console.error('❌ Erro ao atualizar perfil do aluno:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Busca dados detalhados de um aluno específico
+  async getAlunoDetalhado(alunoId, paginaId) {
+    try {
+      console.log('🔍 Buscando dados detalhados do aluno:', alunoId, 'Página:', paginaId);
+
+      const acessosQuery = query(
+        collection(db, 'acessos'),
+        where('alunoId', '==', alunoId),
+        where('paginaId', '==', paginaId)
+      );
+      const acessosSnapshot = await getDocs(acessosQuery);
+
+      if (acessosSnapshot.empty) {
+        return { success: false, error: 'Aluno não encontrado' };
+      }
+
+      // Pega o primeiro acesso (todos devem ter os mesmos dados do aluno)
+      const alunoData = acessosSnapshot.docs[0].data();
+
+      return {
+        success: true,
+        data: {
+          alunoId: alunoData.alunoId,
+          nome: alunoData.nome,
+          email: alunoData.email,
+          telefone: alunoData.telefone || '',
+          cpf: alunoData.cpf || '',
+          dataNascimento: alunoData.dataNascimento || '',
+          endereco: alunoData.endereco || ''
+        }
+      };
+    } catch (error) {
+      console.error('❌ Erro ao buscar dados do aluno:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
   // Adiciona um produto/curso ao aluno
   async adicionarProdutoAluno(alunoData) {
     try {

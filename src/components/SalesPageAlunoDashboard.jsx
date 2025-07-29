@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAlunoAuth } from '../contexts/AlunoAuthContext';
 import { alunoService } from '../firebase/alunoService';
@@ -33,13 +33,13 @@ const SalesPageAlunoDashboard = () => {
   // Carrega dados da página de vendas para estilização
   useEffect(() => {
     if (!paginaId) return;
-    
+
     const fetchSalesPageData = async () => {
       try {
         const result = await salesPageService.getSalesPageById(paginaId);
         if (result.success) {
           setSalesPageData(result.data);
-          
+
           // Define as cores da página ou usa padrões profissionais
           const cores = {
             principal: result.data.corPrincipal || '#1e40af',
@@ -52,7 +52,7 @@ const SalesPageAlunoDashboard = () => {
         console.error('Erro ao buscar dados da página de vendas:', error);
       }
     };
-    
+
     fetchSalesPageData();
   }, [paginaId]);
 
@@ -65,7 +65,7 @@ const SalesPageAlunoDashboard = () => {
       });
       return;
     }
-    
+
     console.log('🚀 [DASHBOARD] Iniciando carregamento de acessos...');
     console.log('🚀 [DASHBOARD] Dados do contexto:', { 
       alunoId: aluno.uid, 
@@ -73,34 +73,34 @@ const SalesPageAlunoDashboard = () => {
       alunoName: aluno.displayName,
       paginaId: paginaId 
     });
-    
+
     setLoading(true);
-    
+
     const loadAcessos = async () => {
       try {
         console.log('📞 [DASHBOARD] Chamando alunoService.getAcessosPorAluno...');
         let result = await alunoService.getAcessosPorAluno(aluno.uid, paginaId);
-        
+
         console.log('📨 [DASHBOARD] Resposta recebida do service:', result);
-        
+
         // Se não encontrou acessos, tenta verificar e criar dados de teste
         if (result.success && result.data.length === 0) {
           console.log('🔧 [DASHBOARD] Nenhum acesso encontrado. Tentando criar dados de teste...');
           result = await alunoService.verificarECriarDadosTeste(aluno.uid, paginaId);
           console.log('🔧 [DASHBOARD] Resultado após tentar criar dados de teste:', result);
         }
-        
+
         console.log('✅ [DASHBOARD] Resultado final dos acessos:', {
           success: result.success,
           dataLength: result.data?.length || 0,
           error: result.error || 'nenhum',
           data: result.data
         });
-        
+
         if (result.success) {
           console.log('💾 [DASHBOARD] Salvando acessos no estado...');
           setAcessos(result.data);
-          
+
           console.log('👤 [DASHBOARD] Acessos salvos. Detalhes dos cursos:');
           result.data.forEach((acesso, index) => {
             console.log(`📚 [DASHBOARD] Curso ${index + 1}:`, {
@@ -113,7 +113,7 @@ const SalesPageAlunoDashboard = () => {
               ativo: acesso.ativo
             });
           });
-          
+
           // Inicializa dados do perfil
           if (result.data.length > 0) {
             const primeiroAcesso = result.data[0];
@@ -121,7 +121,7 @@ const SalesPageAlunoDashboard = () => {
               nome: primeiroAcesso.nome || aluno.displayName || aluno.email || '',
               endereco: primeiroAcesso.endereco || ''
             };
-            
+
             console.log('👤 [DASHBOARD] Inicializando dados do perfil:', profileDataToSet);
             setProfileData(profileDataToSet);
           } else {
@@ -145,7 +145,7 @@ const SalesPageAlunoDashboard = () => {
       } catch (error) {
         console.error('💥 [DASHBOARD] ERRO FATAL na função de carregamento:', error);
         console.error('💥 [DASHBOARD] Stack trace:', error.stack);
-        
+
         const fallbackProfileData = {
           nome: aluno.displayName || aluno.email || '',
           endereco: ''
@@ -157,7 +157,7 @@ const SalesPageAlunoDashboard = () => {
         setLoading(false);
       }
     };
-    
+
     loadAcessos();
   }, [aluno, paginaId]);
 
@@ -226,7 +226,7 @@ const SalesPageAlunoDashboard = () => {
   const handleSaveProfile = async () => {
     try {
       console.log('Salvando perfil com dados:', profileData);
-      
+
       const result = await alunoService.atualizarPerfilAluno(aluno.uid, {
         name: profileData.nome,
         endereco: profileData.endereco
@@ -236,7 +236,7 @@ const SalesPageAlunoDashboard = () => {
 
       if (result.success) {
         setEditingProfile(false);
-        
+
         // Recarrega os acessos para atualizar os dados
         console.log('Recarregando acessos após atualização...');
         const acessosResult = await alunoService.getAcessosPorAluno(aluno.uid, paginaId);
@@ -244,7 +244,7 @@ const SalesPageAlunoDashboard = () => {
           setAcessos(acessosResult.data);
           console.log('Acessos recarregados:', acessosResult.data);
         }
-        
+
         alert('Perfil atualizado com sucesso!');
       } else {
         console.error('Erro no resultado:', result.error);
