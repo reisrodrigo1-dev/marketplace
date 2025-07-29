@@ -30,6 +30,45 @@ export default function AlunoCourseCard({ acesso, onContinue, progresso = 0, con
     return 'text-gray-700 bg-gray-100';
   };
 
+  // Formatação da data de acesso
+  const formatarData = (data) => {
+    if (!data) return 'Data não disponível';
+    try {
+      let dataObj;
+
+      // Se é um Timestamp do Firestore
+      if (data && typeof data.toDate === 'function') {
+        dataObj = data.toDate();
+      }
+      // Se é uma string ISO
+      else if (typeof data === 'string') {
+        dataObj = new Date(data);
+      }
+      // Se já é um objeto Date
+      else if (data instanceof Date) {
+        dataObj = data;
+      }
+      // Se é um objeto com seconds (formato Timestamp serializado)
+      else if (data && typeof data === 'object' && data.seconds) {
+        dataObj = new Date(data.seconds * 1000);
+      }
+      // Fallback
+      else {
+        dataObj = new Date(data);
+      }
+
+      // Verifica se a data é válida
+      if (isNaN(dataObj.getTime())) {
+        return 'Data inválida';
+      }
+
+      return dataObj.toLocaleDateString('pt-BR');
+    } catch (error) {
+      console.error('Erro ao formatar data:', error, 'Data recebida:', data);
+      return 'Data inválida';
+    }
+  };
+
   return (
     <div 
       className="group bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border transform hover:-translate-y-1"
@@ -118,7 +157,7 @@ export default function AlunoCourseCard({ acesso, onContinue, progresso = 0, con
           </div>
           {acesso.dataAcesso && (
             <span>
-              Desde {new Date(acesso.dataAcesso.toDate()).toLocaleDateString('pt-BR')}
+              Desde {formatarData(acesso.dataAcesso)}
             </span>
           )}
         </div>
