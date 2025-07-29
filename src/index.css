@@ -4,6 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Importar animações da landing page */
+@import './styles/ctaPulse.css';
+@import './styles/salesPageAnimations.css';
+
 body {
   font-family: 'Inter', sans-serif;
 }
