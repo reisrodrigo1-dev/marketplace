@@ -62,6 +62,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
     titulo: '',
     descricao: '',
     produtosSelecionados: [],
+    produtosAoVivo: {}, // { [productId]: { aoVivo: boolean, data: string, hora: string } }
     corPrincipal: '#1e40af', // Azul profissional e confiável (inspirado em HeroSpark)
     corSecundaria: '#3b82f6', // Azul complementar mais claro
     corDestaque: '#059669', // Verde para CTAs (alta conversão)

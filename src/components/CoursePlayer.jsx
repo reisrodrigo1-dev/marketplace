@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAlunoAuth } from '../contexts/AlunoAuthContext';
 import { notesService } from '../firebase/notesService';
@@ -20,16 +19,27 @@ const CoursePlayer = ({ course, onBack }) => {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   if (!course) return null;
-  const modules = course.modulos || [];
+  // Suporte a ambas as estruturas: modulos/aulas (antigo) e sections/lessons (novo)
+  const modules = course.modulos || course.sections || [];
+  const getLessons = (mod) => mod.aulas || mod.lessons || [];
   const currentModule = modules[selectedModuleIdx] || {};
-  const lessons = currentModule.aulas || [];
+  const lessons = getLessons(currentModule);
   const currentLesson = lessons[selectedLessonIdx] || {};
-  const totalLessons = modules.reduce((acc, m) => acc + (m.aulas?.length || 0), 0);
-  
-  const allLessonIds = modules.flatMap(m => (m.aulas || []).map(a => a.id));
+  const totalLessons = modules.reduce((acc, m) => acc + getLessons(m).length, 0);
+  const allLessonIds = modules.flatMap(m => getLessons(m).map(a => a.id));
   const uniqueCompleted = Array.from(new Set(completedLessons)).filter(id => allLessonIds.includes(id));
   const completedCount = uniqueCompleted.length;
   const courseProgress = totalLessons ? Math.min(100, Math.round((completedCount / totalLessons) * 100)) : 0;
+
+  // Loga nome e status ao vivo da aula ao entrar no curso ou trocar de aula
+  useEffect(() => {
+    if (lessons && lessons[selectedLessonIdx]) {
+      const l = lessons[selectedLessonIdx];
+      // eslint-disable-next-line no-console
+      console.log('Aula objeto completo:', l);
+      console.log(`Aula: ${l.title || l.titulo} | AO VIVO: ${!!(l.aoVivo === true || l.aoVivo === 'true')}`);
+    }
+  }, [selectedLessonIdx, lessons]);
 
   // Encontrar próxima aula
   const getNextLesson = () => {
@@ -222,7 +232,7 @@ const CoursePlayer = ({ course, onBack }) => {
                 
                 {mIdx === selectedModuleIdx && (
                   <div className="bg-gray-50">
-                    {module.aulas?.map((lesson, lIdx) => (
+                    {(module.aulas || module.lessons || []).map((lesson, lIdx) => (
                       <button
                         key={lesson.id || lIdx}
                         onClick={() => {
@@ -257,7 +267,12 @@ const CoursePlayer = ({ course, onBack }) => {
                             ? 'text-blue-900 font-medium'
                             : 'text-gray-700'
                         }`}>
-                          {lesson.titulo}
+                          {lesson.title || lesson.titulo}
+                        {!!(lesson.aoVivo === true || lesson.aoVivo === 'true') ? (
+                          <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-bold align-middle">AO VIVO</span>
+                        ) : (
+                          <span className="ml-2 px-2 py-0.5 bg-gray-300 text-gray-700 text-[10px] rounded-full font-bold align-middle">Gravada</span>
+                        )}
                         </span>
                         {completedLessons.includes(lesson.id) && (
                           <span className="ml-auto text-xs text-green-600 font-medium">Concluída</span>
@@ -324,9 +339,26 @@ const CoursePlayer = ({ course, onBack }) => {
                     Aula {selectedLessonIdx + 1} de {lessons.length}
                   </span>
                 </div>
+                {/* --- Área principal: data/hora da aula ao vivo --- */}
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  {currentLesson.titulo}
+                  {currentLesson.title || currentLesson.titulo}
+                  {!!(currentLesson.aoVivo === true || currentLesson.aoVivo === 'true') ? (
+                    <span className="ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full font-bold align-middle">AO VIVO</span>
+                  ) : (
+                    <span className="ml-3 px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded-full font-bold align-middle">Gravada</span>
+                  )}
                 </h2>
+                {currentLesson.aoVivo && (currentLesson.dataAoVivo || currentLesson.horaAoVivo) && (
+                  <div className="mb-2 text-sm text-red-700 font-semibold flex items-center gap-2">
+                    <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    {currentLesson.dataAoVivo && (
+                      <span>{new Date(currentLesson.dataAoVivo).toLocaleDateString('pt-BR')}</span>
+                    )}
+                    {currentLesson.horaAoVivo && (
+                      <span>{currentLesson.horaAoVivo.slice(0,5)}</span>
+                    )}
+                  </div>
+                )}
                 {currentLesson.descricao && (
                   <p className="text-gray-600 leading-relaxed">
                     {currentLesson.descricao}

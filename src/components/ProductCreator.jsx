@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -25,7 +24,7 @@ export default function ProductCreator({ faseada }) {
   const [courses, setCourses] = useState([]);
   const [editCourse, setEditCourse] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const { register, handleSubmit, formState: { errors }, setValue, reset } = useForm({
+  const { register, handleSubmit, formState: { errors }, setValue, reset, watch } = useForm({
     resolver: zodResolver(courseSchema),
   });
 
@@ -51,9 +50,8 @@ export default function ProductCreator({ faseada }) {
           coverUrl: imageUrl || editCourse.coverUrl,
           priceOriginal: data.priceOriginal,
           priceSale: data.priceSale,
-          userId: user?.uid || editCourse.userId || '',
         });
-        setCourses((prev) => prev.map(c => c.id === editCourse.id ? { ...editCourse, title: data.title, description: data.description, coverUrl: imageUrl || editCourse.coverUrl, priceOriginal: data.priceOriginal, priceSale: data.priceSale, userId: user?.uid || editCourse.userId || '' } : c));
+        setCourses((prev) => prev.map(c => c.id === editCourse.id ? { ...editCourse, title: data.title, description: data.description, coverUrl: imageUrl || editCourse.coverUrl, priceOriginal: data.priceOriginal, priceSale: data.priceSale } : c));
         setEditCourse(null);
       } else {
         // Criar novo curso completo
@@ -513,7 +511,7 @@ export default function ProductCreator({ faseada }) {
                             )}
                             <div className="flex items-center text-sm text-gray-500">
                               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M6 20h12" />
                               </svg>
                               {course.sections?.length || 0} seções
                             </div>

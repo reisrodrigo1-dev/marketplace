@@ -210,7 +210,10 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
   }, [aluno, pendingProduct, showAcessoModal]);
 
   const registrarAcesso = async () => {
-    if (!aluno || !pendingProduct) return;
+    if (!aluno || !pendingProduct || !pendingProduct.id) {
+      alert('Erro ao finalizar compra: curso não encontrado. Tente novamente.');
+      return;
+    }
     setRegistrando(true);
     await alunoService.criarOuAtualizarAcesso({
       paginaId: salesData?.id || salesData?.paginaId || 'pagina_padrao',

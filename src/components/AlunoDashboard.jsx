@@ -39,6 +39,8 @@ const AlunoDashboard = ({ paginaId }) => {
     const fetchCourse = async () => {
       const result = await courseService.getCoursesByIds([selectedCourse.cursoId]);
       if (result.success && result.data.length > 0) {
+        // eslint-disable-next-line no-console
+        console.log('Curso completo do Firestore:', result.data[0]);
         // Tenta mapear para o padrão esperado pelo player
         const course = result.data[0];
         let modulos = [];
@@ -46,12 +48,19 @@ const AlunoDashboard = ({ paginaId }) => {
           modulos = course.sections.map(section => ({
             id: section.id,
             titulo: section.title,
-            aulas: (section.lessons || []).map(lesson => ({
-              id: lesson.id,
-              titulo: lesson.title,
-              descricao: lesson.description || '',
-              videoUrl: getYoutubeEmbedUrl(lesson.youtubeUrl) || lesson.videoUrl || lesson.url || '',
-            }))
+            aulas: (section.lessons || []).map(lesson => {
+              // eslint-disable-next-line no-console
+              console.log('Lesson do banco:', lesson);
+              return {
+                id: lesson.id,
+                titulo: lesson.title,
+                descricao: lesson.description || '',
+                videoUrl: getYoutubeEmbedUrl(lesson.youtubeUrl) || lesson.videoUrl || lesson.url || '',
+                aoVivo: lesson.aoVivo,
+                dataAoVivo: lesson.dataAoVivo,
+                horaAoVivo: lesson.horaAoVivo,
+              };
+            })
           }));
         }
         setSelectedCourseData({ ...course, ...selectedCourse, modulos });

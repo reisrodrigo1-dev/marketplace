@@ -195,8 +195,11 @@ export default function CourseManager({ course, onUpdateCourse }) {
                     <Draggable key={lesson.id} draggableId={lesson.id} index={idx}>
                       {(dragProvided) => (
                         <li ref={dragProvided.innerRef} {...dragProvided.draggableProps} className="flex items-center justify-between bg-yellow-50 rounded-xl p-5 shadow border border-yellow-200">
-                          <div>
+                          <div className="flex items-center gap-2">
                             <span className="font-bold text-gray-900 text-lg font-inter-bold">{lesson.title}</span>
+                            {lesson.aoVivo && (
+                              <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-bold align-middle">AO VIVO</span>
+                            )}
                             <span className="ml-2 text-xs text-yellow-700 font-inter-medium">({lesson.type})</span>
                           </div>
                           <div className="flex gap-2 items-center">

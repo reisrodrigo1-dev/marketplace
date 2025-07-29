@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 export default function LessonFormModal({ isOpen, onClose, onSave, initialData }) {
@@ -10,6 +9,10 @@ export default function LessonFormModal({ isOpen, onClose, onSave, initialData }
   const [quizOptions, setQuizOptions] = useState(Array(5).fill(''));
   const [quizCorrect, setQuizCorrect] = useState(null);
   const [showYoutubePreview, setShowYoutubePreview] = useState(false);
+  // Estado para aula ao vivo
+  const [aoVivo, setAoVivo] = useState(false);
+  const [dataAoVivo, setDataAoVivo] = useState('');
+  const [horaAoVivo, setHoraAoVivo] = useState('');
 
   useEffect(() => {
     setTitle(initialData?.title || '');
@@ -19,6 +22,9 @@ export default function LessonFormModal({ isOpen, onClose, onSave, initialData }
     setQuizQuestion(initialData?.quizQuestion || '');
     setQuizOptions(initialData?.quizOptions || Array(5).fill(''));
     setQuizCorrect(initialData?.quizCorrect ?? null);
+    setAoVivo(initialData?.aoVivo || false);
+    setDataAoVivo(initialData?.dataAoVivo || '');
+    setHoraAoVivo(initialData?.horaAoVivo || '');
   }, [initialData, isOpen]);
 
   const handleOptionChange = (idx, value) => {
@@ -37,6 +43,9 @@ export default function LessonFormModal({ isOpen, onClose, onSave, initialData }
       quizQuestion,
       quizOptions,
       quizCorrect,
+      aoVivo,
+      dataAoVivo,
+      horaAoVivo,
     });
     onClose();
   };
@@ -57,8 +66,11 @@ export default function LessonFormModal({ isOpen, onClose, onSave, initialData }
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-bold mb-2">
+              <h2 className="text-3xl font-bold mb-2 flex items-center gap-3">
                 {initialData ? '✏️ Editar Aula' : '✨ Nova Aula'}
+                {aoVivo && (
+                  <span className="px-3 py-1 bg-red-500 text-white text-xs rounded-full font-bold align-middle">AO VIVO</span>
+                )}
               </h2>
               <p className="text-blue-100">
                 {initialData ? 'Atualize o conteúdo da sua aula' : 'Crie uma nova experiência de aprendizado'}
@@ -258,6 +270,27 @@ export default function LessonFormModal({ isOpen, onClose, onSave, initialData }
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Aula ao vivo */}
+          <div>
+            <label className="block text-sm font-semibold text-blue-700 mb-2">Aula ao vivo</label>
+            <div className="flex items-center gap-2 mb-2">
+              <input type="checkbox" id="aoVivo" checked={aoVivo} onChange={e => setAoVivo(e.target.checked)} />
+              <label htmlFor="aoVivo" className="font-semibold text-blue-700">Esta aula será ao vivo</label>
+            </div>
+            {aoVivo && (
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Data da Aula ao Vivo</label>
+                  <input type="date" value={dataAoVivo} onChange={e => setDataAoVivo(e.target.value)} className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">Hora da Aula ao Vivo</label>
+                  <input type="time" value={horaAoVivo} onChange={e => setHoraAoVivo(e.target.value)} className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl" />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Botões de Ação */}
