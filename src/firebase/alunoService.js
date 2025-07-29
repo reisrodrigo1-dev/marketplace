@@ -8,7 +8,7 @@ const COLLECTION = 'alunosPorPagina';
 
 export const alunoService = {
   // Cria ou atualiza acesso do aluno a um curso em uma página
-  async criarOuAtualizarAcesso({ paginaId, alunoId, nome, email, cursoId, cursoTitulo, cursoDescricao, linkAcesso }) {
+  async criarOuAtualizarAcesso({ paginaId, alunoId, nome, email, cpf, dataNascimento, endereco, cursoId, cursoTitulo, cursoDescricao, linkAcesso }) {
     const docId = `${paginaId}_${alunoId}_${cursoId}`;
     const ref = doc(db, COLLECTION, docId);
     const data = {
@@ -16,6 +16,9 @@ export const alunoService = {
       alunoId,
       nome,
       email,
+      cpf: cpf || '',
+      dataNascimento: dataNascimento || '',
+      endereco: endereco || '',
       cursoId,
       cursoTitulo,
       cursoDescricao,
@@ -72,6 +75,9 @@ export const alunoService = {
           nome: acesso.nome,
           email: acesso.email,
           telefone: acesso.telefone || '',
+          cpf: acesso.cpf || '',
+          dataNascimento: acesso.dataNascimento || '',
+          endereco: acesso.endereco || '',
           totalCursos: 0,
           primeiroAcesso: acesso.dataAcesso,
           ultimoAcesso: acesso.dataAcesso,
@@ -107,6 +113,9 @@ export const alunoService = {
           const userData = userSnap.data();
           aluno.nome = userData.name || aluno.nome;
           aluno.telefone = userData.telefone || aluno.telefone || '';
+          aluno.cpf = userData.cpf || aluno.cpf || '';
+          aluno.dataNascimento = userData.dataNascimento || aluno.dataNascimento || '';
+          aluno.endereco = userData.endereco || aluno.endereco || '';
         }
         
         alunosComDetalhes.push(aluno);
@@ -117,5 +126,29 @@ export const alunoService = {
     }
     
     return { success: true, data: alunosComDetalhes };
+  },
+
+  // Atualiza informações do perfil do aluno
+  async atualizarPerfilAluno(alunoId, dadosAtualizados) {
+    try {
+      // Atualiza na collection users
+      const userRef = doc(db, 'users', alunoId);
+      await setDoc(userRef, dadosAtualizados, { merge: true });
+
+      // Atualiza todos os acessos do aluno
+      const q = query(collection(db, COLLECTION), where('alunoId', '==', alunoId));
+      const snap = await getDocs(q);
+      
+      const updatePromises = snap.docs.map(docSnapshot => {
+        const docRef = doc(db, COLLECTION, docSnapshot.id);
+        return setDoc(docRef, dadosAtualizados, { merge: true });
+      });
+
+      await Promise.all(updatePromises);
+      return { success: true };
+    } catch (error) {
+      console.error('Erro ao atualizar perfil do aluno:', error);
+      return { success: false, error: error.message };
+    }
   }
 };

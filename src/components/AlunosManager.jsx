@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { salesPageService } from '../firebase/salesPageService';
@@ -20,14 +19,17 @@ export default function AlunosManager() {
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
-    telefone: ''
+    telefone: '',
+    cpf: '',
+    dataNascimento: '',
+    endereco: ''
   });
 
   // Carregar páginas de vendas do usuário
   useEffect(() => {
     async function fetchPages() {
       if (!user?.uid) return;
-      
+
       setLoadingPages(true);
       try {
         const result = await salesPageService.getUserSalesPages(user.uid);
@@ -43,7 +45,7 @@ export default function AlunosManager() {
         setLoadingPages(false);
       }
     }
-    
+
     fetchPages();
   }, [user]);
 
@@ -87,7 +89,10 @@ export default function AlunosManager() {
     setFormData({
       nome: aluno.nome || '',
       email: aluno.email || '',
-      telefone: aluno.telefone || ''
+      telefone: aluno.telefone || '',
+      cpf: aluno.cpf || '',
+      dataNascimento: aluno.dataNascimento || '',
+      endereco: aluno.endereco || ''
     });
     setShowEditModal(true);
   };
@@ -98,16 +103,22 @@ export default function AlunosManager() {
     try {
       // Atualizar informações do aluno no Firestore
       const userRef = doc(db, 'users', editingAluno.alunoId);
-      await updateDoc(userRef, {
+      const dadosAtualizados = {
         name: formData.nome,
         telefone: formData.telefone,
+        cpf: formData.cpf,
+        dataNascimento: formData.dataNascimento,
+        endereco: formData.endereco
+      };
+      await updateDoc(userRef, {
+        ...dadosAtualizados,
         updatedAt: new Date()
       });
 
       // Atualizar a lista local
       setAlunos(prev => prev.map(aluno => 
         aluno.alunoId === editingAluno.alunoId 
-          ? { ...aluno, nome: formData.nome, telefone: formData.telefone }
+          ? { ...aluno, nome: formData.nome, telefone: formData.telefone, cpf: formData.cpf, dataNascimento: formData.dataNascimento, endereco: formData.endereco }
           : aluno
       ));
 
@@ -173,7 +184,7 @@ export default function AlunosManager() {
                 ))}
               </select>
             </div>
-            
+
             {selectedPageId && (
               <div className="bg-blue-50 px-4 py-2 rounded-lg">
                 <p className="text-sm text-blue-700">
@@ -220,6 +231,12 @@ export default function AlunosManager() {
                         Telefone
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        CPF
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Data de Nascimento
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Cursos
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -251,6 +268,16 @@ export default function AlunosManager() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
                             {aluno.telefone || 'Não informado'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {aluno.cpf || 'Não informado'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {aluno.dataNascimento || 'Não informado'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -331,7 +358,45 @@ export default function AlunosManager() {
                 value={formData.telefone}
                 onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                placeholder="(00) 00000-0000"
+                placeholder="Telefone do aluno"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                CPF
+              </label>
+              <input
+                type="text"
+                value={formData.cpf}
+                onChange={(e) => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                placeholder="CPF do aluno"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Data de Nascimento
+              </label>
+              <input
+                type="date"
+                value={formData.dataNascimento}
+                onChange={(e) => setFormData(prev => ({ ...prev, dataNascimento: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Endereço
+              </label>
+              <textarea
+                value={formData.endereco}
+                onChange={(e) => setFormData(prev => ({ ...prev, endereco: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Endereço completo do aluno"
+                rows="3"
               />
             </div>
 

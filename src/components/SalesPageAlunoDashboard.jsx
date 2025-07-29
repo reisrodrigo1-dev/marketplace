@@ -16,13 +16,28 @@ const SalesPageAlunoDashboard = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedCourseData, setSelectedCourseData] = useState(null);
   const [progressoCursos, setProgressoCursos] = useState({});
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    nome: '',
+    endereco: ''
+  });
 
   // Carrega os acessos do aluno para esta página
   useEffect(() => {
     if (!aluno || !paginaId) return;
     setLoading(true);
     alunoService.getAcessosPorAluno(aluno.uid, paginaId).then(result => {
-      if (result.success) setAcessos(result.data);
+      if (result.success) {
+        setAcessos(result.data);
+        // Inicializa dados do perfil
+        if (result.data.length > 0) {
+          const primeiroAcesso = result.data[0];
+          setProfileData({
+            nome: primeiroAcesso.nome || aluno.displayName || '',
+            endereco: primeiroAcesso.endereco || ''
+          });
+        }
+      }
       setLoading(false);
     });
   }, [aluno, paginaId]);
@@ -87,6 +102,31 @@ const SalesPageAlunoDashboard = () => {
     if (!match) return '';
     return `https://www.youtube.com/embed/${match[1]}`;
   }
+
+  // Função para salvar as alterações do perfil
+  const handleSaveProfile = async () => {
+    try {
+      const result = await alunoService.atualizarPerfilAluno(aluno.uid, {
+        name: profileData.nome,
+        endereco: profileData.endereco
+      });
+
+      if (result.success) {
+        setEditingProfile(false);
+        // Recarrega os acessos para atualizar os dados
+        const acessosResult = await alunoService.getAcessosPorAluno(aluno.uid, paginaId);
+        if (acessosResult.success) {
+          setAcessos(acessosResult.data);
+        }
+        alert('Perfil atualizado com sucesso!');
+      } else {
+        alert('Erro ao atualizar perfil: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
+      alert('Erro ao atualizar perfil');
+    }
+  };
 
   if (!aluno) {
     return (
@@ -167,16 +207,96 @@ const SalesPageAlunoDashboard = () => {
 
           {showProfile && (
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 animate-fade-in">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Informações do Perfil</h3>
+                {!editingProfile ? (
+                  <button
+                    onClick={() => setEditingProfile(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    Editar Perfil
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveProfile}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors text-sm"
+                    >
+                      Salvar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingProfile(false);
+                        // Reseta os dados do formulário
+                        if (acessos.length > 0) {
+                          const primeiroAcesso = acessos[0];
+                          setProfileData({
+                            nome: primeiroAcesso.nome || aluno.displayName || '',
+                            endereco: primeiroAcesso.endereco || ''
+                          });
+                        }
+                      }}
+                      className="px-4 py-2 bg-gray-500 text-white rounded-lg font-medium hover:bg-gray-600 transition-colors text-sm"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <span className="font-semibold text-gray-700">Nome:</span>
-                  <p className="text-gray-800">{aluno.displayName || 'Não informado'}</p>
+                  {editingProfile ? (
+                    <input
+                      type="text"
+                      value={profileData.nome}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, nome: e.target.value }))}
+                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Seu nome completo"
+                    />
+                  ) : (
+                    <p className="text-gray-800">{acessos[0]?.nome || aluno.displayName || 'Não informado'}</p>
+                  )}
                 </div>
+
                 <div>
                   <span className="font-semibold text-gray-700">Email:</span>
                   <p className="text-gray-800">{aluno.email}</p>
+                  <p className="text-xs text-gray-500">O email não pode ser alterado</p>
                 </div>
+
                 <div>
+                  <span className="font-semibold text-gray-700">CPF:</span>
+                  <p className="text-gray-800">{acessos[0]?.cpf || 'Não informado'}</p>
+                </div>
+
+                <div>
+                  <span className="font-semibold text-gray-700">Data de Nascimento:</span>
+                  <p className="text-gray-800">
+                    {acessos[0]?.dataNascimento ? 
+                      new Date(acessos[0].dataNascimento).toLocaleDateString('pt-BR') : 
+                      'Não informado'
+                    }
+                  </p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <span className="font-semibold text-gray-700">Endereço:</span>
+                  {editingProfile ? (
+                    <textarea
+                      value={profileData.endereco}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, endereco: e.target.value }))}
+                      className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Seu endereço completo"
+                      rows="2"
+                    />
+                  ) : (
+                    <p className="text-gray-800">{acessos[0]?.endereco || 'Não informado'}</p>
+                  )}
+                </div>
+
+                <div className="md:col-span-2">
                   <span className="font-semibold text-gray-700">ID do Aluno:</span>
                   <p className="text-gray-600 text-sm">{aluno.uid}</p>
                 </div>
