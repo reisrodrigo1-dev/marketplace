@@ -1,13 +1,12 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAlunoAuth } from '../contexts/AlunoAuthContext';
 import { notesService } from '../firebase/notesService';
 import { progressoService } from '../firebase/progressoService';
 
-// CoursePlayer: Hotmart/Alura-style course viewer
-// Props: course (object with modules/lessons), onBack (function)
+// CoursePlayer: Player moderno inspirado no Hotmart/Alura
 const CoursePlayer = ({ course, onBack }) => {
   const { aluno } = useAlunoAuth();
-  // --- Hotmart/Alura-style visual improvements ---
   const [showSidebar, setShowSidebar] = useState(true);
   const [notes, setNotes] = useState('');
   const [loadingNote, setLoadingNote] = useState(false);
@@ -16,6 +15,8 @@ const CoursePlayer = ({ course, onBack }) => {
   const [showMaterials, setShowMaterials] = useState(false);
   const [selectedModuleIdx, setSelectedModuleIdx] = useState(0);
   const [selectedLessonIdx, setSelectedLessonIdx] = useState(0);
+  const [showNotes, setShowNotes] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   if (!course) return null;
   const modules = course.modulos || [];
@@ -23,12 +24,33 @@ const CoursePlayer = ({ course, onBack }) => {
   const lessons = currentModule.aulas || [];
   const currentLesson = lessons[selectedLessonIdx] || {};
   const totalLessons = modules.reduce((acc, m) => acc + (m.aulas?.length || 0), 0);
-  // Corrige progresso: só conta IDs únicos e que existem nas aulas
+  
   const allLessonIds = modules.flatMap(m => (m.aulas || []).map(a => a.id));
-  // Garante IDs únicos e válidos
   const uniqueCompleted = Array.from(new Set(completedLessons)).filter(id => allLessonIds.includes(id));
   const completedCount = uniqueCompleted.length;
   const courseProgress = totalLessons ? Math.min(100, Math.round((completedCount / totalLessons) * 100)) : 0;
+
+  // Encontrar próxima aula
+  const getNextLesson = () => {
+    if (selectedLessonIdx < lessons.length - 1) {
+      return { moduleIdx: selectedModuleIdx, lessonIdx: selectedLessonIdx + 1 };
+    }
+    if (selectedModuleIdx < modules.length - 1) {
+      return { moduleIdx: selectedModuleIdx + 1, lessonIdx: 0 };
+    }
+    return null;
+  };
+
+  const getPrevLesson = () => {
+    if (selectedLessonIdx > 0) {
+      return { moduleIdx: selectedModuleIdx, lessonIdx: selectedLessonIdx - 1 };
+    }
+    if (selectedModuleIdx > 0) {
+      const prevModule = modules[selectedModuleIdx - 1];
+      return { moduleIdx: selectedModuleIdx - 1, lessonIdx: (prevModule.aulas?.length || 1) - 1 };
+    }
+    return null;
+  };
 
   // Carrega anotação ao trocar de aula
   useEffect(() => {
@@ -45,16 +67,13 @@ const CoursePlayer = ({ course, onBack }) => {
       setNotes(res.success ? res.nota : '');
       setLoadingNote(false);
     });
-    // Limpa timeout de save ao trocar de aula
     return () => { if (saveTimeout.current) clearTimeout(saveTimeout.current); };
-    // eslint-disable-next-line
   }, [aluno, course?.id, selectedLessonIdx, lessons]);
-
 
   // Salva anotação com debounce
   useEffect(() => {
     if (!aluno || !course?.id || !lessons[selectedLessonIdx]?.id) return;
-    if (loadingNote) return; // Não salva enquanto carrega
+    if (loadingNote) return;
     if (saveTimeout.current) clearTimeout(saveTimeout.current);
     saveTimeout.current = setTimeout(() => {
       notesService.saveNote({
@@ -64,18 +83,7 @@ const CoursePlayer = ({ course, onBack }) => {
         nota: notes
       });
     }, 800);
-    // eslint-disable-next-line
   }, [notes]);
-
-  // Navegação por teclado
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') setSelectedLessonIdx(idx => Math.max(0, idx - 1));
-      if (e.key === 'ArrowRight') setSelectedLessonIdx(idx => Math.min(lessons.length - 1, idx + 1));
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lessons.length]);
 
   // Marca aula como concluída ao trocar de aula
   useEffect(() => {
@@ -96,7 +104,6 @@ const CoursePlayer = ({ course, onBack }) => {
         setCompletedLessons(res.aulasConcluidas);
       }
     });
-    // eslint-disable-next-line
   }, [aluno, course?.id]);
 
   // Salva progresso ao marcar aula como concluída
@@ -107,156 +114,340 @@ const CoursePlayer = ({ course, onBack }) => {
       cursoId: course.id,
       aulasConcluidas: Array.from(new Set(completedLessons))
     });
-    // eslint-disable-next-line
   }, [completedLessons]);
 
+  const nextLesson = getNextLesson();
+  const prevLesson = getPrevLesson();
+
   return (
-    <div className="flex flex-col md:flex-row min-h-[80vh] bg-gray-100">
-      {/* Sidebar: Modules & Lessons */}
-      <aside className={`z-10 fixed md:static top-0 left-0 h-full md:h-auto w-72 bg-white border-r shadow-lg transition-transform duration-300 ${showSidebar ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
-        <div className="flex items-center justify-between p-4 border-b">
-          <button onClick={onBack} className="text-blue-600 hover:underline font-bold">← Voltar</button>
-          <button className="md:hidden text-gray-500" onClick={() => setShowSidebar(false)} aria-label="Fechar menu">✕</button>
-        </div>
-        <div className="p-4">
-          <h3 className="font-bold text-lg mb-4 text-blue-900">Conteúdo do Curso</h3>
-          <ul>
-            {modules.map((mod, mIdx) => (
-              <li key={mod.id || mIdx} className="mb-2">
-                <div
-                  className={`flex items-center gap-2 font-semibold cursor-pointer px-2 py-1 rounded ${mIdx === selectedModuleIdx ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-200'}`}
-                  onClick={() => { setSelectedModuleIdx(mIdx); setSelectedLessonIdx(0); }}
-                >
-                  <span className="inline-block w-3 h-3 rounded-full mr-2" style={{ background: mIdx === selectedModuleIdx ? '#0ea5e9' : '#e5e7eb', border: mIdx === selectedModuleIdx ? '2px solid #0ea5e9' : '2px solid #e5e7eb' }}></span>
-                  {mod.titulo}
-                </div>
-                <ul className="ml-4 mt-1">
-                  {mod.aulas?.map((aula, aIdx) => (
-                    <li key={aula.id || aIdx}>
-                      <button
-                        className={`flex items-center gap-2 w-full px-2 py-1 rounded text-sm text-left ${mIdx === selectedModuleIdx && aIdx === selectedLessonIdx ? 'bg-yellow-200 text-yellow-900 font-bold' : 'hover:bg-yellow-50'} ${completedLessons.includes(aula.id) ? 'line-through text-green-600' : ''}`}
-                        onClick={() => { setSelectedModuleIdx(mIdx); setSelectedLessonIdx(aIdx); }}
-                        aria-label={aula.titulo}
-                      >
-                        <span className="material-icons text-xs">{completedLessons.includes(aula.id) ? 'check_circle' : 'play_circle'}</span>
-                        {aula.titulo}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="p-4 border-t text-xs text-gray-400 text-center">Powered by DireitoHub</div>
-      </aside>
-
-      {/* Main: Video Player & Lesson Info */}
-      <main className="flex-1 flex flex-col items-center justify-center p-0 md:p-8">
-        {/* Topbar: título, progresso, avatar, professor */}
-        <div className="w-full max-w-3xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 px-4 pt-6 md:pt-0">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <span className="text-2xl font-bold text-blue-900">{course.titulo}</span>
-              {course.autor && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">com {course.autor}</span>}
-            </div>
-            <div className="text-sm text-gray-500 font-medium">Módulo: <span className="text-blue-800 font-semibold">{currentModule.titulo}</span></div>
-            <div className="text-xs text-gray-400">Aula {selectedLessonIdx + 1} de {lessons.length}</div>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* Avatar fake do aluno */}
-            <div className="w-10 h-10 rounded-full bg-yellow-200 flex items-center justify-center text-lg font-bold text-yellow-800 border-2 border-yellow-400">👤</div>
-            {/* Progresso do curso */}
-            <div className="flex flex-col items-end">
-              <span className="text-xs text-gray-500 mb-1">Progresso do curso</span>
-              <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-2 bg-blue-500 rounded-full" style={{ width: `${courseProgress}%` }}></div>
-              </div>
-              <span className="text-xs text-blue-700 font-bold mt-1">{courseProgress}%</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Video player com fundo escuro e sombra */}
-        <div className="w-full max-w-3xl bg-gray-900 rounded-2xl shadow-2xl mb-6 p-2 md:p-6 flex flex-col items-center">
-          {currentLesson.videoUrl ? (
-            <div className="w-full aspect-w-16 aspect-h-9 bg-black rounded-xl overflow-hidden border-4 border-gray-800 shadow-lg">
-              <iframe
-                src={currentLesson.videoUrl}
-                title={currentLesson.titulo}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-72 md:h-[420px] rounded-xl"
-              />
-            </div>
-          ) : (
-            <div className="mb-6 text-gray-400 text-center">Vídeo não disponível</div>
-          )}
-        </div>
-
-        {/* Navegação rápida */}
-        <div className="flex justify-between items-center w-full max-w-3xl mb-6 px-4">
-          <button
-            className="px-4 py-2 bg-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-300"
-            onClick={() => setSelectedLessonIdx(idx => Math.max(0, idx - 1))}
-            disabled={selectedLessonIdx === 0}
-          >
-            ← Aula anterior
-          </button>
-          <button
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
-            onClick={() => setSelectedLessonIdx(idx => Math.min(lessons.length - 1, idx + 1))}
-            disabled={selectedLessonIdx === lessons.length - 1}
-          >
-            Próxima aula →
-          </button>
-        </div>
-
-        {/* Materiais extras e anotações */}
-        <div className="w-full max-w-3xl flex flex-col md:flex-row gap-6 mb-8 px-4">
-          <div className="flex-1">
-            <button className="text-xs text-yellow-700 underline mb-2" onClick={() => setShowMaterials(v => !v)}>
-              {showMaterials ? 'Ocultar materiais' : 'Ver materiais da aula'}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header fixo no topo */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={onBack}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Voltar
             </button>
-            {showMaterials && currentLesson.pdfUrl && (
-              <div className="mb-2">
-                <a href={currentLesson.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Baixar PDF da aula</a>
-              </div>
-            )}
-            {/* Espaço para comentários/dúvidas futuros */}
+            <div className="h-6 w-px bg-gray-300"></div>
+            <h1 className="text-xl font-bold text-gray-900 truncate max-w-xs md:max-w-md">
+              {course.titulo}
+            </h1>
           </div>
-          <div className="flex-1">
-            <label className="block text-xs text-gray-500 mb-1">Minhas anotações</label>
-            <textarea
-              className="w-full border border-yellow-200 rounded-xl px-3 py-2 text-base focus:ring-2 focus:ring-yellow-400"
-              rows={3}
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Escreva suas anotações sobre esta aula..."
-              disabled={loadingNote}
-            />
-            {loadingNote && <div className="text-xs text-gray-400 mt-1">Carregando anotações...</div>}
+          
+          <div className="flex items-center gap-4">
+            {/* Progresso */}
+            <div className="hidden md:flex items-center gap-3">
+              <span className="text-sm text-gray-600">Progresso</span>
+              <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300"
+                  style={{ width: `${courseProgress}%` }}
+                />
+              </div>
+              <span className="text-sm font-semibold text-gray-900">{courseProgress}%</span>
+            </div>
+            
+            {/* Toggle sidebar */}
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           </div>
         </div>
+      </header>
 
-        {/* Feedback visual de conclusão */}
-        {completedCount === totalLessons && totalLessons > 0 && (
-          <div className="w-full max-w-3xl mb-8 flex flex-col items-center">
-            <div className="text-2xl text-green-600 font-bold mb-2">Parabéns! Você concluiu o curso 🎉</div>
-            <div className="text-sm text-gray-500">Certificado disponível em breve.</div>
+      <div className="flex h-[calc(100vh-80px)]">
+        {/* Sidebar com conteúdo do curso */}
+        <aside className={`${showSidebar ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 overflow-hidden flex flex-col`}>
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Conteúdo do Curso</h2>
+            <div className="text-sm text-gray-600">
+              {completedCount} de {totalLessons} aulas concluídas
+            </div>
           </div>
-        )}
-      </main>
+          
+          <div className="flex-1 overflow-y-auto">
+            {modules.map((module, mIdx) => (
+              <div key={module.id || mIdx} className="border-b border-gray-100">
+                <button
+                  onClick={() => {
+                    setSelectedModuleIdx(mIdx);
+                    setSelectedLessonIdx(0);
+                  }}
+                  className={`w-full p-4 text-left hover:bg-gray-50 transition-colors ${
+                    mIdx === selectedModuleIdx ? 'bg-blue-50 border-r-2 border-blue-500' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                        mIdx === selectedModuleIdx 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-200 text-gray-600'
+                      }`}>
+                        {mIdx + 1}
+                      </div>
+                      <span className="font-medium text-gray-900">{module.titulo}</span>
+                    </div>
+                    <svg 
+                      className={`w-4 h-4 text-gray-400 transition-transform ${
+                        mIdx === selectedModuleIdx ? 'rotate-90' : ''
+                      }`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </button>
+                
+                {mIdx === selectedModuleIdx && (
+                  <div className="bg-gray-50">
+                    {module.aulas?.map((lesson, lIdx) => (
+                      <button
+                        key={lesson.id || lIdx}
+                        onClick={() => {
+                          setSelectedModuleIdx(mIdx);
+                          setSelectedLessonIdx(lIdx);
+                        }}
+                        className={`w-full px-6 py-3 text-left hover:bg-gray-100 transition-colors flex items-center gap-3 ${
+                          mIdx === selectedModuleIdx && lIdx === selectedLessonIdx
+                            ? 'bg-blue-100 border-r-2 border-blue-500'
+                            : ''
+                        }`}
+                      >
+                        <div className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                          completedLessons.includes(lesson.id)
+                            ? 'bg-green-500'
+                            : mIdx === selectedModuleIdx && lIdx === selectedLessonIdx
+                            ? 'bg-blue-500'
+                            : 'bg-gray-300'
+                        }`}>
+                          {completedLessons.includes(lesson.id) ? (
+                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M8 5v10l8-5-8-5z" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className={`text-sm ${
+                          mIdx === selectedModuleIdx && lIdx === selectedLessonIdx
+                            ? 'text-blue-900 font-medium'
+                            : 'text-gray-700'
+                        }`}>
+                          {lesson.titulo}
+                        </span>
+                        {completedLessons.includes(lesson.id) && (
+                          <span className="ml-auto text-xs text-green-600 font-medium">Concluída</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </aside>
 
-      {/* Botão para abrir sidebar no mobile */}
-      {!showSidebar && (
-        <button
-          className="fixed bottom-6 left-6 z-20 bg-blue-600 text-white rounded-full shadow-lg p-4 md:hidden"
-          onClick={() => setShowSidebar(true)}
-          aria-label="Abrir menu do curso"
-        >
-          <span className="material-icons">menu</span>
-        </button>
+        {/* Área principal do player */}
+        <main className="flex-1 flex flex-col bg-gray-900">
+          {/* Video player */}
+          <div className="flex-1 flex items-center justify-center p-6">
+            <div className="w-full max-w-5xl">
+              {currentLesson.videoUrl ? (
+                <div className="relative bg-black rounded-xl overflow-hidden shadow-2xl">
+                  <iframe
+                    src={currentLesson.videoUrl}
+                    title={currentLesson.titulo}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full aspect-video"
+                    style={{ minHeight: '400px' }}
+                  />
+                  {/* Controles overlay */}
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <button
+                      onClick={() => setIsFullscreen(!isFullscreen)}
+                      className="p-2 bg-black bg-opacity-50 text-white rounded-lg hover:bg-opacity-75 transition-all"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="aspect-video bg-gray-800 rounded-xl flex items-center justify-center">
+                  <div className="text-center text-gray-400">
+                    <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M12 5v.01M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
+                    </svg>
+                    <p className="text-lg">Vídeo não disponível</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Informações da aula e controles */}
+          <div className="bg-white border-t border-gray-200">
+            <div className="max-w-5xl mx-auto p-6">
+              {/* Título e descrição da aula */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                    Módulo {selectedModuleIdx + 1}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    Aula {selectedLessonIdx + 1} de {lessons.length}
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  {currentLesson.titulo}
+                </h2>
+                {currentLesson.descricao && (
+                  <p className="text-gray-600 leading-relaxed">
+                    {currentLesson.descricao}
+                  </p>
+                )}
+              </div>
+
+              {/* Controles de navegação */}
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() => {
+                    if (prevLesson) {
+                      setSelectedModuleIdx(prevLesson.moduleIdx);
+                      setSelectedLessonIdx(prevLesson.lessonIdx);
+                    }
+                  }}
+                  disabled={!prevLesson}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Aula anterior
+                </button>
+
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setShowMaterials(!showMaterials)}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Materiais
+                  </button>
+                  
+                  <button
+                    onClick={() => setShowNotes(!showNotes)}
+                    className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Anotações
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (nextLesson) {
+                      setSelectedModuleIdx(nextLesson.moduleIdx);
+                      setSelectedLessonIdx(nextLesson.lessonIdx);
+                    }
+                  }}
+                  disabled={!nextLesson}
+                  className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                  Próxima aula
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Materiais e anotações */}
+              {(showMaterials || showNotes) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-gray-200">
+                  {showMaterials && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">Materiais da Aula</h3>
+                      {currentLesson.pdfUrl ? (
+                        <a
+                          href={currentLesson.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          <span>Material PDF da aula</span>
+                        </a>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Nenhum material disponível para esta aula</p>
+                      )}
+                    </div>
+                  )}
+
+                  {showNotes && (
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-3">Minhas Anotações</h3>
+                      <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        disabled={loadingNote}
+                        className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        placeholder="Faça suas anotações sobre esta aula..."
+                      />
+                      {loadingNote && (
+                        <p className="text-xs text-gray-500 mt-1">Carregando anotações...</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {/* Feedback de conclusão do curso */}
+      {completedCount === totalLessons && totalLessons > 0 && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Parabéns! 🎉</h3>
+            <p className="text-gray-600 mb-6">Você concluiu o curso com sucesso!</p>
+            <button
+              onClick={() => setCompletedCount(0)}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
