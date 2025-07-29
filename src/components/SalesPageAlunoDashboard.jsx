@@ -228,7 +228,7 @@ const SalesPageAlunoDashboard = () => {
       console.log('Salvando perfil com dados:', profileData);
 
       const result = await alunoService.atualizarPerfilAluno(aluno.uid, {
-        name: profileData.nome,
+        nome: profileData.nome, // Corrigindo para usar 'nome' em vez de 'name'
         endereco: profileData.endereco
       });
 
@@ -237,10 +237,18 @@ const SalesPageAlunoDashboard = () => {
       if (result.success) {
         setEditingProfile(false);
 
-        // Recarrega os acessos para atualizar os dados
+        // Atualiza imediatamente os acessos na interface com os novos dados
+        const acessosAtualizados = acessos.map(acesso => ({
+          ...acesso,
+          nome: profileData.nome,
+          endereco: profileData.endereco
+        }));
+        setAcessos(acessosAtualizados);
+
+        // Recarrega os acessos para garantir sincronização com o banco
         console.log('Recarregando acessos após atualização...');
         const acessosResult = await alunoService.getAcessosPorAluno(aluno.uid, paginaId);
-        if (acessosResult.success) {
+        if (acessosResult.success && acessosResult.data.length > 0) {
           setAcessos(acessosResult.data);
           console.log('Acessos recarregados:', acessosResult.data);
         }
@@ -252,7 +260,7 @@ const SalesPageAlunoDashboard = () => {
       }
     } catch (error) {
       console.error('Erro ao salvar perfil:', error);
-      alert('Erro ao atualizar perfil: ' + error.message);
+      alert('Erro ao salvar perfil: ' + error.message);
     }
   };
 

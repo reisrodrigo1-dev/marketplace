@@ -301,67 +301,71 @@ export const alunoService = {
   // Atualiza informações do perfil do aluno
   async atualizarPerfilAluno(alunoId, dadosAtualizacao) {
     try {
-      console.log('Atualizando perfil do aluno:', alunoId, dadosAtualizacao);
-
-      // Atualiza na coleção users
-      const alunoRef = doc(db, 'users', alunoId);
-      await updateDoc(alunoRef, {
-        name: dadosAtualizacao.name,
-        endereco: dadosAtualizacao.endereco,
-        updatedAt: serverTimestamp()
-      });
-
-      // Também atualiza todos os acessos do aluno
-      const acessosQuery = query(
-        collection(db, 'acessos'),
-        where('alunoId', '==', alunoId)
-      );
-      const acessosSnapshot = await getDocs(acessosQuery);
-
-      const updatePromises = acessosSnapshot.docs.map(doc => {
-        return updateDoc(doc.ref, {
-          nome: dadosAtualizacao.name,
-          endereco: dadosAtualizacao.endereco,
-          updatedAt: serverTimestamp()
-        });
-      });
-
-      await Promise.all(updatePromises);
-
-      console.log('Perfil atualizado com sucesso');
-      return { success: true };
-    } catch (error) {
-      console.error('Erro ao atualizar perfil do aluno:', error);
-      return { success: false, error: error.message };
-    }
-  },
-
-  // Atualiza perfil de um aluno específico
-  async atualizarPerfilAluno(alunoId, dadosAtualizacao) {
-    try {
       console.log('📝 Atualizando perfil do aluno:', alunoId, dadosAtualizacao);
 
-      // Atualizar todos os acessos do aluno
-      const acessosQuery = query(
-        collection(db, 'acessos'),
-        where('alunoId', '==', alunoId)
-      );
-      const acessosSnapshot = await getDocs(acessosQuery);
-
-      const updatePromises = acessosSnapshot.docs.map(doc => {
-        return updateDoc(doc.ref, {
-          nome: dadosAtualizacao.nome || dadosAtualizacao.name,
+      // Atualiza na coleção users primeiro
+      try {
+        const alunoRef = doc(db, 'users', alunoId);
+        await updateDoc(alunoRef, {
+          name: dadosAtualizacao.nome || dadosAtualizacao.name,
+          endereco: dadosAtualizacao.endereco,
           telefone: dadosAtualizacao.telefone,
           cpf: dadosAtualizacao.cpf,
           dataNascimento: dadosAtualizacao.dataNascimento,
-          endereco: dadosAtualizacao.endereco,
           updatedAt: serverTimestamp()
         });
-      });
+        console.log('✅ Perfil atualizado na coleção users');
+      } catch (userError) {
+        console.log('⚠️ Erro ao atualizar coleção users (pode não existir):', userError);
+      }
 
-      await Promise.all(updatePromises);
+      // Atualizar todos os acessos do aluno na coleção 'acessos'
+      const acessosQuery = query(
+        collection(db, 'acessos'),
+        where('alunoId', '==', alunoId)
+      );
+      const acessosSnapshot = await getDocs(acessosQuery);
 
-      console.log('✅ Perfil do aluno atualizado com sucesso');
+      if (acessosSnapshot.docs.length > 0) {
+        const updatePromises = acessosSnapshot.docs.map(doc => {
+          return updateDoc(doc.ref, {
+            nome: dadosAtualizacao.nome || dadosAtualizacao.name,
+            telefone: dadosAtualizacao.telefone,
+            cpf: dadosAtualizacao.cpf,
+            dataNascimento: dadosAtualizacao.dataNascimento,
+            endereco: dadosAtualizacao.endereco,
+            updatedAt: serverTimestamp()
+          });
+        });
+
+        await Promise.all(updatePromises);
+        console.log(`✅ ${acessosSnapshot.docs.length} acessos atualizados na coleção 'acessos'`);
+      }
+
+      // Também atualizar na coleção legada 'alunosPorPagina' se existir
+      const alunosPorPaginaQuery = query(
+        collection(db, 'alunosPorPagina'),
+        where('alunoId', '==', alunoId)
+      );
+      const alunosPorPaginaSnapshot = await getDocs(alunosPorPaginaQuery);
+
+      if (alunosPorPaginaSnapshot.docs.length > 0) {
+        const updatePromisesLegacy = alunosPorPaginaSnapshot.docs.map(doc => {
+          return updateDoc(doc.ref, {
+            nome: dadosAtualizacao.nome || dadosAtualizacao.name,
+            telefone: dadosAtualizacao.telefone,
+            cpf: dadosAtualizacao.cpf,
+            dataNascimento: dadosAtualizacao.dataNascimento,
+            endereco: dadosAtualizacao.endereco,
+            updatedAt: serverTimestamp()
+          });
+        });
+
+        await Promise.all(updatePromisesLegacy);
+        console.log(`✅ ${alunosPorPaginaSnapshot.docs.length} registros atualizados na coleção legada 'alunosPorPagina'`);
+      }
+
+      console.log('✅ Perfil do aluno atualizado com sucesso em todas as coleções');
       return { success: true };
     } catch (error) {
       console.error('❌ Erro ao atualizar perfil do aluno:', error);
