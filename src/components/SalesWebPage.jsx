@@ -232,11 +232,11 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
     logoUrl
   } = pageData;
 
-  // Cores padrão caso não estejam definidas
+  // Cores padrão caso não estejam definidas - esquema profissional baseado em players do mercado
   const cores = {
-    principal: corPrincipal || '#6366f1',
-    secundaria: corSecundaria || '#8b5cf6', 
-    destaque: corDestaque || '#10b981'
+    principal: corPrincipal || '#1e40af', // Azul profissional (credibilidade jurídica)
+    secundaria: corSecundaria || '#3b82f6', // Azul complementar (harmonioso)
+    destaque: corDestaque || '#059669' // Verde esmeralda (alta conversão em CTAs)
   };
 
   const getYoutubeId = (url) => {

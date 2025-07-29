@@ -56,9 +56,9 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
     titulo: '',
     descricao: '',
     produtosSelecionados: [],
-    corPrincipal: '#6366f1',
-    corSecundaria: '#8b5cf6',
-    corDestaque: '#10b981',
+    corPrincipal: '#1e40af', // Azul profissional e confiável (inspirado em HeroSpark)
+    corSecundaria: '#3b82f6', // Azul complementar mais claro
+    corDestaque: '#059669', // Verde para CTAs (alta conversão)
   };
 
   const initialFormData = isEditing ? {
@@ -242,7 +242,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
           </div>
         </div>
 
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           <form
             onSubmit={async (e) => {
               e.preventDefault();
@@ -285,7 +285,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
               }
               setIsSubmitting(false);
             }}
-            className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8"
+            className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 flex-1"
           >
             {currentStep === 1 && (
               <div className="space-y-8">
@@ -508,7 +508,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
               </div>
             )}
 
-            {currentStep === 4 && (
+            {currentStep === 7 && (
               <div className="space-y-8">
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -576,7 +576,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
               </div>
             )}
 
-            {currentStep === 5 && (
+            {currentStep === 8 && (
               <div className="w-full">
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -625,64 +625,62 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
               </div>
             )}
 
-            {/* Navegação - Sempre visível */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 pt-6 mt-10 -mx-8 px-8">
-              <div className="flex justify-between">
+            {/* Navegação */}
+            <div className="flex justify-between mt-10 pt-6 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={currentStep === 1 ? onBack : prevStep}
+                className="inline-flex items-center px-8 py-3 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 hover:shadow-md transition-all duration-200"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Anterior
+              </button>
+
+              {currentStep < 5 ? (
                 <button
                   type="button"
-                  onClick={currentStep === 1 ? onBack : prevStep}
-                  className="inline-flex items-center px-8 py-3 border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 hover:shadow-md transition-all duration-200"
+                  onClick={nextStep}
+                  disabled={
+                    (currentStep === 1 && !validateStep1()) ||
+                    (currentStep === 2 && !validateStep2()) ||
+                    (currentStep === 4 && !validateStep4())
+                  }
+                  className={`inline-flex items-center px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    (currentStep === 1 && !validateStep1()) ||
+                    (currentStep === 2 && !validateStep2()) ||
+                    (currentStep === 4 && !validateStep4())
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-lg hover:scale-105'
+                  }`}
                 >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  {currentStep === 4 ? 'Pré-visualizar' : 'Próximo'}
+                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                  Anterior
                 </button>
-
-                {currentStep < 5 ? (
-                  <button
-                    type="button"
-                    onClick={nextStep}
-                    disabled={
-                      (currentStep === 1 && !validateStep1()) ||
-                      (currentStep === 2 && !validateStep2()) ||
-                      (currentStep === 4 && !validateStep4())
-                    }
-                    className={`inline-flex items-center px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                      (currentStep === 1 && !validateStep1()) ||
-                      (currentStep === 2 && !validateStep2()) ||
-                      (currentStep === 4 && !validateStep4())
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-lg hover:scale-105'
-                    }`}
-                  >
-                    {currentStep === 4 ? 'Pré-visualizar' : 'Próximo'}
-                    <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !validateStep4()}
+                  className={`inline-flex items-center px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    isSubmitting || !validateStep4()
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-500 to-teal-600 text-white hover:shadow-lg hover:scale-105'
+                  }`}
+                >
+                  {isSubmitting && (
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={isSubmitting || !validateStep4()}
-                    className={`inline-flex items-center px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                      isSubmitting || !validateStep4()
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-green-500 to-teal-600 text-white hover:shadow-lg hover:scale-105'
-                    }`}
-                  >
-                    {isSubmitting && (
-                      <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    )}
-                    {isSubmitting
-                      ? (isEditing ? 'Salvando...' : 'Criando...')
-                      : (isEditing ? 'Salvar Alterações' : 'Criar Página de Vendas')}
-                  </button>
-                )}
-              </div>
+                  )}
+                  {isSubmitting
+                    ? (isEditing ? 'Salvando...' : 'Criando...')
+                    : (isEditing ? 'Salvar Alterações' : 'Criar Página de Vendas')}
+                </button>
+              )}
             </div>
           </form>
         </div>
