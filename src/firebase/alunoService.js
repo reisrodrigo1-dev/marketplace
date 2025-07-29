@@ -29,12 +29,29 @@ export const alunoService = {
     return { success: true };
   },
 
-  // Busca todos os acessos de um aluno em uma página
+  // Busca acessos de um aluno para uma página específica
   async getAcessosPorAluno(alunoId, paginaId) {
-    const q = query(collection(db, COLLECTION), where('alunoId', '==', alunoId), where('paginaId', '==', paginaId));
-    const snap = await getDocs(q);
-    const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    return { success: true, data };
+    try {
+      console.log(`Buscando acessos para aluno: ${alunoId}, página: ${paginaId}`);
+
+      const q = query(
+        collection(db, 'acessos'),
+        where('alunoId', '==', alunoId),
+        where('paginaId', '==', paginaId)
+      );
+      const querySnapshot = await getDocs(q);
+      const acessos = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log('Acesso encontrado:', { id: doc.id, ...data });
+        return { id: doc.id, ...data };
+      });
+
+      console.log(`Total de acessos encontrados: ${acessos.length}`);
+      return { success: true, data: acessos };
+    } catch (error) {
+      console.error('Erro ao buscar acessos do aluno:', error);
+      return { success: false, error: error.message };
+    }
   },
 
   // Busca todos os alunos de uma página
@@ -65,7 +82,7 @@ export const alunoService = {
     const q = query(collection(db, COLLECTION), where('paginaId', '==', paginaId));
     const snap = await getDocs(q);
     const acessos = snap.docs.map(doc => doc.data());
-    
+
     // Agrupa por aluno para evitar duplicatas
     const alunosMap = new Map();
     acessos.forEach(acesso => {
@@ -91,7 +108,7 @@ export const alunoService = {
         cursoTitulo: acesso.cursoTitulo,
         dataAcesso: acesso.dataAcesso
       });
-      
+
       // Atualiza datas
       if (acesso.dataAcesso < aluno.primeiroAcesso) {
         aluno.primeiroAcesso = acesso.dataAcesso;
@@ -108,7 +125,7 @@ export const alunoService = {
         // Buscar informações do usuário na collection 'users'
         const userRef = doc(db, 'users', aluno.alunoId);
         const userSnap = await getDoc(userRef);
-        
+
         if (userSnap.exists()) {
           const userData = userSnap.data();
           aluno.nome = userData.name || aluno.nome;
@@ -117,38 +134,103 @@ export const alunoService = {
           aluno.dataNascimento = userData.dataNascimento || aluno.dataNascimento || '';
           aluno.endereco = userData.endereco || aluno.endereco || '';
         }
-        
+
         alunosComDetalhes.push(aluno);
       } catch (error) {
         console.error('Erro ao buscar dados do usuário:', error);
         alunosComDetalhes.push(aluno);
       }
     }
-    
+
     return { success: true, data: alunosComDetalhes };
   },
 
   // Atualiza informações do perfil do aluno
-  async atualizarPerfilAluno(alunoId, dadosAtualizados) {
+  async atualizarPerfilAluno(alunoId, dadosAtualizacao) {
     try {
-      // Atualiza na collection users
-      const userRef = doc(db, 'users', alunoId);
-      await setDoc(userRef, dadosAtualizados, { merge: true });
+      console.log('Atualizando perfil do aluno:', alunoId, dadosAtualizacao);
 
-      // Atualiza todos os acessos do aluno
-      const q = query(collection(db, COLLECTION), where('alunoId', '==', alunoId));
-      const snap = await getDocs(q);
-      
-      const updatePromises = snap.docs.map(docSnapshot => {
-        const docRef = doc(db, COLLECTION, docSnapshot.id);
-        return setDoc(docRef, dadosAtualizados, { merge: true });
+      // Atualiza na coleção users
+      const alunoRef = doc(db, 'users', alunoId);
+      await updateDoc(alunoRef, {
+        name: dadosAtualizacao.name,
+        endereco: dadosAtualizacao.endereco,
+        updatedAt: serverTimestamp()
+      });
+
+      // Também atualiza todos os acessos do aluno
+      const acessosQuery = query(
+        collection(db, 'acessos'),
+        where('alunoId', '==', alunoId)
+      );
+      const acessosSnapshot = await getDocs(acessosQuery);
+
+      const updatePromises = acessosSnapshot.docs.map(doc => {
+        return updateDoc(doc.ref, {
+          nome: dadosAtualizacao.name,
+          endereco: dadosAtualizacao.endereco,
+          updatedAt: serverTimestamp()
+        });
       });
 
       await Promise.all(updatePromises);
+
+      console.log('Perfil atualizado com sucesso');
       return { success: true };
     } catch (error) {
       console.error('Erro ao atualizar perfil do aluno:', error);
       return { success: false, error: error.message };
     }
-  }
+  },
+
+  // Adiciona um produto/curso ao aluno
+  async adicionarProdutoAluno(alunoData) {
+    try {
+      console.log('Criando acesso para aluno:', alunoData);
+
+      const acessoRef = await addDoc(collection(db, 'acessos'), {
+        ...alunoData,
+        dataAcesso: serverTimestamp(),
+        ativo: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+
+      console.log('Acesso criado com ID:', acessoRef.id);
+      return { success: true, id: acessoRef.id };
+    } catch (error) {
+      console.error('Erro ao adicionar produto ao aluno:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Função para testar criação de acesso (usar apenas para debug)
+  async criarAcessoTeste(alunoId, paginaId, cursoId, nomeProduto) {
+    try {
+      const acessoData = {
+        alunoId: alunoId,
+        paginaId: paginaId,
+        cursoId: cursoId,
+        nomeProduto: nomeProduto,
+        nome: 'Aluno Teste',
+        email: 'teste@example.com',
+        telefone: '(11) 99999-9999',
+        cpf: '000.000.000-00',
+        endereco: 'Endereço teste',
+        dataNascimento: new Date('1990-01-01'),
+        compradoEm: serverTimestamp(),
+        dataAcesso: serverTimestamp(),
+        ativo: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      const result = await this.adicionarProdutoAluno(acessoData);
+      console.log('Acesso de teste criado:', result);
+      return result;
+    } catch (error) {
+      console.error('Erro ao criar acesso de teste:', error);
+      return { success: false, error: error.message };
+    }
+  },
 };

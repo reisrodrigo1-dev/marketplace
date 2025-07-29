@@ -58,10 +58,17 @@ const SalesPageAlunoDashboard = () => {
   // Carrega os acessos do aluno para esta página
   useEffect(() => {
     if (!aluno || !paginaId) return;
+    
+    console.log('Iniciando carregamento de acessos...', { alunoId: aluno.uid, paginaId });
     setLoading(true);
+    
     alunoService.getAcessosPorAluno(aluno.uid, paginaId).then(result => {
+      console.log('Resultado dos acessos:', result);
+      
       if (result.success) {
         setAcessos(result.data);
+        console.log('Acessos carregados:', result.data);
+        
         // Inicializa dados do perfil
         if (result.data.length > 0) {
           const primeiroAcesso = result.data[0];
@@ -69,8 +76,19 @@ const SalesPageAlunoDashboard = () => {
             nome: primeiroAcesso.nome || aluno.displayName || '',
             endereco: primeiroAcesso.endereco || ''
           });
+          console.log('Dados do perfil inicializados:', {
+            nome: primeiroAcesso.nome || aluno.displayName || '',
+            endereco: primeiroAcesso.endereco || ''
+          });
+        } else {
+          console.log('Nenhum acesso encontrado para este aluno nesta página');
         }
+      } else {
+        console.error('Erro ao carregar acessos:', result.error);
       }
+      setLoading(false);
+    }).catch(error => {
+      console.error('Erro na promise de acessos:', error);
       setLoading(false);
     });
   }, [aluno, paginaId]);
@@ -139,25 +157,34 @@ const SalesPageAlunoDashboard = () => {
   // Função para salvar as alterações do perfil
   const handleSaveProfile = async () => {
     try {
+      console.log('Salvando perfil com dados:', profileData);
+      
       const result = await alunoService.atualizarPerfilAluno(aluno.uid, {
         name: profileData.nome,
         endereco: profileData.endereco
       });
 
+      console.log('Resultado da atualização:', result);
+
       if (result.success) {
         setEditingProfile(false);
+        
         // Recarrega os acessos para atualizar os dados
+        console.log('Recarregando acessos após atualização...');
         const acessosResult = await alunoService.getAcessosPorAluno(aluno.uid, paginaId);
         if (acessosResult.success) {
           setAcessos(acessosResult.data);
+          console.log('Acessos recarregados:', acessosResult.data);
         }
+        
         alert('Perfil atualizado com sucesso!');
       } else {
+        console.error('Erro no resultado:', result.error);
         alert('Erro ao atualizar perfil: ' + result.error);
       }
     } catch (error) {
       console.error('Erro ao salvar perfil:', error);
-      alert('Erro ao atualizar perfil');
+      alert('Erro ao atualizar perfil: ' + error.message);
     }
   };
 
@@ -406,6 +433,12 @@ const SalesPageAlunoDashboard = () => {
               <div className="text-6xl mb-4">📖</div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">Nenhum curso encontrado</h3>
               <p className="text-gray-600">Você ainda não possui cursos nesta página.</p>
+              <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-600">
+                <p><strong>Debug:</strong></p>
+                <p>Aluno ID: {aluno?.uid}</p>
+                <p>Página ID: {paginaId}</p>
+                <p>Verifique se existem registros na coleção 'acessos' com estes IDs.</p>
+              </div>
             </div>
           ) : (
             <>
