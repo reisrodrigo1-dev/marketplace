@@ -1,52 +1,116 @@
-import React from "react";
+
+<old_str>import React from "react";
+
+// Card visual para exibir curso do aluno no dashboard
+// Props: acesso (objeto do curso), onContinue (callback), progresso (0-100), concluido (bool)</old_str>
+<new_str>import React from "react";
 
 // Card visual para exibir curso do aluno no dashboard
 // Props: acesso (objeto do curso), onContinue (callback), progresso (0-100), concluido (bool)
-const AlunoCourseCard = ({ acesso, onContinue, progresso = 0, concluido = false }) => {
+const AlunoCourseCard = ({ acesso, progresso, concluido, onContinue }) => {
+  const getProgressColor = () => {
+    if (concluido) return 'bg-green-500';
+    if (progresso > 50) return 'bg-blue-500';
+    if (progresso > 0) return 'bg-yellow-500';
+    return 'bg-gray-300';
+  };
+
+  const getStatusText = () => {
+    if (concluido) return 'Concluído';
+    if (progresso > 0) return 'Em progresso';
+    return 'Não iniciado';
+  };
+
+  const getStatusColor = () => {
+    if (concluido) return 'text-green-700 bg-green-100';
+    if (progresso > 0) return 'text-blue-700 bg-blue-100';
+    return 'text-gray-700 bg-gray-100';
+  };
+
   return (
-    <div className={
-      `relative bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col transition-transform duration-200 hover:scale-[1.03] hover:shadow-2xl overflow-hidden` +
-      (concluido ? ' ring-2 ring-green-400' : '')
-    }>
-      {/* Capa do curso (se houver) */}
-      {/* <div className="h-32 bg-gray-200 flex items-center justify-center text-gray-400 text-2xl font-bold">
-        Capa
-      </div> */}
-      <div className="flex-1 flex flex-col p-5">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="inline-block px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800 font-semibold">
-            {concluido ? 'Concluído' : progresso >= 1 ? 'Em andamento' : 'Novo'}
-          </span>
-          {concluido && <span className="material-icons text-green-500 text-base ml-1">check_circle</span>}
-        </div>
-        <h3 className="text-lg font-bold text-blue-900 mb-1 line-clamp-2">{acesso.cursoTitulo}</h3>
-        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{acesso.cursoDescricao}</p>
-        <span className="inline-block bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium mb-2">
-          Acesso em {new Date(acesso.dataAcesso).toLocaleDateString('pt-BR')}
-        </span>
-        {/* Barra de progresso */}
-        <div className="flex items-center gap-2 mt-2">
-          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-2 rounded-full transition-all duration-500" style={{ width: `${progresso}%`, background: concluido ? '#22c55e' : '#0ea5e9' }}></div>
+    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 group">
+      {/* Imagem/Thumbnail do curso */}
+      <div className="relative h-48 bg-gradient-to-br from-blue-400 via-purple-500 to-indigo-600 flex items-center justify-center">
+        {acesso.thumbnail ? (
+          <img 
+            src={acesso.thumbnail} 
+            alt={acesso.titulo}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="text-white text-6xl opacity-80">
+            📚
           </div>
-          <span className="text-xs font-bold text-blue-700 w-10 text-right">{progresso}%</span>
+        )}
+        
+        {/* Badge de Status */}
+        <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor()}`}>
+          {getStatusText()}
         </div>
-        {/* Botão continuar */}
+
+        {/* Ícone de Play no centro */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black bg-opacity-20">
+          <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center shadow-lg">
+            <svg className="w-6 h-6 text-blue-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {/* Conteúdo do Card */}
+      <div className="p-6">
+        <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+          {acesso.titulo || 'Curso sem título'}
+        </h3>
+        
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+          {acesso.descricao || 'Descrição não disponível'}
+        </p>
+
+        {/* Barra de Progresso */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">Progresso</span>
+            <span className="text-sm font-bold text-gray-800">{progresso}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div 
+              className={`h-2 rounded-full transition-all duration-500 ${getProgressColor()}`}
+              style={{ width: `${progresso}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Informações Adicionais */}
+        <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+          <div className="flex items-center gap-1">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Acesso liberado</span>
+          </div>
+          {acesso.dataAcesso && (
+            <span>
+              Desde {new Date(acesso.dataAcesso.toDate()).toLocaleDateString('pt-BR')}
+            </span>
+          )}
+        </div>
+
+        {/* Botão de Ação */}
         <button
-          className="mt-5 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors w-full"
           onClick={onContinue}
+          className={`w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300 ${
+            concluido 
+              ? 'bg-green-600 hover:bg-green-700 text-white' 
+              : progresso > 0 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-gray-800 hover:bg-gray-900 text-white'
+          } hover:shadow-lg transform hover:-translate-y-0.5`}
         >
-          {concluido ? 'Ver Certificado' : progresso > 0 ? 'Continuar' : 'Começar curso'}
+          {concluido ? '✅ Revisar Curso' : progresso > 0 ? '▶️ Continuar' : '🚀 Iniciar Curso'}
         </button>
       </div>
-      {/* Selo de conquista */}
-      {concluido && (
-        <div className="absolute top-3 right-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full shadow font-bold animate-bounce">
-          🎉 Concluído
-        </div>
-      )}
     </div>
   );
-};
-
-export default AlunoCourseCard;
+};</new_str>
