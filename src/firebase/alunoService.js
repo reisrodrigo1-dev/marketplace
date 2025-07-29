@@ -32,9 +32,13 @@ export const alunoService = {
   // Busca acessos de um aluno para uma página específica
   async getAcessosPorAluno(alunoId, paginaId) {
     try {
-      console.log(`Buscando acessos para aluno: ${alunoId}, página: ${paginaId}`);
+      console.log(`🔍 [DEBUG] Iniciando busca de acessos:`);
+      console.log(`   - Aluno ID: ${alunoId}`);
+      console.log(`   - Página ID: ${paginaId}`);
+      console.log(`   - Timestamp: ${new Date().toISOString()}`);
 
       // Primeiro tenta buscar na coleção 'acessos'
+      console.log(`🔍 [DEBUG] Tentativa 1: Buscando na coleção 'acessos'...`);
       let q = query(
         collection(db, 'acessos'),
         where('alunoId', '==', alunoId),
@@ -42,76 +46,163 @@ export const alunoService = {
       );
       let querySnapshot = await getDocs(q);
       
-      console.log(`Documentos encontrados na coleção 'acessos': ${querySnapshot.docs.length}`);
+      console.log(`📊 [DEBUG] Documentos encontrados na coleção 'acessos': ${querySnapshot.docs.length}`);
+      
+      if (querySnapshot.docs.length > 0) {
+        querySnapshot.docs.forEach((doc, index) => {
+          const data = doc.data();
+          console.log(`📄 [DEBUG] Acesso ${index + 1}:`, {
+            id: doc.id,
+            cursoId: data.cursoId,
+            cursoTitulo: data.cursoTitulo || data.nomeProduto,
+            nome: data.nome,
+            email: data.email,
+            dataAcesso: data.dataAcesso,
+            ativo: data.ativo
+          });
+        });
+      }
 
       // Se não encontrar, tenta na coleção legada 'alunosPorPagina'
       if (querySnapshot.docs.length === 0) {
-        console.log('Tentando buscar na coleção alunosPorPagina...');
+        console.log(`🔍 [DEBUG] Tentativa 2: Buscando na coleção 'alunosPorPagina'...`);
         q = query(
           collection(db, 'alunosPorPagina'),
           where('alunoId', '==', alunoId),
           where('paginaId', '==', paginaId)
         );
         querySnapshot = await getDocs(q);
-        console.log(`Documentos encontrados na coleção 'alunosPorPagina': ${querySnapshot.docs.length}`);
+        console.log(`📊 [DEBUG] Documentos encontrados na coleção 'alunosPorPagina': ${querySnapshot.docs.length}`);
+        
+        if (querySnapshot.docs.length > 0) {
+          querySnapshot.docs.forEach((doc, index) => {
+            const data = doc.data();
+            console.log(`📄 [DEBUG] Acesso legado ${index + 1}:`, {
+              id: doc.id,
+              cursoId: data.cursoId,
+              cursoTitulo: data.cursoTitulo || data.nomeProduto,
+              nome: data.nome,
+              email: data.email,
+              dataAcesso: data.dataAcesso
+            });
+          });
+        }
       }
 
       // Se ainda não encontrou, tenta buscar com base no documento composto (formato antigo)
       if (querySnapshot.docs.length === 0) {
-        console.log('Tentando buscar com documento composto...');
+        console.log(`🔍 [DEBUG] Tentativa 3: Buscando documento composto...`);
         const compositeId = `${paginaId}_${alunoId}`;
+        console.log(`🔍 [DEBUG] ID composto: ${compositeId}`);
+        
         try {
           const docRef = doc(db, 'alunosPorPagina', compositeId);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
-            console.log('Documento composto encontrado');
+            console.log(`✅ [DEBUG] Documento composto encontrado!`, docSnap.data());
             querySnapshot = { docs: [docSnap] };
+          } else {
+            console.log(`❌ [DEBUG] Documento composto não existe`);
           }
         } catch (docError) {
-          console.log('Erro ao buscar documento composto:', docError);
+          console.log(`❌ [DEBUG] Erro ao buscar documento composto:`, docError);
         }
       }
 
       const acessos = querySnapshot.docs.map(doc => {
         const data = doc.data();
-        console.log('Acesso encontrado:', { id: doc.id, ...data });
+        console.log(`✅ [DEBUG] Processando acesso final:`, { id: doc.id, ...data });
         return { id: doc.id, ...data };
       });
 
-      console.log(`Total de acessos encontrados: ${acessos.length}`);
+      console.log(`📊 [DEBUG] RESULTADO FINAL: ${acessos.length} acessos encontrados`);
       
       // Se ainda não encontrou, faz debug mais detalhado
       if (acessos.length === 0) {
-        console.log('Nenhum acesso encontrado. Fazendo busca ampla para debug...');
+        console.log(`🚨 [DEBUG] NENHUM ACESSO ENCONTRADO! Iniciando debug detalhado...`);
         
         // Busca todos os acessos do aluno (sem filtro de página)
+        console.log(`🔍 [DEBUG] Buscando TODOS os acessos do aluno ${alunoId}...`);
         const debugQuery = query(
           collection(db, 'acessos'),
           where('alunoId', '==', alunoId)
         );
         const debugSnapshot = await getDocs(debugQuery);
-        console.log(`Acessos do aluno em todas as páginas: ${debugSnapshot.docs.length}`);
+        console.log(`📊 [DEBUG] Total de acessos do aluno em TODAS as páginas: ${debugSnapshot.docs.length}`);
         
-        debugSnapshot.docs.forEach(doc => {
-          console.log('Debug acesso global:', { id: doc.id, ...doc.data() });
+        debugSnapshot.docs.forEach((doc, index) => {
+          const data = doc.data();
+          console.log(`📄 [DEBUG] Acesso global ${index + 1}:`, {
+            id: doc.id,
+            paginaId: data.paginaId,
+            cursoId: data.cursoId,
+            cursoTitulo: data.cursoTitulo || data.nomeProduto,
+            nome: data.nome,
+            email: data.email,
+            dataAcesso: data.dataAcesso,
+            ativo: data.ativo
+          });
+          
+          // Destaca se a página for diferente da procurada
+          if (data.paginaId !== paginaId) {
+            console.log(`⚠️ [DEBUG] Este acesso é de uma página diferente! Página atual: ${data.paginaId}, Procurada: ${paginaId}`);
+          }
         });
 
         // Também busca na coleção alunosPorPagina sem filtros
+        console.log(`🔍 [DEBUG] Buscando na coleção legada 'alunosPorPagina'...`);
         const debugQueryLegacy = query(
           collection(db, 'alunosPorPagina'),
           where('alunoId', '==', alunoId)
         );
         const debugSnapshotLegacy = await getDocs(debugQueryLegacy);
-        console.log(`Acessos legados do aluno: ${debugSnapshotLegacy.docs.length}`);
+        console.log(`📊 [DEBUG] Total de acessos legados do aluno: ${debugSnapshotLegacy.docs.length}`);
         
-        debugSnapshotLegacy.docs.forEach(doc => {
-          console.log('Debug acesso legado:', { id: doc.id, ...doc.data() });
+        debugSnapshotLegacy.docs.forEach((doc, index) => {
+          const data = doc.data();
+          console.log(`📄 [DEBUG] Acesso legado global ${index + 1}:`, {
+            id: doc.id,
+            paginaId: data.paginaId,
+            cursoId: data.cursoId,
+            cursoTitulo: data.cursoTitulo || data.nomeProduto,
+            nome: data.nome,
+            email: data.email,
+            dataAcesso: data.dataAcesso
+          });
+          
+          if (data.paginaId !== paginaId) {
+            console.log(`⚠️ [DEBUG] Este acesso legado é de uma página diferente! Página atual: ${data.paginaId}, Procurada: ${paginaId}`);
+          }
         });
+
+        // Busca todas as páginas existentes para comparar
+        console.log(`🔍 [DEBUG] Verificando páginas de vendas existentes...`);
+        try {
+          const salesPagesSnapshot = await getDocs(collection(db, 'salesPages'));
+          console.log(`📊 [DEBUG] Total de páginas de vendas no sistema: ${salesPagesSnapshot.docs.length}`);
+          
+          salesPagesSnapshot.docs.forEach((doc, index) => {
+            const data = doc.data();
+            console.log(`📄 [DEBUG] Página ${index + 1}:`, {
+              id: doc.id,
+              titulo: data.titulo,
+              slug: data.slug,
+              ownerId: data.ownerId
+            });
+            
+            if (doc.id === paginaId) {
+              console.log(`✅ [DEBUG] Esta é a página que estamos procurando!`);
+            }
+          });
+        } catch (pageError) {
+          console.log(`❌ [DEBUG] Erro ao buscar páginas:`, pageError);
+        }
       }
 
       return { success: true, data: acessos };
     } catch (error) {
-      console.error('Erro ao buscar acessos do aluno:', error);
+      console.error(`❌ [DEBUG] ERRO FATAL ao buscar acessos do aluno:`, error);
+      console.error(`❌ [DEBUG] Stack trace:`, error.stack);
       return { success: false, error: error.message };
     }
   },

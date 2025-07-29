@@ -57,64 +57,102 @@ const SalesPageAlunoDashboard = () => {
 
   // Carrega os acessos do aluno para esta página
   useEffect(() => {
-    if (!aluno || !paginaId) return;
+    if (!aluno || !paginaId) {
+      console.log('🚨 [DASHBOARD] Carregamento cancelado - dados faltando:', { 
+        aluno: !!aluno, 
+        paginaId: !!paginaId 
+      });
+      return;
+    }
     
-    console.log('Iniciando carregamento de acessos...', { alunoId: aluno.uid, paginaId });
+    console.log('🚀 [DASHBOARD] Iniciando carregamento de acessos...');
+    console.log('🚀 [DASHBOARD] Dados do contexto:', { 
+      alunoId: aluno.uid, 
+      alunoEmail: aluno.email,
+      alunoName: aluno.displayName,
+      paginaId: paginaId 
+    });
+    
     setLoading(true);
     
     const loadAcessos = async () => {
       try {
-        // Primeiro tenta buscar os acessos diretamente
-        console.log('Tentando buscar acessos diretamente...');
+        console.log('📞 [DASHBOARD] Chamando alunoService.getAcessosPorAluno...');
         let result = await alunoService.getAcessosPorAluno(aluno.uid, paginaId);
+        
+        console.log('📨 [DASHBOARD] Resposta recebida do service:', result);
         
         // Se não encontrou acessos, tenta verificar e criar dados de teste
         if (result.success && result.data.length === 0) {
-          console.log('Nenhum acesso encontrado. Tentando criar dados de teste...');
+          console.log('🔧 [DASHBOARD] Nenhum acesso encontrado. Tentando criar dados de teste...');
           result = await alunoService.verificarECriarDadosTeste(aluno.uid, paginaId);
+          console.log('🔧 [DASHBOARD] Resultado após tentar criar dados de teste:', result);
         }
         
-        console.log('Resultado final dos acessos:', result);
+        console.log('✅ [DASHBOARD] Resultado final dos acessos:', {
+          success: result.success,
+          dataLength: result.data?.length || 0,
+          error: result.error || 'nenhum',
+          data: result.data
+        });
         
         if (result.success) {
+          console.log('💾 [DASHBOARD] Salvando acessos no estado...');
           setAcessos(result.data);
-          console.log('Acessos carregados com sucesso:', result.data);
+          
+          console.log('👤 [DASHBOARD] Acessos salvos. Detalhes dos cursos:');
+          result.data.forEach((acesso, index) => {
+            console.log(`📚 [DASHBOARD] Curso ${index + 1}:`, {
+              id: acesso.id,
+              cursoId: acesso.cursoId,
+              cursoTitulo: acesso.cursoTitulo || acesso.nomeProduto,
+              nome: acesso.nome,
+              email: acesso.email,
+              dataAcesso: acesso.dataAcesso,
+              ativo: acesso.ativo
+            });
+          });
           
           // Inicializa dados do perfil
           if (result.data.length > 0) {
             const primeiroAcesso = result.data[0];
-            setProfileData({
+            const profileDataToSet = {
               nome: primeiroAcesso.nome || aluno.displayName || aluno.email || '',
               endereco: primeiroAcesso.endereco || ''
-            });
-            console.log('Dados do perfil inicializados:', {
-              nome: primeiroAcesso.nome || aluno.displayName || aluno.email || '',
-              endereco: primeiroAcesso.endereco || ''
-            });
+            };
+            
+            console.log('👤 [DASHBOARD] Inicializando dados do perfil:', profileDataToSet);
+            setProfileData(profileDataToSet);
           } else {
-            console.log('Nenhum acesso encontrado após todas as tentativas');
-            // Inicializa dados básicos do perfil mesmo sem acessos
-            setProfileData({
+            console.log('⚠️ [DASHBOARD] Nenhum acesso após todas as tentativas - usando dados básicos');
+            const basicProfileData = {
               nome: aluno.displayName || aluno.email || '',
               endereco: ''
-            });
+            };
+            console.log('👤 [DASHBOARD] Dados básicos do perfil:', basicProfileData);
+            setProfileData(basicProfileData);
           }
         } else {
-          console.error('Erro ao carregar acessos:', result.error);
-          // Inicializa dados básicos do perfil mesmo com erro
-          setProfileData({
+          console.error('❌ [DASHBOARD] Erro ao carregar acessos:', result.error);
+          const errorProfileData = {
             nome: aluno.displayName || aluno.email || '',
             endereco: ''
-          });
+          };
+          console.log('👤 [DASHBOARD] Dados de perfil após erro:', errorProfileData);
+          setProfileData(errorProfileData);
         }
       } catch (error) {
-        console.error('Erro na função de carregamento:', error);
-        // Inicializa dados básicos do perfil mesmo com erro
-        setProfileData({
+        console.error('💥 [DASHBOARD] ERRO FATAL na função de carregamento:', error);
+        console.error('💥 [DASHBOARD] Stack trace:', error.stack);
+        
+        const fallbackProfileData = {
           nome: aluno.displayName || aluno.email || '',
           endereco: ''
-        });
+        };
+        console.log('👤 [DASHBOARD] Dados de perfil de fallback:', fallbackProfileData);
+        setProfileData(fallbackProfileData);
       } finally {
+        console.log('🏁 [DASHBOARD] Finalizando carregamento. setLoading(false)');
         setLoading(false);
       }
     };
