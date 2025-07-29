@@ -115,9 +115,9 @@ export default function AlunoCourseCard({ acesso, onContinue, progresso = 0, con
 
       {/* Conteúdo do Card */}
       <div className="p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
-          {acesso.titulo || 'Curso sem título'}
-        </h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+            {acesso.cursoTitulo || acesso.nomeProduto || acesso.titulo || 'Curso sem título'}
+          </h3>
 
         <p className="text-gray-600 text-sm mb-4 line-clamp-2">
           {acesso.descricao || 'Descrição não disponível'}

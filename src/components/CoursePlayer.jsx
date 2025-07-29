@@ -17,6 +17,7 @@ const CoursePlayer = ({ course, onBack }) => {
   const [selectedLessonIdx, setSelectedLessonIdx] = useState(0);
   const [showNotes, setShowNotes] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   if (!course) return null;
   const modules = course.modulos || [];
@@ -105,6 +106,13 @@ const CoursePlayer = ({ course, onBack }) => {
       }
     });
   }, [aluno, course?.id]);
+
+  // Controla a exibição do modal de conclusão
+  useEffect(() => {
+    if (completedCount === totalLessons && totalLessons > 0) {
+      setShowCompletionModal(true);
+    }
+  }, [completedCount, totalLessons]);
 
   // Salva progresso ao marcar aula como concluída
   useEffect(() => {
@@ -430,7 +438,7 @@ const CoursePlayer = ({ course, onBack }) => {
       </div>
 
       {/* Feedback de conclusão do curso */}
-      {completedCount === totalLessons && totalLessons > 0 && (
+      {showCompletionModal && completedCount === totalLessons && totalLessons > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -440,12 +448,23 @@ const CoursePlayer = ({ course, onBack }) => {
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Parabéns! 🎉</h3>
             <p className="text-gray-600 mb-6">Você concluiu o curso com sucesso!</p>
-            <button
-              onClick={() => setCompletedCount(0)}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Continuar
-            </button>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setShowCompletionModal(false)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Continuar Assistindo
+              </button>
+              <button
+                onClick={() => {
+                  setShowCompletionModal(false);
+                  onBack();
+                }}
+                className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Voltar ao Dashboard
+              </button>
+            </div>
           </div>
         </div>
       )}
