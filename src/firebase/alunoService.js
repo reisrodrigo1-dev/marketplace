@@ -56,6 +56,22 @@ export const alunoService = {
         console.log(`Documentos encontrados na coleção 'alunosPorPagina': ${querySnapshot.docs.length}`);
       }
 
+      // Se ainda não encontrou, tenta buscar com base no documento composto (formato antigo)
+      if (querySnapshot.docs.length === 0) {
+        console.log('Tentando buscar com documento composto...');
+        const compositeId = `${paginaId}_${alunoId}`;
+        try {
+          const docRef = doc(db, 'alunosPorPagina', compositeId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            console.log('Documento composto encontrado');
+            querySnapshot = { docs: [docSnap] };
+          }
+        } catch (docError) {
+          console.log('Erro ao buscar documento composto:', docError);
+        }
+      }
+
       const acessos = querySnapshot.docs.map(doc => {
         const data = doc.data();
         console.log('Acesso encontrado:', { id: doc.id, ...data });
@@ -64,7 +80,7 @@ export const alunoService = {
 
       console.log(`Total de acessos encontrados: ${acessos.length}`);
       
-      // Se ainda não encontrou, lista todas as coleções para debug
+      // Se ainda não encontrou, faz debug mais detalhado
       if (acessos.length === 0) {
         console.log('Nenhum acesso encontrado. Fazendo busca ampla para debug...');
         
@@ -77,7 +93,19 @@ export const alunoService = {
         console.log(`Acessos do aluno em todas as páginas: ${debugSnapshot.docs.length}`);
         
         debugSnapshot.docs.forEach(doc => {
-          console.log('Debug acesso:', { id: doc.id, ...doc.data() });
+          console.log('Debug acesso global:', { id: doc.id, ...doc.data() });
+        });
+
+        // Também busca na coleção alunosPorPagina sem filtros
+        const debugQueryLegacy = query(
+          collection(db, 'alunosPorPagina'),
+          where('alunoId', '==', alunoId)
+        );
+        const debugSnapshotLegacy = await getDocs(debugQueryLegacy);
+        console.log(`Acessos legados do aluno: ${debugSnapshotLegacy.docs.length}`);
+        
+        debugSnapshotLegacy.docs.forEach(doc => {
+          console.log('Debug acesso legado:', { id: doc.id, ...doc.data() });
         });
       }
 
@@ -241,18 +269,34 @@ export const alunoService = {
   // Função para testar criação de acesso (usar apenas para debug)
   async criarAcessoTeste(alunoId, paginaId, cursoId, nomeProduto) {
     try {
+      // Busca informações do usuário para usar dados reais
+      let nomeAluno = 'Aluno Teste';
+      let emailAluno = 'teste@example.com';
+      
+      try {
+        const userRef = doc(db, 'users', alunoId);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          nomeAluno = userData.name || userData.displayName || 'Aluno Teste';
+          emailAluno = userData.email || 'teste@example.com';
+        }
+      } catch (userError) {
+        console.log('Erro ao buscar dados do usuário, usando dados padrão:', userError);
+      }
+
       const acessoData = {
         alunoId: alunoId,
         paginaId: paginaId,
-        cursoId: cursoId || 'curso-teste-123',
-        nomeProduto: nomeProduto || 'Curso de Teste',
-        cursoTitulo: nomeProduto || 'Curso de Teste',
-        cursoDescricao: 'Curso criado para teste do sistema',
-        nome: 'Aluno Teste',
-        email: 'teste@example.com',
+        cursoId: cursoId || 'curso-teste-' + Date.now(),
+        nomeProduto: nomeProduto || 'Curso de Teste - Direito Digital',
+        cursoTitulo: nomeProduto || 'Curso de Teste - Direito Digital',
+        cursoDescricao: 'Curso criado automaticamente para teste do sistema. Inclui módulos sobre legislação digital, LGPD e mais.',
+        nome: nomeAluno,
+        email: emailAluno,
         telefone: '(11) 99999-9999',
         cpf: '000.000.000-00',
-        endereco: 'Endereço teste',
+        endereco: 'Rua das Flores, 123 - Centro - São Paulo/SP',
         dataNascimento: new Date('1990-01-01'),
         compradoEm: serverTimestamp(),
         dataAcesso: serverTimestamp(),

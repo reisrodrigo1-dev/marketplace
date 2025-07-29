@@ -62,36 +62,64 @@ const SalesPageAlunoDashboard = () => {
     console.log('Iniciando carregamento de acessos...', { alunoId: aluno.uid, paginaId });
     setLoading(true);
     
-    // Usa a função que verifica e cria dados de teste se necessário
-    alunoService.verificarECriarDadosTeste(aluno.uid, paginaId).then(result => {
-      console.log('Resultado dos acessos:', result);
-      
-      if (result.success) {
-        setAcessos(result.data);
-        console.log('Acessos carregados:', result.data);
+    const loadAcessos = async () => {
+      try {
+        // Primeiro tenta buscar os acessos diretamente
+        console.log('Tentando buscar acessos diretamente...');
+        let result = await alunoService.getAcessosPorAluno(aluno.uid, paginaId);
         
-        // Inicializa dados do perfil
-        if (result.data.length > 0) {
-          const primeiroAcesso = result.data[0];
-          setProfileData({
-            nome: primeiroAcesso.nome || aluno.displayName || '',
-            endereco: primeiroAcesso.endereco || ''
-          });
-          console.log('Dados do perfil inicializados:', {
-            nome: primeiroAcesso.nome || aluno.displayName || '',
-            endereco: primeiroAcesso.endereco || ''
-          });
-        } else {
-          console.log('Nenhum acesso encontrado para este aluno nesta página');
+        // Se não encontrou acessos, tenta verificar e criar dados de teste
+        if (result.success && result.data.length === 0) {
+          console.log('Nenhum acesso encontrado. Tentando criar dados de teste...');
+          result = await alunoService.verificarECriarDadosTeste(aluno.uid, paginaId);
         }
-      } else {
-        console.error('Erro ao carregar acessos:', result.error);
+        
+        console.log('Resultado final dos acessos:', result);
+        
+        if (result.success) {
+          setAcessos(result.data);
+          console.log('Acessos carregados com sucesso:', result.data);
+          
+          // Inicializa dados do perfil
+          if (result.data.length > 0) {
+            const primeiroAcesso = result.data[0];
+            setProfileData({
+              nome: primeiroAcesso.nome || aluno.displayName || aluno.email || '',
+              endereco: primeiroAcesso.endereco || ''
+            });
+            console.log('Dados do perfil inicializados:', {
+              nome: primeiroAcesso.nome || aluno.displayName || aluno.email || '',
+              endereco: primeiroAcesso.endereco || ''
+            });
+          } else {
+            console.log('Nenhum acesso encontrado após todas as tentativas');
+            // Inicializa dados básicos do perfil mesmo sem acessos
+            setProfileData({
+              nome: aluno.displayName || aluno.email || '',
+              endereco: ''
+            });
+          }
+        } else {
+          console.error('Erro ao carregar acessos:', result.error);
+          // Inicializa dados básicos do perfil mesmo com erro
+          setProfileData({
+            nome: aluno.displayName || aluno.email || '',
+            endereco: ''
+          });
+        }
+      } catch (error) {
+        console.error('Erro na função de carregamento:', error);
+        // Inicializa dados básicos do perfil mesmo com erro
+        setProfileData({
+          nome: aluno.displayName || aluno.email || '',
+          endereco: ''
+        });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    }).catch(error => {
-      console.error('Erro na promise de acessos:', error);
-      setLoading(false);
-    });
+    };
+    
+    loadAcessos();
   }, [aluno, paginaId]);
 
   // Busca dados completos do curso selecionado
