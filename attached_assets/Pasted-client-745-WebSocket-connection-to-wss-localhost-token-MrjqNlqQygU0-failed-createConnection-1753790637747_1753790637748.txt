@@ -1,0 +1,171 @@
+client:745  WebSocket connection to 'wss://localhost/?token=MrjqNlqQygU0' failed: 
+createConnection @ client:745
+connect @ client:412
+connect @ client:751
+connect @ client:290
+connect @ client:374
+(anônimo) @ client:822
+client:772  [vite] failed to connect to websocket (Error: WebSocket closed without opened.). 
+connect @ client:772
+await in connect
+connect @ client:290
+connect @ client:374
+(anônimo) @ client:822
+client:424  Uncaught (in promise) Error: WebSocket closed without opened.
+    at WebSocket.<anonymous> (client:424:30)
+(anônimo) @ client:424
+react-dom-client.development.js:24868 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+SalesPageAlunoDashboard.jsx:69 🚀 [DASHBOARD] Iniciando carregamento de acessos...
+SalesPageAlunoDashboard.jsx:70 🚀 [DASHBOARD] Dados do contexto: {alunoId: 'KZyvTo8yOlXeTIUkv0zaSqC4SRo2', alunoEmail: 'alunoteste@direitohub.com.br', alunoName: null, paginaId: 'x2Y9WJ8YKTGQ387fbF1R'}
+SalesPageAlunoDashboard.jsx:81 📞 [DASHBOARD] Chamando alunoService.getAcessosPorAluno...
+alunoService.js:35 🔍 [DEBUG] Iniciando busca de acessos:
+alunoService.js:36    - Aluno ID: KZyvTo8yOlXeTIUkv0zaSqC4SRo2
+alunoService.js:37    - Página ID: x2Y9WJ8YKTGQ387fbF1R
+alunoService.js:38    - Timestamp: 2025-07-29T12:03:24.088Z
+alunoService.js:41 🔍 [DEBUG] Tentativa 1: Buscando na coleção 'acessos'...
+SalesPageAlunoDashboard.jsx:69 🚀 [DASHBOARD] Iniciando carregamento de acessos...
+SalesPageAlunoDashboard.jsx:70 🚀 [DASHBOARD] Dados do contexto: {alunoId: 'KZyvTo8yOlXeTIUkv0zaSqC4SRo2', alunoEmail: 'alunoteste@direitohub.com.br', alunoName: null, paginaId: 'x2Y9WJ8YKTGQ387fbF1R'}
+SalesPageAlunoDashboard.jsx:81 📞 [DASHBOARD] Chamando alunoService.getAcessosPorAluno...
+alunoService.js:35 🔍 [DEBUG] Iniciando busca de acessos:
+alunoService.js:36    - Aluno ID: KZyvTo8yOlXeTIUkv0zaSqC4SRo2
+alunoService.js:37    - Página ID: x2Y9WJ8YKTGQ387fbF1R
+alunoService.js:38    - Timestamp: 2025-07-29T12:03:24.091Z
+alunoService.js:41 🔍 [DEBUG] Tentativa 1: Buscando na coleção 'acessos'...
+alunoService.js:49 📊 [DEBUG] Documentos encontrados na coleção 'acessos': 0
+alunoService.js:68 🔍 [DEBUG] Tentativa 2: Buscando na coleção 'alunosPorPagina'...
+alunoService.js:49 📊 [DEBUG] Documentos encontrados na coleção 'acessos': 0
+alunoService.js:68 🔍 [DEBUG] Tentativa 2: Buscando na coleção 'alunosPorPagina'...
+alunoService.js:75 📊 [DEBUG] Documentos encontrados na coleção 'alunosPorPagina': 1
+alunoService.js:80 📄 [DEBUG] Acesso legado 1: {id: 'x2Y9WJ8YKTGQ387fbF1R_KZyvTo8yOlXeTIUkv0zaSqC4SRo2_HXFk0JmdzTg9WYRROvxB', cursoId: 'HXFk0JmdzTg9WYRROvxB', cursoTitulo: 'Procedimento Comum Cível', nome: 'alunoteste@direitohub.com.br', email: 'alunoteste@direitohub.com.br', …}
+alunoService.js:114 ✅ [DEBUG] Processando acesso final: {id: 'x2Y9WJ8YKTGQ387fbF1R_KZyvTo8yOlXeTIUkv0zaSqC4SRo2_HXFk0JmdzTg9WYRROvxB', alunoId: 'KZyvTo8yOlXeTIUkv0zaSqC4SRo2', cursoDescricao: 'testetestetestetestetestetestetestetestetesteteste…estetestetestetestetestetestetestetestetesteteste', linkAcesso: '#', nome: 'alunoteste@direitohub.com.br', …}
+alunoService.js:118 📊 [DEBUG] RESULTADO FINAL: 1 acessos encontrados
+SalesPageAlunoDashboard.jsx:84 📨 [DASHBOARD] Resposta recebida do service: {success: true, data: Array(1)}
+SalesPageAlunoDashboard.jsx:93 ✅ [DASHBOARD] Resultado final dos acessos: {success: true, dataLength: 1, error: 'nenhum', data: Array(1)}
+SalesPageAlunoDashboard.jsx:101 💾 [DASHBOARD] Salvando acessos no estado...
+SalesPageAlunoDashboard.jsx:104 👤 [DASHBOARD] Acessos salvos. Detalhes dos cursos:
+SalesPageAlunoDashboard.jsx:106 📚 [DASHBOARD] Curso 1: {id: 'x2Y9WJ8YKTGQ387fbF1R_KZyvTo8yOlXeTIUkv0zaSqC4SRo2_HXFk0JmdzTg9WYRROvxB', cursoId: 'HXFk0JmdzTg9WYRROvxB', cursoTitulo: 'Procedimento Comum Cível', nome: 'alunoteste@direitohub.com.br', email: 'alunoteste@direitohub.com.br', …}
+SalesPageAlunoDashboard.jsx:125 👤 [DASHBOARD] Inicializando dados do perfil: {nome: 'alunoteste@direitohub.com.br', endereco: ''}
+SalesPageAlunoDashboard.jsx:156 🏁 [DASHBOARD] Finalizando carregamento. setLoading(false)
+alunoService.js:75 📊 [DEBUG] Documentos encontrados na coleção 'alunosPorPagina': 1
+alunoService.js:80 📄 [DEBUG] Acesso legado 1: {id: 'x2Y9WJ8YKTGQ387fbF1R_KZyvTo8yOlXeTIUkv0zaSqC4SRo2_HXFk0JmdzTg9WYRROvxB', cursoId: 'HXFk0JmdzTg9WYRROvxB', cursoTitulo: 'Procedimento Comum Cível', nome: 'alunoteste@direitohub.com.br', email: 'alunoteste@direitohub.com.br', …}
+alunoService.js:114 ✅ [DEBUG] Processando acesso final: {id: 'x2Y9WJ8YKTGQ387fbF1R_KZyvTo8yOlXeTIUkv0zaSqC4SRo2_HXFk0JmdzTg9WYRROvxB', alunoId: 'KZyvTo8yOlXeTIUkv0zaSqC4SRo2', cursoDescricao: 'testetestetestetestetestetestetestetestetesteteste…estetestetestetestetestetestetestetestetesteteste', linkAcesso: '#', nome: 'alunoteste@direitohub.com.br', …}
+alunoService.js:118 📊 [DEBUG] RESULTADO FINAL: 1 acessos encontrados
+SalesPageAlunoDashboard.jsx:84 📨 [DASHBOARD] Resposta recebida do service: {success: true, data: Array(1)}
+SalesPageAlunoDashboard.jsx:93 ✅ [DASHBOARD] Resultado final dos acessos: {success: true, dataLength: 1, error: 'nenhum', data: Array(1)}
+SalesPageAlunoDashboard.jsx:101 💾 [DASHBOARD] Salvando acessos no estado...
+SalesPageAlunoDashboard.jsx:104 👤 [DASHBOARD] Acessos salvos. Detalhes dos cursos:
+SalesPageAlunoDashboard.jsx:106 📚 [DASHBOARD] Curso 1: {id: 'x2Y9WJ8YKTGQ387fbF1R_KZyvTo8yOlXeTIUkv0zaSqC4SRo2_HXFk0JmdzTg9WYRROvxB', cursoId: 'HXFk0JmdzTg9WYRROvxB', cursoTitulo: 'Procedimento Comum Cível', nome: 'alunoteste@direitohub.com.br', email: 'alunoteste@direitohub.com.br', …}
+SalesPageAlunoDashboard.jsx:125 👤 [DASHBOARD] Inicializando dados do perfil: {nome: 'alunoteste@direitohub.com.br', endereco: ''}
+SalesPageAlunoDashboard.jsx:156 🏁 [DASHBOARD] Finalizando carregamento. setLoading(false)
+AlunoCourseCard.jsx:121  Uncaught TypeError: acesso.dataAcesso.toDate is not a function
+    at AlunoCourseCard (AlunoCourseCard.jsx:121:49)
+    at react-stack-bottom-frame (react-dom-client.development.js:23863:20)
+    at renderWithHooks (react-dom-client.development.js:5529:22)
+    at updateFunctionComponent (react-dom-client.development.js:8897:19)
+    at beginWork (react-dom-client.development.js:10522:18)
+    at runWithFiberInDEV (react-dom-client.development.js:1519:30)
+    at performUnitOfWork (react-dom-client.development.js:15132:22)
+    at workLoopSync (react-dom-client.development.js:14956:41)
+    at renderRootSync (react-dom-client.development.js:14936:11)
+    at performWorkOnRoot (react-dom-client.development.js:14462:44)
+    at performWorkOnRootViaSchedulerTask (react-dom-client.development.js:16216:7)
+    at MessagePort.performWorkUntilDeadline (scheduler.development.js:45:48)
+AlunoCourseCard @ AlunoCourseCard.jsx:121
+react-stack-bottom-frame @ react-dom-client.development.js:23863
+renderWithHooks @ react-dom-client.development.js:5529
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14462
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<AlunoCourseCard>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anônimo) @ SalesPageAlunoDashboard.jsx:611
+SalesPageAlunoDashboard @ SalesPageAlunoDashboard.jsx:607
+react-stack-bottom-frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14462
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<SalesPageAlunoDashboard>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.jsx:113
+react-stack-bottom-frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anônimo) @ main.jsx:14
+SalesPageAlunoDashboard.jsx:611  An error occurred in the <AlunoCourseCard> component.
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://react.dev/link/error-boundaries to learn more about error boundaries.
+
+defaultOnUncaughtError @ react-dom-client.development.js:8283
+logUncaughtError @ react-dom-client.development.js:8352
+runWithFiberInDEV @ react-dom-client.development.js:1519
+lane.callback @ react-dom-client.development.js:8382
+callCallback @ react-dom-client.development.js:5363
+commitCallbacks @ react-dom-client.development.js:5383
+runWithFiberInDEV @ react-dom-client.development.js:1522
+commitLayoutEffectOnFiber @ react-dom-client.development.js:12709
+flushLayoutEffects @ react-dom-client.development.js:15559
+commitRoot @ react-dom-client.development.js:15402
+commitRootWhenReady @ react-dom-client.development.js:14652
+performWorkOnRoot @ react-dom-client.development.js:14575
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<AlunoCourseCard>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anônimo) @ SalesPageAlunoDashboard.jsx:611
+SalesPageAlunoDashboard @ SalesPageAlunoDashboard.jsx:607
+react-stack-bottom-frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14462
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<SalesPageAlunoDashboard>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.jsx:113
+react-stack-bottom-frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anônimo) @ main.jsx:14
