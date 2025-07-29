@@ -504,7 +504,6 @@ export default function ProductCreator({ faseada }) {
                               {course.status === 'rascunho' ? 'Rascunho' : 'Publicado'}
                             </span>
                           </div>
-                          <p className="text-gray-600 mb-3 line-clamp-2">{course.description}</p>
                           <div className="flex items-center space-x-4">
                             {course.priceOriginal && (
                               <span className="text-gray-400 line-through text-lg">R$ {course.priceOriginal}</span>
