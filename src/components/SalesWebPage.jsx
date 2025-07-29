@@ -277,40 +277,51 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
             {/* Badge de Credibilidade */}
             <div className="inline-flex items-center bg-blue-600/20 border border-blue-400/30 rounded-full px-6 py-2 mb-6">
               <span className="text-blue-300 mr-2">✓</span>
-              <span className="text-sm font-medium">Mais de 1.000 advogados transformaram suas carreiras</span>
+              <span className="text-sm font-medium">
+                {pageData.heroBadge || 'Mais de 1.000 advogados transformaram suas carreiras'}
+              </span>
             </div>
 
             {/* Headline Principal */}
             <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
-              <span className="text-yellow-400">Transforme</span> Sua Carreira Jurídica em{' '}
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                90 Dias
-              </span>
+              {pageData.heroTitle ? (
+                <span dangerouslySetInnerHTML={{ __html: pageData.heroTitle.replace(/\b(Transforme|90 Dias)\b/g, (match) => 
+                  match === 'Transforme' ? '<span class="text-yellow-400">Transforme</span>' :
+                  '<span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">90 Dias</span>'
+                ) }} />
+              ) : (
+                <>
+                  <span className="text-yellow-400">Transforme</span> Sua Carreira Jurídica em{' '}
+                  <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                    90 Dias
+                  </span>
+                </>
+              )}
             </h1>
 
             {/* Subheadline */}
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Descubra o método comprovado que está transformando advogados comuns em 
-              <strong className="text-yellow-400"> especialistas requisitados</strong> no mercado jurídico
+              {pageData.heroSubtitle || (
+                <>
+                  Descubra o método comprovado que está transformando advogados comuns em 
+                  <strong className="text-yellow-400"> especialistas requisitados</strong> no mercado jurídico
+                </>
+              )}
             </p>
 
             {/* Benefícios Principais */}
             <div className="grid md:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-                <div className="text-3xl mb-3">💰</div>
-                <h3 className="font-bold mb-2">Aumente Seus Honorários</h3>
-                <p className="text-gray-300 text-sm">Multiplique sua receita por 3x em até 6 meses</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-                <div className="text-3xl mb-3">⚡</div>
-                <h3 className="font-bold mb-2">Resultados Rápidos</h3>
-                <p className="text-gray-300 text-sm">Primeiros resultados em 30 dias</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-                <div className="text-3xl mb-3">🎯</div>
-                <h3 className="font-bold mb-2">Método Comprovado</h3>
-                <p className="text-gray-300 text-sm">Sistema testado por milhares de advogados</p>
-              </div>
+              {(pageData.beneficios && pageData.beneficios.length > 0 ? pageData.beneficios : [
+                { icon: '💰', titulo: 'Aumente Seus Honorários', descricao: 'Multiplique sua receita por 3x em até 6 meses' },
+                { icon: '⚡', titulo: 'Resultados Rápidos', descricao: 'Primeiros resultados em 30 dias' },
+                { icon: '🎯', titulo: 'Método Comprovado', descricao: 'Sistema testado por milhares de advogados' }
+              ]).map((beneficio, idx) => (
+                <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+                  <div className="text-3xl mb-3">{beneficio.icon}</div>
+                  <h3 className="font-bold mb-2">{beneficio.titulo}</h3>
+                  <p className="text-gray-300 text-sm">{beneficio.descricao}</p>
+                </div>
+              ))}
             </div>
 
             {/* CTA Principal */}
@@ -348,78 +359,62 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
           {/* Números de Impacto */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
             <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">1.247</div>
+              <div className="text-4xl font-bold text-blue-600 mb-2">
+                {pageData.provaSocial?.numeroAdvogados || '1.247'}
+              </div>
               <div className="text-gray-600">Advogados Formados</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-green-600 mb-2">R$ 2.3M</div>
+              <div className="text-4xl font-bold text-green-600 mb-2">
+                {pageData.provaSocial?.honorariosGerados || 'R$ 2.3M'}
+              </div>
               <div className="text-gray-600">Em Honorários Gerados</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-purple-600 mb-2">94%</div>
+              <div className="text-4xl font-bold text-purple-600 mb-2">
+                {pageData.provaSocial?.taxaSatisfacao || '94%'}
+              </div>
               <div className="text-gray-600">Taxa de Satisfação</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-orange-600 mb-2">30 dias</div>
+              <div className="text-4xl font-bold text-orange-600 mb-2">
+                {pageData.provaSocial?.tempoResultado || '30 dias'}
+              </div>
               <div className="text-gray-600">Média p/ 1º Resultado</div>
             </div>
           </div>
 
           {/* Depoimentos */}
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-blue-600 font-bold">DR</span>
+            {(pageData.provaSocial?.depoimentos && pageData.provaSocial.depoimentos.length > 0 ? 
+              pageData.provaSocial.depoimentos : [
+                { nome: 'Dr. Roberto Silva', especialidade: 'Direito Empresarial', depoimento: 'Em 3 meses aumentei meus honorários em 250%. O método é realmente transformador!', iniciais: 'DR' },
+                { nome: 'Dra. Ana Martins', especialidade: 'Direito Trabalhista', depoimento: 'Consegui me especializar e hoje sou referência na minha área. Recomendo!', iniciais: 'AM' },
+                { nome: 'Dr. Carlos Santos', especialidade: 'Direito Civil', depoimento: 'Método prático e direto ao ponto. Resultados desde a primeira semana!', iniciais: 'CS' }
+              ]
+            ).map((depoimento, idx) => {
+              const colors = ['blue', 'pink', 'green'];
+              const color = colors[idx % colors.length];
+              return (
+                <div key={idx} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+                  <div className="flex items-center mb-4">
+                    <div className={`w-12 h-12 bg-${color}-100 rounded-full flex items-center justify-center mr-4`}>
+                      <span className={`text-${color}-600 font-bold`}>{depoimento.iniciais}</span>
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900">{depoimento.nome}</div>
+                      <div className="text-gray-600 text-sm">{depoimento.especialidade}</div>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 mb-4">
+                    "{depoimento.depoimento}"
+                  </p>
+                  <div className="flex text-yellow-400">
+                    ⭐⭐⭐⭐⭐
+                  </div>
                 </div>
-                <div>
-                  <div className="font-bold text-gray-900">Dr. Roberto Silva</div>
-                  <div className="text-gray-600 text-sm">Direito Empresarial</div>
-                </div>
-              </div>
-              <p className="text-gray-700 mb-4">
-                "Em 3 meses aumentei meus honorários em 250%. O método é realmente transformador!"
-              </p>
-              <div className="flex text-yellow-400">
-                ⭐⭐⭐⭐⭐
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-pink-600 font-bold">AM</span>
-                </div>
-                <div>
-                  <div className="font-bold text-gray-900">Dra. Ana Martins</div>
-                  <div className="text-gray-600 text-sm">Direito Trabalhista</div>
-                </div>
-              </div>
-              <p className="text-gray-700 mb-4">
-                "Consegui me especializar e hoje sou referência na minha área. Recomendo!"
-              </p>
-              <div className="flex text-yellow-400">
-                ⭐⭐⭐⭐⭐
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-green-600 font-bold">CS</span>
-                </div>
-                <div>
-                  <div className="font-bold text-gray-900">Dr. Carlos Santos</div>
-                  <div className="text-gray-600 text-sm">Direito Civil</div>
-                </div>
-              </div>
-              <p className="text-gray-700 mb-4">
-                "Método prático e direto ao ponto. Resultados desde a primeira semana!"
-              </p>
-              <div className="flex text-yellow-400">
-                ⭐⭐⭐⭐⭐
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -639,11 +634,16 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
 
             {/* Bonificações */}
             <div className="bg-yellow-400 text-gray-900 rounded-2xl p-6 mb-8">
-              <h3 className="text-xl font-bold mb-4">🎁 BÔNUS EXCLUSIVOS (Valor: R$ 897)</h3>
+              <h3 className="text-xl font-bold mb-4">
+                🎁 BÔNUS EXCLUSIVOS (Valor: {pageData.bonus?.valor || 'R$ 897'})
+              </h3>
               <div className="grid md:grid-cols-3 gap-4 text-sm">
-                <div>✅ Planilha de Gestão Financeira</div>
-                <div>✅ Kit Modelos de Contratos</div>
-                <div>✅ Acesso ao Grupo VIP</div>
+                {(pageData.bonus?.itens && pageData.bonus.itens.length > 0 ? 
+                  pageData.bonus.itens : 
+                  ['Planilha de Gestão Financeira', 'Kit Modelos de Contratos', 'Acesso ao Grupo VIP']
+                ).filter(item => item).map((item, idx) => (
+                  <div key={idx}>✅ {item}</div>
+                ))}
               </div>
             </div>
           </div>
@@ -658,11 +658,15 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
               <span className="text-5xl">🛡️</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-green-800 mb-6">
-              Garantia Incondicional de 7 Dias
+              {pageData.garantia?.titulo || `Garantia Incondicional de ${pageData.garantia?.dias || '7'} Dias`}
             </h2>
             <p className="text-xl text-green-700 mb-8 leading-relaxed">
-              Experimente todo o conteúdo por 7 dias. Se não ficar completamente satisfeito, 
-              devolvemos 100% do seu investimento. <strong>Sem perguntas, sem burocracia.</strong>
+              {pageData.garantia?.descricao || (
+                <>
+                  Experimente todo o conteúdo por {pageData.garantia?.dias || '7'} dias. Se não ficar completamente satisfeito, 
+                  devolvemos 100% do seu investimento. <strong>Sem perguntas, sem burocracia.</strong>
+                </>
+              )}
             </p>
             <div className="bg-white rounded-xl p-6 shadow-lg inline-block">
               <p className="text-green-800 font-bold">
@@ -688,41 +692,21 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
           </div>
 
           <div className="max-w-4xl mx-auto space-y-6">
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                ❓ Como funciona o acesso ao curso?
-              </h3>
-              <p className="text-gray-600">
-                Após a confirmação do pagamento, você recebe imediatamente os dados de acesso à nossa plataforma exclusiva, onde poderá assistir às aulas quantas vezes quiser.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                ❓ Por quanto tempo tenho acesso?
-              </h3>
-              <p className="text-gray-600">
-                O acesso é vitalício! Você paga uma única vez e tem acesso para sempre, incluindo todas as futuras atualizações do conteúdo.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                ❓ E se eu não conseguir resultados?
-              </h3>
-              <p className="text-gray-600">
-                Oferecemos garantia incondicional de 7 dias. Se não estiver satisfeito, devolvemos 100% do valor investido, sem questionamentos.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                ❓ Preciso de conhecimento prévio?
-              </h3>
-              <p className="text-gray-600">
-                Não! O curso foi desenvolvido tanto para advogados iniciantes quanto experientes. Começamos do básico e evoluímos gradualmente.
-              </p>
-            </div>
+            {(pageData.faq && pageData.faq.length > 0 ? pageData.faq : [
+              { pergunta: 'Como funciona o acesso ao curso?', resposta: 'Após a confirmação do pagamento, você recebe imediatamente os dados de acesso à nossa plataforma exclusiva, onde poderá assistir às aulas quantas vezes quiser.' },
+              { pergunta: 'Por quanto tempo tenho acesso?', resposta: 'O acesso é vitalício! Você paga uma única vez e tem acesso para sempre, incluindo todas as futuras atualizações do conteúdo.' },
+              { pergunta: 'E se eu não conseguir resultados?', resposta: 'Oferecemos garantia incondicional de 7 dias. Se não estiver satisfeito, devolvemos 100% do valor investido, sem questionamentos.' },
+              { pergunta: 'Preciso de conhecimento prévio?', resposta: 'Não! O curso foi desenvolvido tanto para advogados iniciantes quanto experientes. Começamos do básico e evoluímos gradualmente.' }
+            ]).filter(item => item.pergunta && item.resposta).map((item, idx) => (
+              <div key={idx} className="bg-white rounded-xl p-6 shadow-lg">
+                <h3 className="text-xl font-bold text-gray-900 mb-3">
+                  ❓ {item.pergunta}
+                </h3>
+                <p className="text-gray-600">
+                  {item.resposta}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import SalesWebPage from './SalesWebPage';
 import { useAuth } from '../contexts/AuthContext';
@@ -38,9 +37,9 @@ const AREAS_JURIDICAS = [
 const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = null }) => {
   const { user } = useAuth();
   const isEditing = !!editingPage;
-  
+
   const [availableProducts, setAvailableProducts] = useState([]);
-  
+
   useEffect(() => {
     async function fetchCourses() {
       if (user?.uid) {
@@ -50,7 +49,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
     }
     fetchCourses();
   }, [user]);
-  
+
   const defaultFormData = {
     tipoPagina: 'vendas',
     nomePagina: '',
@@ -58,12 +57,12 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
     descricao: '',
     produtosSelecionados: [],
   };
-  
+
   const initialFormData = isEditing ? {
     ...defaultFormData,
     ...editingPage
   } : defaultFormData;
-  
+
   const [formData, setFormData] = useState(initialFormData);
 
   useEffect(() => {
@@ -80,7 +79,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
       setVideoLinks([]);
     }
   }, [editingPage, isEditing]);
-  
+
   const [logoPreview, setLogoPreview] = useState(null);
   const [fotoPreview, setFotoPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -127,11 +126,11 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-  
+
   const prevStep = () => {
     setCurrentStep((prev) => (prev > 1 ? prev - 1 : prev));
   };
-  
+
   const nextStep = () => {
     setCurrentStep((prev) => (prev < 5 ? prev + 1 : prev));
   };
@@ -144,7 +143,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
         : [...prev.areasAtuacao, area]
     }));
   };
-  
+
   const handleFileUpload = (type, event) => {
     const file = event.target.files[0];
     if (file) {
@@ -161,7 +160,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
       reader.readAsDataURL(file);
     }
   };
-  
+
   const formatCNPJ = (value) => {
     const numbers = value.replace(/[^\d]/g, '');
     if (numbers.length <= 2) return numbers;
@@ -178,7 +177,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 mb-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full -translate-y-16 translate-x-16 opacity-50"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-green-100 to-blue-100 rounded-full translate-y-12 -translate-x-12 opacity-50"></div>
-          
+
           <div className="flex items-center justify-between relative z-10">
             <div>
               <div className="flex items-center space-x-3 mb-2">
@@ -207,7 +206,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
               </button>
             )}
           </div>
-          
+
           {/* Progress Bar Melhorado */}
           <div className="mt-8">
             <div className="flex items-center w-full">
@@ -296,7 +295,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">Informações Básicas</h3>
                   <p className="text-gray-600">Vamos começar com o essencial da sua página</p>
                 </div>
-                
+
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
                   <label className="block text-lg font-bold mb-3 text-gray-800">
                     Nome da Página <span className="text-red-500">*</span>
@@ -428,7 +427,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
               </div>
             )}
 
-            {currentStep === 4 && (
+            {currentStep === 7 && (
               <div className="space-y-8">
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -496,7 +495,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
               </div>
             )}
 
-            {currentStep === 5 && (
+            {currentStep === 8 && (
               <div className="w-full">
                 <div className="text-center mb-8">
                   <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -508,7 +507,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
                   <h3 className="text-2xl font-bold text-gray-800 mb-2">Pré-visualização</h3>
                   <p className="text-gray-600">Veja como ficará sua página antes de publicar</p>
                 </div>
-                
+
                 <div className="rounded-2xl shadow-xl border border-gray-200 p-4 bg-white">
                   <SalesWebPage
                     salesData={{
@@ -533,7 +532,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
                 </div>
               </div>
             )}
-            
+
             {errorMsg && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <div className="flex items-center">
@@ -557,7 +556,7 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
                 </svg>
                 Anterior
               </button>
-              
+
               {currentStep < 5 ? (
                 <button
                   type="button"
