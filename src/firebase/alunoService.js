@@ -71,13 +71,20 @@ export const alunoService = {
           alunoId: acesso.alunoId,
           nome: acesso.nome,
           email: acesso.email,
+          telefone: acesso.telefone || '',
           totalCursos: 0,
           primeiroAcesso: acesso.dataAcesso,
-          ultimoAcesso: acesso.dataAcesso
+          ultimoAcesso: acesso.dataAcesso,
+          cursosMatriculados: []
         });
       }
       const aluno = alunosMap.get(acesso.alunoId);
       aluno.totalCursos++;
+      aluno.cursosMatriculados.push({
+        cursoId: acesso.cursoId,
+        cursoTitulo: acesso.cursoTitulo,
+        dataAcesso: acesso.dataAcesso
+      });
       
       // Atualiza datas
       if (acesso.dataAcesso < aluno.primeiroAcesso) {
@@ -87,7 +94,28 @@ export const alunoService = {
         aluno.ultimoAcesso = acesso.dataAcesso;
       }
     });
+
+    // Buscar informações adicionais dos usuários no Firebase Auth/Firestore
+    const alunosComDetalhes = [];
+    for (const aluno of Array.from(alunosMap.values())) {
+      try {
+        // Buscar informações do usuário na collection 'users'
+        const userRef = doc(db, 'users', aluno.alunoId);
+        const userSnap = await getDoc(userRef);
+        
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          aluno.nome = userData.name || aluno.nome;
+          aluno.telefone = userData.telefone || aluno.telefone || '';
+        }
+        
+        alunosComDetalhes.push(aluno);
+      } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error);
+        alunosComDetalhes.push(aluno);
+      }
+    }
     
-    return { success: true, data: Array.from(alunosMap.values()) };
+    return { success: true, data: alunosComDetalhes };
   }
 };

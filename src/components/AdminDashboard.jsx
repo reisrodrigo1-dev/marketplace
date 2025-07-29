@@ -18,6 +18,7 @@ import FinancialTest from './FinancialTest';
 import ProductCreator from './ProductCreator';
 import FinancesPage from './FinancesPage';
 import UserCodeDisplay from './UserCodeDisplay';
+import AlunosManager from './AlunosManager';
 
 const AdminDashboard = () => {
   const { user, userData, logout } = useAuth();
@@ -397,6 +398,10 @@ const AdminDashboard = () => {
                     onClick={() => setActiveTab('financeiro')}
                     className={`w-full text-left px-4 py-2 text-sm font-inter-medium rounded-lg hover:bg-yellow-50 ${activeTab === 'financeiro' ? 'bg-yellow-100 text-yellow-700' : 'text-gray-700'}`}
                   >Financeiro</button>
+                  <button
+                    onClick={() => setActiveTab('gerenciar-alunos')}
+                    className={`w-full text-left px-4 py-2 text-sm font-inter-medium rounded-lg hover:bg-yellow-50 ${activeTab === 'gerenciar-alunos' ? 'bg-yellow-100 text-yellow-700' : 'text-gray-700'}`}
+                  >Gerenciar Alunos</button>
                 </div>
               </div>
               
@@ -565,6 +570,10 @@ const AdminDashboard = () => {
 
           {activeTab === 'meus-produtos' && (
             <ProductCreator faseada enableLessonsPerModule />
+          )}
+
+          {activeTab === 'gerenciar-alunos' && (
+            <AlunosManager />
           )}
         </div>
       </div>
