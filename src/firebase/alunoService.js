@@ -2,7 +2,7 @@
 // Estrutura: alunosPorPagina/{paginaId}_{alunoId}
 
 import { db } from './firebase';
-import { doc, setDoc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
+import { doc, setDoc, getDoc, getDocs, collection, query, where, updateDoc, serverTimestamp, addDoc } from 'firebase/firestore';
 
 const COLLECTION = 'alunosPorPagina';
 
@@ -34,12 +34,28 @@ export const alunoService = {
     try {
       console.log(`Buscando acessos para aluno: ${alunoId}, página: ${paginaId}`);
 
-      const q = query(
+      // Primeiro tenta buscar na coleção 'acessos'
+      let q = query(
         collection(db, 'acessos'),
         where('alunoId', '==', alunoId),
         where('paginaId', '==', paginaId)
       );
-      const querySnapshot = await getDocs(q);
+      let querySnapshot = await getDocs(q);
+      
+      console.log(`Documentos encontrados na coleção 'acessos': ${querySnapshot.docs.length}`);
+
+      // Se não encontrar, tenta na coleção legada 'alunosPorPagina'
+      if (querySnapshot.docs.length === 0) {
+        console.log('Tentando buscar na coleção alunosPorPagina...');
+        q = query(
+          collection(db, 'alunosPorPagina'),
+          where('alunoId', '==', alunoId),
+          where('paginaId', '==', paginaId)
+        );
+        querySnapshot = await getDocs(q);
+        console.log(`Documentos encontrados na coleção 'alunosPorPagina': ${querySnapshot.docs.length}`);
+      }
+
       const acessos = querySnapshot.docs.map(doc => {
         const data = doc.data();
         console.log('Acesso encontrado:', { id: doc.id, ...data });
@@ -47,6 +63,24 @@ export const alunoService = {
       });
 
       console.log(`Total de acessos encontrados: ${acessos.length}`);
+      
+      // Se ainda não encontrou, lista todas as coleções para debug
+      if (acessos.length === 0) {
+        console.log('Nenhum acesso encontrado. Fazendo busca ampla para debug...');
+        
+        // Busca todos os acessos do aluno (sem filtro de página)
+        const debugQuery = query(
+          collection(db, 'acessos'),
+          where('alunoId', '==', alunoId)
+        );
+        const debugSnapshot = await getDocs(debugQuery);
+        console.log(`Acessos do aluno em todas as páginas: ${debugSnapshot.docs.length}`);
+        
+        debugSnapshot.docs.forEach(doc => {
+          console.log('Debug acesso:', { id: doc.id, ...doc.data() });
+        });
+      }
+
       return { success: true, data: acessos };
     } catch (error) {
       console.error('Erro ao buscar acessos do aluno:', error);
@@ -210,8 +244,10 @@ export const alunoService = {
       const acessoData = {
         alunoId: alunoId,
         paginaId: paginaId,
-        cursoId: cursoId,
-        nomeProduto: nomeProduto,
+        cursoId: cursoId || 'curso-teste-123',
+        nomeProduto: nomeProduto || 'Curso de Teste',
+        cursoTitulo: nomeProduto || 'Curso de Teste',
+        cursoDescricao: 'Curso criado para teste do sistema',
         nome: 'Aluno Teste',
         email: 'teste@example.com',
         telefone: '(11) 99999-9999',
@@ -225,11 +261,38 @@ export const alunoService = {
         updatedAt: serverTimestamp()
       };
 
-      const result = await this.adicionarProdutoAluno(acessoData);
-      console.log('Acesso de teste criado:', result);
-      return result;
+      console.log('Criando acesso de teste com dados:', acessoData);
+      const acessoRef = await addDoc(collection(db, 'acessos'), acessoData);
+      console.log('Acesso de teste criado com ID:', acessoRef.id);
+      
+      return { success: true, id: acessoRef.id };
     } catch (error) {
       console.error('Erro ao criar acesso de teste:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Função para verificar se existem dados de teste e criar se necessário
+  async verificarECriarDadosTeste(alunoId, paginaId) {
+    try {
+      console.log('Verificando dados de teste para:', { alunoId, paginaId });
+      
+      const acessosResult = await this.getAcessosPorAluno(alunoId, paginaId);
+      
+      if (acessosResult.success && acessosResult.data.length === 0) {
+        console.log('Nenhum acesso encontrado. Criando dados de teste...');
+        
+        const testeResult = await this.criarAcessoTeste(alunoId, paginaId);
+        
+        if (testeResult.success) {
+          console.log('Dados de teste criados. Buscando novamente...');
+          return await this.getAcessosPorAluno(alunoId, paginaId);
+        }
+      }
+      
+      return acessosResult;
+    } catch (error) {
+      console.error('Erro ao verificar/criar dados de teste:', error);
       return { success: false, error: error.message };
     }
   },

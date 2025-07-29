@@ -62,7 +62,8 @@ const SalesPageAlunoDashboard = () => {
     console.log('Iniciando carregamento de acessos...', { alunoId: aluno.uid, paginaId });
     setLoading(true);
     
-    alunoService.getAcessosPorAluno(aluno.uid, paginaId).then(result => {
+    // Usa a função que verifica e cria dados de teste se necessário
+    alunoService.verificarECriarDadosTeste(aluno.uid, paginaId).then(result => {
       console.log('Resultado dos acessos:', result);
       
       if (result.success) {
@@ -438,6 +439,28 @@ const SalesPageAlunoDashboard = () => {
                 <p>Aluno ID: {aluno?.uid}</p>
                 <p>Página ID: {paginaId}</p>
                 <p>Verifique se existem registros na coleção 'acessos' com estes IDs.</p>
+                <button
+                  onClick={async () => {
+                    console.log('Forçando criação de dados de teste...');
+                    setLoading(true);
+                    try {
+                      const result = await alunoService.criarAcessoTeste(aluno.uid, paginaId);
+                      if (result.success) {
+                        console.log('Dados de teste criados. Recarregando...');
+                        window.location.reload();
+                      } else {
+                        alert('Erro ao criar dados de teste: ' + result.error);
+                      }
+                    } catch (error) {
+                      console.error('Erro:', error);
+                      alert('Erro: ' + error.message);
+                    }
+                    setLoading(false);
+                  }}
+                  className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Criar Dados de Teste
+                </button>
               </div>
             </div>
           ) : (
