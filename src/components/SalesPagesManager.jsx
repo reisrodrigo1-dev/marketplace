@@ -1,12 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { salesPageService } from '../firebase/salesPageService';
+import { courseService } from '../firebase/courseService';
+import { alunoService } from '../firebase/alunoService';
 import SalesPageBuilder from './SalesPageBuilder';
-import InviteNotifications from './InviteNotifications';
-import CollaboratorAccess from './CollaboratorAccess';
-import CollaborationManager from './CollaborationManager';
-import CollaboratorManager from './CollaboratorManager';
+import SalesWebPage from './SalesWebPage';
 import Modal from './Modal';
 
 export default function SalesPagesManager() {
@@ -15,6 +13,9 @@ export default function SalesPagesManager() {
   const { user } = useAuth();
   const [salesPages, setSalesPages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
+  const [pageStats, setPageStats] = useState({}); // Para armazenar contadores de produtos e alunos
 
   useEffect(() => {
     async function fetchPages() {
@@ -28,6 +29,7 @@ export default function SalesPagesManager() {
       const result = await salesPageService.getUserSalesPages(userId);
       if (result.success) {
         setSalesPages(result.data);
+        await fetchPageStats(result.data);
       } else {
         setSalesPages([]);
       }
@@ -35,6 +37,26 @@ export default function SalesPagesManager() {
     }
     fetchPages();
   }, [user]);
+
+  const fetchPageStats = async (pages) => {
+    const stats = {};
+
+    for (const page of pages) {
+      // Contar produtos
+      const qtdProdutos = page.produtosSelecionados ? page.produtosSelecionados.length : 0;
+
+      // Contar alunos únicos da página
+      const alunosResult = await alunoService.getAlunosUnicosPorPagina(page.id);
+      const qtdAlunos = alunosResult.success ? alunosResult.data.length : 0;
+
+      stats[page.id] = {
+        produtos: qtdProdutos,
+        alunos: qtdAlunos
+      };
+    }
+
+    setPageStats(stats);
+  };
 
   if (loading) {
     return (
@@ -46,6 +68,39 @@ export default function SalesPagesManager() {
       </div>
     );
   }
+
+  const handlePageCreated = async (newPage) => {
+    const updatedPages = [...salesPages, newPage];
+    setSalesPages(updatedPages);
+    await fetchPageStats(updatedPages); // Atualizar estatísticas
+    setShowBuilder(false);
+  };
+
+  const handlePageUpdated = async (updatedPage) => {
+    const updatedPages = salesPages.map(page => 
+      page.id === updatedPage.id ? updatedPage : page
+    );
+    setSalesPages(updatedPages);
+    await fetchPageStats(updatedPages); // Atualizar estatísticas
+    setShowBuilder(false);
+    setEditingPage(null);
+  };
+
+  const handleDeletePage = async (pageId) => {
+    if (window.confirm('Tem certeza que deseja excluir esta página? Esta ação não pode ser desfeita.')) {
+      const result = await salesPageService.deleteSalesPage(pageId);
+      if (result.success) {
+        const updatedPages = salesPages.filter(page => page.id !== pageId);
+        setSalesPages(updatedPages);
+        // Remover estatísticas da página deletada
+        const newStats = { ...pageStats };
+        delete newStats[pageId];
+        setPageStats(newStats);
+      } else {
+        alert('Erro ao excluir página: ' + result.error);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -264,11 +319,33 @@ export default function SalesPagesManager() {
 
                   {/* Conteúdo do Card */}
                   <div className="p-6">
-                    {page.titulo && (
-                      <div className="text-gray-700 font-semibold text-lg mb-4 line-clamp-2 group-hover:text-blue-700 transition-colors duration-300">
-                        {page.titulo}
-                      </div>
-                    )}
+                    
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                            {page.nomePagina || 'Página sem nome'}
+                          </h3>
+                          <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
+                            {page.titulo || 'Sem descrição disponível'}
+                          </p>
+
+                          {/* Estatísticas da Página */}
+                          <div className="flex items-center space-x-4 mt-3">
+                            <div className="flex items-center space-x-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 2L3 7v11a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V7l-7-5z" clipRule="evenodd" />
+                              </svg>
+                              <span>{pageStats[page.id]?.produtos || 0} produto{(pageStats[page.id]?.produtos || 0) !== 1 ? 's' : ''}</span>
+                            </div>
+                            <div className="flex items-center space-x-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+                              </svg>
+                              <span>{pageStats[page.id]?.alunos || 0} aluno{(pageStats[page.id]?.alunos || 0) !== 1 ? 's' : ''}</span>
+                            </div>
+                          </div>
+                        </div>
+                    
 
                     {/* Métricas */}
                     <div className="grid grid-cols-2 gap-4 mb-6">
@@ -307,10 +384,7 @@ export default function SalesPagesManager() {
                         </button>
                         <button
                           onClick={async () => {
-                            if (window.confirm('Tem certeza que deseja excluir esta página? Esta ação não pode ser desfeita.')) {
-                              await salesPageService.deleteSalesPage(page.id);
-                              setSalesPages(salesPages.filter(p => p.id !== page.id));
-                            }
+                            handleDeletePage(page.id);
                           }}
                           className="px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl hover:scale-[1.02] transition-all duration-200"
                         >
@@ -337,7 +411,10 @@ export default function SalesPagesManager() {
             const userId = user?.uid;
             if (!userId) return;
             const result = await salesPageService.getUserSalesPages(userId);
-            if (result.success) setSalesPages(result.data);
+            if (result.success) {
+              const newPage = result.data.find(page => page.id === id)
+              handlePageCreated(newPage);
+            }
             setShowBuilder(false);
             setEditingPage(null);
           }}
@@ -346,7 +423,10 @@ export default function SalesPagesManager() {
             const userId = user?.uid;
             if (!userId) return;
             const result = await salesPageService.getUserSalesPages(userId);
-            if (result.success) setSalesPages(result.data);
+            if (result.success) {
+              const updatedPage = result.data.find(page => page.id === id)
+              handlePageUpdated(updatedPage);
+            }
             setShowBuilder(false);
             setEditingPage(null);
           }}
