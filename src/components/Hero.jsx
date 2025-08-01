@@ -20,9 +20,9 @@ const Hero = () => {
         <div className="text-center">
           <div className="mb-8">
             <img 
-              src="/logo_direitoHub_Branco.png" 
-              alt="DireitoHub" 
-              className="h-32 w-auto mx-auto"
+              src="/logo_Marketplace.png" 
+              alt="Marketplace" 
+              className="h-32 w-auto mx-auto brightness-0 invert"
             />
           </div>
         </div>

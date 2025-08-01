@@ -110,8 +110,8 @@ const LawyerLogin = () => {
         <div className="text-center mb-8">
           <Link to="/escolher-perfil" className="inline-block mb-6">
             <img 
-              src="/logo_direitoHub.png" 
-              alt="DireitoHub" 
+              src="/logo_Marketplace.png" 
+              alt="Marketplace" 
               className="h-12 mx-auto"
             />
           </Link>

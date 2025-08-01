@@ -74,8 +74,8 @@ const AdminDashboard = () => {
             <div className="flex items-center space-x-6">
               <div className="flex items-center">
                 <img 
-                  src="/logo_direitoHub.png" 
-                  alt="DireitoHub" 
+                  src="/logo_Marketplace.png" 
+                  alt="Marketplace" 
                   className="h-12 w-auto mr-3"
                 />
                 <span className="text-xl font-inter-bold text-gray-900">Marketplace Admin</span>

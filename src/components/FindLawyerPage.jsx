@@ -148,8 +148,8 @@ const FindLawyerPage = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 h-20">
           {/* Logo */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.location.href = '/'}>
-            <img src="/logo_direitoHub.png" alt="DireitoHub Logo" className="h-10 w-auto object-contain" />
-            <span className="text-2xl font-extrabold text-blue-700 tracking-tight">DireitoHub</span>
+            <img src="/logo_Marketplace.png" alt="Marketplace Logo" className="h-10 w-auto object-contain" />
+            <span className="text-2xl font-extrabold text-blue-700 tracking-tight">Marketplace</span>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -377,7 +377,7 @@ const LawyerCard = ({ lawyer }) => {
     if (lawyer.logoUrl) {
       return lawyer.logoUrl;
     }
-    return '/logo_direitoHub.png';
+    return '/logo_Marketplace.png';
   }
 
   const handleContact = (type) => {
@@ -426,7 +426,7 @@ const LawyerCard = ({ lawyer }) => {
                 className="w-full h-full object-contain object-center"
                 style={{ background: 'white' }}
                 onError={(e) => {
-                  e.target.src = '/logo_direitoHub.png';
+                  e.target.src = '/logo_Marketplace.png';
                 }}
               />
             </div>

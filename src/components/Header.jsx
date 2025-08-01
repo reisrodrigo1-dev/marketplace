@@ -28,8 +28,8 @@ const Header = ({ onLoginClick, showBackButton = false, onBackClick }) => {
                 </button>
               )}
               <img 
-                src="/logo_direitoHub.png" 
-                alt="DireitoHub" 
+                src="/logo_Marketplace.png" 
+                alt="Marketplace" 
                 className="h-16 w-auto mr-3"
               />
             </div>

@@ -11,13 +11,13 @@ const UserTypeSelection = () => {
         <div className="text-center mb-12">
           <Link to="/" className="inline-block mb-6">
             <img 
-              src="/logo_direitoHub.png" 
-              alt="DireitoHub" 
+              src="/logo_Marketplace.png" 
+              alt="Marketplace" 
               className="h-16 mx-auto"
             />
           </Link>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Bem-vindo ao DireitoHub
+            Bem-vindo ao Marketplace
           </h1>
           <p className="text-xl text-gray-600">
             Escolha como você deseja acessar nossa plataforma
