@@ -35,15 +35,19 @@ export default function LessonFormModal({ isOpen, onClose, onSave, initialData }
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    let finalTitle = title;
+    if (aoVivo) {
+      finalTitle = title.startsWith('AO VIVO - ') ? title : `AO VIVO - ${title}`;
+    }
     onSave({
-      title,
+      title: finalTitle,
       youtubeUrl,
       description,
       pdfUrl,
       quizQuestion,
       quizOptions,
       quizCorrect,
-      aoVivo,
+      aoVivo: Boolean(aoVivo),
       dataAoVivo,
       horaAoVivo,
     });

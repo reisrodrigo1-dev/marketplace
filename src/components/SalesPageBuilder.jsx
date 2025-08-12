@@ -83,10 +83,16 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
       };
       setFormData(newFormData);
       setVideoLinks(editingPage.videos || []);
+      
+      // Configurar preview do logo se existir logoUrl
+      if (editingPage.logoUrl) {
+        setLogoPreview(editingPage.logoUrl);
+      }
     }
     if (!isEditing) {
       setFormData(defaultFormData);
       setVideoLinks([]);
+      setLogoPreview(null);
     }
   }, [editingPage, isEditing]);
 
@@ -163,6 +169,20 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
   const handleFileUpload = (type, event) => {
     const file = event.target.files[0];
     if (file) {
+      // Validar tipo de arquivo
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Formato de arquivo não suportado. Use PNG, JPG ou JPEG.');
+        return;
+      }
+
+      // Validar tamanho (5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB em bytes
+      if (file.size > maxSize) {
+        alert('Arquivo muito grande. O tamanho máximo é 5MB.');
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         if (type === 'logo') {
@@ -325,6 +345,65 @@ const SalesPageBuilder = ({ onBack, onPageCreated, onPageUpdated, editingPage = 
                     required
                   />
                   <p className="text-sm text-gray-500 mt-2">Este será o nome identificador da sua página</p>
+                </div>
+
+                {/* Campo de Logo */}
+                <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-6">
+                  <label className="block text-lg font-bold mb-3 text-gray-800">
+                    Logo da Página
+                  </label>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Adicione o logo da sua empresa ou marca (opcional)
+                  </p>
+                  
+                  <div className="space-y-4">
+                    {/* Preview do Logo */}
+                    {(logoPreview || formData.logoUrl) && (
+                      <div className="flex justify-center">
+                        <div className="relative">
+                          <img 
+                            src={logoPreview || formData.logoUrl} 
+                            alt="Preview do Logo" 
+                            className="h-20 max-w-40 object-contain rounded-lg border-2 border-gray-200 bg-white p-2"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setLogoPreview(null);
+                              setFormData(prev => ({ ...prev, logo: null, logoUrl: '' }));
+                            }}
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Input de Upload */}
+                    <div className="flex justify-center">
+                      <label className="cursor-pointer group">
+                        <div className="flex flex-col items-center justify-center w-40 h-20 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-400 transition-colors group-hover:bg-blue-50">
+                          <svg className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          <span className="text-sm text-gray-500 group-hover:text-blue-600 font-medium">
+                            {logoPreview || formData.logoUrl ? 'Trocar Logo' : 'Adicionar Logo'}
+                          </span>
+                        </div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={(e) => handleFileUpload('logo', e)}
+                        />
+                      </label>
+                    </div>
+                    
+                    <p className="text-xs text-gray-500 text-center">
+                      Formatos aceitos: PNG, JPG, JPEG • Tamanho máximo: 5MB
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
@@ -538,7 +617,7 @@ const [showIaExample, setShowIaExample] = useState(false);
                       setIaLoading(true);
                       setIaError('');
                       try {
-                        const prompt = `Você é um copywriter especialista em páginas de vendas de cursos online. Com base no briefing abaixo, gere um JSON com os seguintes campos: heroBadge_text, heroTitle_text, heroSubtitle_text, beneficios_mock (array de strings), ctaPrincipal_text, provaSocial_numeroAdvogados, provaSocial_honorariosGerados, provaSocial_taxaSatisfacao, provaSocial_tempoResultado, depoimentos_mock (array de objetos com nome, texto), videosSection_title, videosSection_subtitle, beneficiosDetalhados_mock (array de strings), ofertaEspecial_badge, produto_mock_title, produto_mock_description, produto_mock_priceOriginal, produto_mock_priceSale, produto_mock_discount, produto_mock_cta, produto_mock_infoPagamento, bonus_mock (array de bônus, com nome e descrição), garantia_titulo, garantia_descricao, garantia_lista (array de tópicos), faq_mock (array com objetos {pergunta, resposta}), ultimaChance_title, ultimaChance_subtitle, ultimaChance_infoPreco. Responda apenas com o JSON.\n\nBriefing:\n${formData.iaBriefing}`;
+                        const prompt = `Você é um copywriter especialista em páginas de vendas de cursos online. Com base no briefing abaixo, gere um JSON com os seguintes campos: heroBadge_text, heroTitle_text, heroSubtitle_text, beneficios_mock (array de strings), ctaPrincipal_text, provaSocial_numeroAdvogados, provaSocial_honorariosGerados, provaSocial_taxaSatisfacao, provaSocial_tempoResultado, depoimentos_mock (array de objetos com nome, texto), videosSection_title, videosSection_subtitle, beneficiosDetalhados_mock (array de strings no formato "emoji;titulo;descricao"), ofertaEspecial_badge, produto_mock_title, produto_mock_description, produto_mock_priceOriginal, produto_mock_priceSale, produto_mock_discount, produto_mock_cta, produto_mock_infoPagamento, bonus_mock (array de bônus, com nome e descrição), garantia_titulo, garantia_descricao, garantia_lista (array de tópicos), faq_mock (array com objetos {pergunta, resposta}), ultimaChance_title, ultimaChance_subtitle, ultimaChance_infoPreco. Para beneficiosDetalhados_mock, use o formato "emoji;título;descrição" onde emoji é um emoji relevante, título é um nome curto e descrição explica o benefício. Responda apenas com o JSON.\n\nBriefing:\n${formData.iaBriefing}`;
                         const response = await fetch('https://api.openai.com/v1/chat/completions', {
                           method: 'POST',
                           headers: {
@@ -685,18 +764,26 @@ const [showIaExample, setShowIaExample] = useState(false);
                     <div>
                       <label className="block text-lg font-bold mb-3 text-gray-800">Nº Advogados Formados</label>
                       <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg" value={formData.numeroAdvogados || ''} onChange={e => handleInputChange('numeroAdvogados', e.target.value)} />
+                      <label className="block text-sm font-medium mt-2 mb-1 text-gray-600">Texto do Indicador</label>
+                      <input type="text" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-base" value={formData.numeroAdvogadosLabel || ''} onChange={e => handleInputChange('numeroAdvogadosLabel', e.target.value)} />
                     </div>
                     <div>
                       <label className="block text-lg font-bold mb-3 text-gray-800">Honorários Gerados</label>
                       <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg" value={formData.honorariosGerados || ''} onChange={e => handleInputChange('honorariosGerados', e.target.value)} />
+                      <label className="block text-sm font-medium mt-2 mb-1 text-gray-600">Texto do Indicador</label>
+                      <input type="text" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-base" value={formData.honorariosGeradosLabel || ''} onChange={e => handleInputChange('honorariosGeradosLabel', e.target.value)} />
                     </div>
                     <div>
                       <label className="block text-lg font-bold mb-3 text-gray-800">Taxa de Satisfação</label>
                       <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg" value={formData.taxaSatisfacao || ''} onChange={e => handleInputChange('taxaSatisfacao', e.target.value)} />
+                      <label className="block text-sm font-medium mt-2 mb-1 text-gray-600">Texto do Indicador</label>
+                      <input type="text" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-base" value={formData.taxaSatisfacaoLabel || ''} onChange={e => handleInputChange('taxaSatisfacaoLabel', e.target.value)} />
                     </div>
                     <div>
                       <label className="block text-lg font-bold mb-3 text-gray-800">Tempo p/ 1º Resultado</label>
                       <input type="text" className="w-full border-2 border-gray-200 rounded-xl px-4 py-2 text-lg" value={formData.tempoResultado || ''} onChange={e => handleInputChange('tempoResultado', e.target.value)} />
+                      <label className="block text-sm font-medium mt-2 mb-1 text-gray-600">Texto do Indicador</label>
+                      <input type="text" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-base" value={formData.tempoResultadoLabel || ''} onChange={e => handleInputChange('tempoResultadoLabel', e.target.value)} />
                     </div>
                   </div>
                   {/* Bônus (array) */}
@@ -709,6 +796,19 @@ const [showIaExample, setShowIaExample] = useState(false);
                       onChange={e => handleInputChange('bonusRaw', e.target.value)}
                       rows={3}
                     />
+                  </div>
+                  
+                  {/* Benefícios Detalhados */}
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6">
+                    <label className="block text-lg font-bold mb-3 text-gray-800">Benefícios Detalhados (formato: Ícone;Título;Descrição)</label>
+                    <textarea
+                      className="w-full border-2 border-gray-200 rounded-xl px-4 py-4 text-lg focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-200"
+                      placeholder={"Ex:\n⚡;Acesso Imediato;Comece a aprender assim que finalizar sua inscrição. Todo o conteúdo disponível na sua área de membros.\n🎓;Certificado Reconhecido;Receba certificado válido ao concluir o curso. Comprove sua especialização no mercado.\n🤝;Suporte VIP;Grupo exclusivo no WhatsApp + suporte direto com a equipe para tirar todas suas dúvidas."}
+                      value={formData.beneficiosDetalhadosRaw || ''}
+                      onChange={e => handleInputChange('beneficiosDetalhadosRaw', e.target.value)}
+                      rows={6}
+                    />
+                    <p className="text-xs text-gray-500 mt-2">Um benefício por linha. Formato: Ícone;Título;Descrição. Use emojis para os ícones.</p>
                   </div>
                   {/* Garantia */}
                   <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6">
@@ -817,15 +917,23 @@ const [showIaExample, setShowIaExample] = useState(false);
                             <div className="flex-1">
                               <h4 className="font-bold text-gray-800 mb-1">{course.title}</h4>
                               <div className="flex gap-3 items-center">
-                                {course.priceOriginal && (
-                                  <span className="text-gray-400 line-through text-sm">
-                                    R$ {Number(course.priceOriginal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                {course.isFree ? (
+                                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">
+                                    💚 GRATUITO
                                   </span>
-                                )}
-                                {course.priceSale && (
-                                  <span className="text-green-600 font-bold text-lg">
-                                    R$ {Number(course.priceSale).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                  </span>
+                                ) : (
+                                  <>
+                                    {course.priceOriginal && (
+                                      <span className="text-gray-400 line-through text-sm">
+                                        R$ {Number(course.priceOriginal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                      </span>
+                                    )}
+                                    {course.priceSale && (
+                                      <span className="text-green-600 font-bold text-lg">
+                                        R$ {Number(course.priceSale).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                      </span>
+                                    )}
+                                  </>
                                 )}
                               </div>
                             </div>

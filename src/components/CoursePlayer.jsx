@@ -5,6 +5,10 @@ import { progressoService } from '../firebase/progressoService';
 
 // CoursePlayer: Player moderno inspirado no Hotmart/Alura
 const CoursePlayer = ({ course, onBack }) => {
+  // ...existing code...
+  // DEBUG: loga o objeto completo do curso recebido
+  // eslint-disable-next-line no-console
+  console.log('DEBUG: Objeto completo do curso recebido pelo CoursePlayer:', course);
   const { aluno } = useAlunoAuth();
   const [showSidebar, setShowSidebar] = useState(true);
   const [notes, setNotes] = useState('');
@@ -21,10 +25,17 @@ const CoursePlayer = ({ course, onBack }) => {
   if (!course) return null;
   // Suporte a ambas as estruturas: modulos/aulas (antigo) e sections/lessons (novo)
   const modules = course.modulos || course.sections || [];
-  const getLessons = (mod) => mod.aulas || mod.lessons || [];
+  // Prioriza modulos/aulas para garantir que os campos estejam presentes
+  const getLessons = (mod) => Array.isArray(mod.aulas) ? mod.aulas : (Array.isArray(mod.lessons) ? mod.lessons : []);
   const currentModule = modules[selectedModuleIdx] || {};
   const lessons = getLessons(currentModule);
   const currentLesson = lessons[selectedLessonIdx] || {};
+  // DEBUG: loga o objeto completo da aula atual
+  // eslint-disable-next-line no-console
+  console.log('DEBUG: currentLesson recebido pelo CoursePlayer:', currentLesson);
+  // Fallback para nomes alternativos dos campos de data/hora ao vivo
+  const dataAoVivo = currentLesson.dataAoVivo || currentLesson.data_aovivo || currentLesson.data_ao_vivo || currentLesson.dataaovivo || '';
+  const horaAoVivo = currentLesson.horaAoVivo || currentLesson.hora_aovivo || currentLesson.hora_ao_vivo || currentLesson.horaaovivo || '';
   const totalLessons = modules.reduce((acc, m) => acc + getLessons(m).length, 0);
   const allLessonIds = modules.flatMap(m => getLessons(m).map(a => a.id));
   const uniqueCompleted = Array.from(new Set(completedLessons)).filter(id => allLessonIds.includes(id));
@@ -268,11 +279,18 @@ const CoursePlayer = ({ course, onBack }) => {
                             : 'text-gray-700'
                         }`}>
                           {lesson.title || lesson.titulo}
-                        {!!(lesson.aoVivo === true || lesson.aoVivo === 'true') ? (
-                          <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-bold align-middle">AO VIVO</span>
-                        ) : (
-                          <span className="ml-2 px-2 py-0.5 bg-gray-300 text-gray-700 text-[10px] rounded-full font-bold align-middle">Gravada</span>
-                        )}
+                          {(lesson.aoVivo === true || lesson.aoVivo === 'true' || String(lesson.title || lesson.titulo).startsWith('AO VIVO')) ? (
+                            <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-[10px] rounded-full font-bold align-middle">AO VIVO
+                              {(lesson.dataAoVivo || lesson.horaAoVivo) && (
+                                <span className="ml-1 font-normal text-white">
+                                  {lesson.dataAoVivo && <span>{new Date(lesson.dataAoVivo).toLocaleDateString('pt-BR')}</span>}
+                                  {lesson.horaAoVivo && <span> {lesson.horaAoVivo.slice(0,5)}</span>}
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="ml-2 px-2 py-0.5 bg-gray-300 text-gray-700 text-[10px] rounded-full font-bold align-middle">Gravada</span>
+                          )}
                         </span>
                         {completedLessons.includes(lesson.id) && (
                           <span className="ml-auto text-xs text-green-600 font-medium">Concluída</span>
@@ -342,20 +360,53 @@ const CoursePlayer = ({ course, onBack }) => {
                 {/* --- Área principal: data/hora da aula ao vivo --- */}
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
                   {currentLesson.title || currentLesson.titulo}
-                  {!!(currentLesson.aoVivo === true || currentLesson.aoVivo === 'true') ? (
-                    <span className="ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full font-bold align-middle">AO VIVO</span>
-                  ) : (
-                    <span className="ml-3 px-3 py-1 bg-gray-300 text-gray-700 text-xs rounded-full font-bold align-middle">Gravada</span>
+                  {(currentLesson.aoVivo === true || String(currentLesson.title || currentLesson.titulo).startsWith('AO VIVO')) && (
+                    <span className="ml-3 px-3 py-1 bg-red-500 text-white text-xs rounded-full font-bold align-middle">
+                      AO VIVO
+                    </span>
                   )}
+                  {currentLesson.dataAoVivo && (
+                    <div className="mt-2 text-sm text-blue-700 font-semibold">
+                      Data da aula ao vivo: <span className="font-bold">{currentLesson.dataAoVivo}</span>
+                    </div>
+                  )}
+                  {currentLesson.horaAoVivo && (
+                    <div className="mt-1 text-sm text-blue-700 font-semibold">
+                      Horário da aula ao vivo: <span className="font-bold">{currentLesson.horaAoVivo}</span>
+                    </div>
+                  )}
+                  {/* DEBUG: Exibe todos os campos da aula atual para facilitar troubleshooting */}
+                  <div className="mt-2 text-xs text-gray-500 border border-dashed border-red-400 p-2 rounded">
+                    <div className="font-bold text-red-700 mb-1">DEBUG: Dados da aula</div>
+                    {Object.entries(currentLesson).map(([key, value]) => (
+                      <div key={key}><strong>{key}:</strong> {String(value)}</div>
+                    ))}
+                    <div className="mt-1 text-red-700">dataAoVivo (direto): <strong>{currentLesson.dataAoVivo}</strong></div>
+                    <div className="mt-1 text-red-700">horaAoVivo (direto): <strong>{currentLesson.horaAoVivo}</strong></div>
+                  </div>
+                  {/* DEBUG: Exibe todos os campos da aula atual para facilitar troubleshooting */}
+                  <div className="mt-2 text-xs text-gray-500 border border-dashed border-red-400 p-2 rounded">
+                    <div className="font-bold text-red-700 mb-1">DEBUG: Dados da aula</div>
+                    {Object.entries(currentLesson).map(([key, value]) => (
+                      <div key={key}><strong>{key}:</strong> {String(value)}</div>
+                    ))}
+                  </div>
+                  {/* Exibe todos os campos extras da aula para debug/validação */}
+                  <div className="mt-2 text-xs text-gray-500">
+                    {Object.entries(currentLesson).map(([key, value]) => (
+                      <div key={key}><strong>{key}:</strong> {String(value)}</div>
+                    ))}
+                  </div>
                 </h2>
-                {currentLesson.aoVivo && (currentLesson.dataAoVivo || currentLesson.horaAoVivo) && (
+                {(currentLesson.aoVivo === true || String(currentLesson.title || currentLesson.titulo).startsWith('AO VIVO')) && (currentLesson.dataAoVivo || currentLesson.horaAoVivo) && (
                   <div className="mb-2 text-sm text-red-700 font-semibold flex items-center gap-2">
                     <svg className="w-4 h-4 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    {currentLesson.dataAoVivo && (
-                      <span>{new Date(currentLesson.dataAoVivo).toLocaleDateString('pt-BR')}</span>
+                    <span>Início da transmissão:</span>
+                    {dataAoVivo && (
+                      <span className="font-bold">{new Date(dataAoVivo).toLocaleDateString('pt-BR')}</span>
                     )}
-                    {currentLesson.horaAoVivo && (
-                      <span>{currentLesson.horaAoVivo.slice(0,5)}</span>
+                    {horaAoVivo && (
+                      <span className="font-bold">{horaAoVivo}</span>
                     )}
                   </div>
                 )}

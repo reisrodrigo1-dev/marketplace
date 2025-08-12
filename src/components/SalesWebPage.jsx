@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlunoAuth } from '../contexts/AlunoAuthContext';
@@ -60,8 +60,15 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
     selectedTime: null
   });
 
-  // Utilitários para converter campos string em arrays/objetos
+  // UtilitÃ¡rios para converter campos string em arrays/objetos
   function parseBeneficios(raw) {
+    if (!raw) return undefined;
+    return raw.split('\n').map(line => {
+      const [icon, titulo, descricao] = line.split(';');
+      return icon && titulo && descricao ? { icon: icon.trim(), titulo: titulo.trim(), descricao: descricao.trim() } : null;
+    }).filter(Boolean);
+  }
+  function parseBeneficiosDetalhados(raw) {
     if (!raw) return undefined;
     return raw.split('\n').map(line => {
       const [icon, titulo, descricao] = line.split(';');
@@ -102,7 +109,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
   const [registrando, setRegistrando] = useState(false);
   const [acessoOk, setAcessoOk] = useState(false);
 
-  // Busca dados da página se não vierem por prop
+  // Busca dados da pÃ¡gina se nÃ£o vierem por prop
   useEffect(() => {
     if (!propSalesData) {
       const id = searchParams.get('id');
@@ -189,7 +196,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
     setAppointmentModal({ isOpen: false, selectedDate: null, selectedTime: null });
   };
 
-  // Função para lidar com compra e integração de acesso
+  // FunÃ§Ã£o para lidar com compra e integraÃ§Ã£o de acesso
   const handleComprar = async (produto) => {
     if (user && logout) {
       await logout();
@@ -211,7 +218,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
 
   const registrarAcesso = async () => {
     if (!aluno || !pendingProduct || !pendingProduct.id) {
-      alert('Erro ao finalizar compra: curso não encontrado. Tente novamente.');
+      alert('Erro ao finalizar compra: curso nÃ£o encontrado. Tente novamente.');
       return;
     }
     setRegistrando(true);
@@ -234,11 +241,11 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
   const handleAcessarComoAluno = () => {
     if (!salesData?.id) return;
     
-    // Se o aluno já estiver logado, vai direto para o dashboard
+    // Se o aluno jÃ¡ estiver logado, vai direto para o dashboard
     if (aluno) {
       navigate(`/minha-pagina-de-vendas/aluno-dashboard?paginaId=${salesData.id}`);
     } else {
-      // Se não estiver logado, vai para a tela de login
+      // Se nÃ£o estiver logado, vai para a tela de login
       navigate(`/minha-pagina-de-vendas/aluno-login?paginaId=${salesData.id}`);
     }
   };
@@ -248,7 +255,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Carregando página de vendas...</p>
+          <p className="text-lg text-gray-600">Carregando pÃ¡gina de vendas...</p>
         </div>
       </div>
     );
@@ -259,6 +266,9 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
   const beneficios = pageData.beneficios && Array.isArray(pageData.beneficios)
     ? pageData.beneficios
     : parseBeneficios(pageData.beneficiosRaw);
+  const beneficiosDetalhados = pageData.beneficiosDetalhados && Array.isArray(pageData.beneficiosDetalhados)
+    ? pageData.beneficiosDetalhados
+    : parseBeneficiosDetalhados(pageData.beneficiosDetalhadosRaw);
   const depoimentos = pageData.depoimentos && Array.isArray(pageData.depoimentos)
     ? pageData.depoimentos
     : parseDepoimentos(pageData.depoimentosRaw);
@@ -268,13 +278,18 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
   const faq = pageData.faq && Array.isArray(pageData.faq)
     ? pageData.faq
     : parseFAQ(pageData.faqRaw);
-  // Prova social
+  // Prova social com textos e valores customizáveis
   const provaSocial = pageData.provaSocial || {
     numeroAdvogados: pageData.numeroAdvogados,
     honorariosGerados: pageData.honorariosGerados,
     taxaSatisfacao: pageData.taxaSatisfacao,
     tempoResultado: pageData.tempoResultado,
-    depoimentos: depoimentos
+    depoimentos: depoimentos,
+    // Novos campos para textos customizados
+    numeroAdvogadosLabel: pageData.numeroAdvogadosLabel || 'Nº Advogados Formados',
+    honorariosGeradosLabel: pageData.honorariosGeradosLabel || 'Honorários Gerados',
+    taxaSatisfacaoLabel: pageData.taxaSatisfacaoLabel || 'Taxa de Satisfação',
+    tempoResultadoLabel: pageData.tempoResultadoLabel || 'Tempo p/ 1º Resultado'
   };
   // Garantia
   const garantia = pageData.garantia || {
@@ -282,9 +297,9 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
     descricao: pageData.garantiaDescricao,
     dias: pageData.garantiaDias || '7'
   };
-  // Bônus
+  // BÃ´nus
   const bonus = pageData.bonus || {
-    valor: pageData.bonusValor || 'R$ 897',
+    valor: pageData.bonusValor,
     itens: bonusItens
   };
   // Videos
@@ -303,11 +318,11 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
     logoUrl
   } = pageData;
 
-  // Cores padrão caso não estejam definidas - esquema profissional baseado em players do mercado
+  // Cores padrÃ£o caso nÃ£o estejam definidas - esquema profissional baseado em players do mercado
   const cores = {
-    principal: corPrincipal || '#1e40af', // Azul profissional (credibilidade jurídica)
+    principal: corPrincipal || '#1e40af', // Azul profissional (credibilidade jurÃ­dica)
     secundaria: corSecundaria || '#3b82f6', // Azul complementar (harmonioso)
-    destaque: corDestaque || '#059669' // Verde esmeralda (alta conversão em CTAs)
+    destaque: corDestaque || '#059669' // Verde esmeralda (alta conversÃ£o em CTAs)
   };
 
   const getYoutubeId = (url) => {
@@ -318,9 +333,9 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
   };
 
   const mainProduct = produtosDetalhes[0] || {};
-  const originalPrice = mainProduct.priceOriginal || 997;
-  const salePrice = mainProduct.priceSale || 497;
-  const discount = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
+  const originalPrice = mainProduct.priceOriginal || 0;
+  const salePrice = mainProduct.priceSale || 0;
+  const discount = originalPrice && salePrice ? Math.round(((originalPrice - salePrice) / originalPrice) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -329,26 +344,39 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
         className="fixed top-0 left-0 right-0 z-50 text-white py-2 shadow-lg"
         style={{ background: `linear-gradient(to right, ${cores.principal}, ${cores.secundaria})` }}
       >
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-center gap-2 text-center">
-          <div className="flex items-center gap-2">
-            <span className="animate-pulse text-yellow-300">🔥</span>
-            <span className="font-bold text-sm md:text-base">OFERTA EXPIRA EM:</span>
-            <span className="bg-white text-red-600 px-3 py-1 rounded-full font-mono font-bold text-sm md:text-base">
-              {countdown}
-            </span>
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-2 text-center">
+          {/* Logo */}
+          {logoUrl && (
+            <div className="hidden md:flex items-center">
+              <img src={logoUrl} alt="Logo" className="h-8 max-w-24 object-contain filter brightness-0 invert" />
+            </div>
+          )}
+          
+          {/* ConteÃºdo central */}
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="animate-pulse text-yellow-300">🔥</span>
+              <span className="font-bold text-sm md:text-base">OFERTA EXPIRA EM:</span>
+              <span className="bg-white text-red-600 px-3 py-1 rounded-full font-mono font-bold text-sm md:text-base">
+                {countdown}
+              </span>
+            </div>
+            <div className="flex items-center gap-4 text-xs md:text-sm">
+              <span className="bg-yellow-400 text-red-800 px-2 py-1 rounded-full font-bold animate-pulse">
+                🚨 Apenas 7 vagas restantes
+              </span>
+              <span className="bg-green-400 text-green-900 px-2 py-1 rounded-full font-bold">
+                👀 23 pessoas vendo agora
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-4 text-xs md:text-sm">
-            <span className="bg-yellow-400 text-red-800 px-2 py-1 rounded-full font-bold animate-pulse">
-              🚨 Apenas 7 vagas restantes
-            </span>
-            <span className="bg-green-400 text-green-900 px-2 py-1 rounded-full font-bold">
-              👥 23 pessoas vendo agora
-            </span>
-          </div>
+          
+          {/* EspaÃ§o reservado para balance visual */}
+          <div className="hidden md:flex w-24"></div>
         </div>
       </div>
 
-      {/* Espaçamento para barra fixa */}
+      {/* EspaÃ§amento para barra fixa */}
       <div className="h-16 md:h-12"></div>
 
       {/* Hero Section */}
@@ -368,7 +396,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
                 border: `1px solid ${cores.principal}30` 
               }}
             >
-              <span className="mr-2" style={{ color: `${cores.principal}` }}>✓</span>
+            <span className="mr-2" style={{ color: `${cores.principal}` }}>✔️</span>
               <span className="text-sm font-medium">
                 {pageData.heroBadge || 'Mais de 1.000 advogados transformaram suas carreiras'}
               </span>
@@ -395,26 +423,24 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
               {pageData.heroSubtitle || (
                 <>
-                  Descubra o método comprovado que está transformando advogados comuns em 
-                  <strong className="text-yellow-400"> especialistas requisitados</strong> no mercado jurídico
+                Descubra o método comprovado que está transformando advogados comuns em 
+                <strong className="text-yellow-400"> especialistas requisitados</strong> no mercado jurídico
                 </>
               )}
             </p>
 
-            {/* Benefícios Principais */}
-            <div className="grid md:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
-              {(beneficios && beneficios.length > 0 ? beneficios : [
-                { icon: '💰', titulo: 'Aumente Seus Honorários', descricao: 'Multiplique sua receita por 3x em até 6 meses' },
-                { icon: '⚡', titulo: 'Resultados Rápidos', descricao: 'Primeiros resultados em 30 dias' },
-                { icon: '🎯', titulo: 'Método Comprovado', descricao: 'Sistema testado por milhares de advogados' }
-              ]).map((beneficio, idx) => (
-                <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
-                  <div className="text-3xl mb-3">{beneficio.icon}</div>
-                  <h3 className="font-bold mb-2">{beneficio.titulo}</h3>
-                  <p className="text-gray-300 text-sm">{beneficio.descricao}</p>
-                </div>
-              ))}
-            </div>
+            {/* BenefÃ­cios Principais */}
+            {beneficios && beneficios.length > 0 && (
+              <div className="grid md:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
+                {beneficios.map((beneficio, idx) => (
+                  <div key={idx} className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
+                    <div className="text-3xl mb-3">{beneficio.icon}</div>
+                    <h3 className="font-bold mb-2">{beneficio.titulo}</h3>
+                    <p className="text-gray-300 text-sm">{beneficio.descricao}</p>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* CTA Principal */}
             <div className="text-center">
@@ -445,82 +471,90 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
         </div>
       </section>
 
-      {/* Seção de Prova Social */}
-      <section className="py-16 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Resultados que Falam por Si
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Veja o que nossos alunos estão conquistando
-            </p>
-          </div>
+      {/* SeÃ§Ã£o de Prova Social */}
+      {((provaSocial?.numeroAdvogados || provaSocial?.honorariosGerados || provaSocial?.taxaSatisfacao || provaSocial?.tempoResultado) || (provaSocial?.depoimentos && provaSocial.depoimentos.length > 0)) && (
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Resultados que Falam por Si
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Veja o que nossos alunos estão conquistando
+              </p>
+            </div>
 
-          {/* Números de Impacto */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
-            <div className="text-center">
-              <div className="text-4xl font-bold mb-2" style={{ color: cores.principal }}>
-                {provaSocial?.numeroAdvogados || '1.247'}
-              </div>
-              <div className="text-gray-600">Advogados Formados</div>
+          {/* NÃºmeros de Impacto */}
+          {(provaSocial?.numeroAdvogados || provaSocial?.honorariosGerados || provaSocial?.taxaSatisfacao || provaSocial?.tempoResultado) && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+              {provaSocial?.numeroAdvogados && (
+                <div className="text-center">
+                  <div className="text-4xl font-bold mb-2" style={{ color: cores.principal }}>
+                    {provaSocial.numeroAdvogados}
+                  </div>
+                  <div className="text-gray-600">{provaSocial.numeroAdvogadosLabel}</div>
+                </div>
+              )}
+              {provaSocial?.honorariosGerados && (
+                <div className="text-center">
+                  <div className="text-4xl font-bold mb-2" style={{ color: cores.destaque }}>
+                    {provaSocial.honorariosGerados}
+                  </div>
+                  <div className="text-gray-600">{provaSocial.honorariosGeradosLabel}</div>
+                </div>
+              )}
+              {provaSocial?.taxaSatisfacao && (
+                <div className="text-center">
+                  <div className="text-4xl font-bold mb-2" style={{ color: cores.secundaria }}>
+                    {provaSocial.taxaSatisfacao}
+                  </div>
+                  <div className="text-gray-600">{provaSocial.taxaSatisfacaoLabel}</div>
+                </div>
+              )}
+              {provaSocial?.tempoResultado && (
+                <div className="text-center">
+                  <div className="text-4xl font-bold mb-2" style={{ color: cores.principal }}>
+                    {provaSocial.tempoResultado}
+                  </div>
+                  <div className="text-gray-600">{provaSocial.tempoResultadoLabel}</div>
+                </div>
+              )}
             </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold mb-2" style={{ color: cores.destaque }}>
-                {provaSocial?.honorariosGerados || 'R$ 2.3M'}
-              </div>
-              <div className="text-gray-600">Em Honorários Gerados</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold mb-2" style={{ color: cores.secundaria }}>
-                {provaSocial?.taxaSatisfacao || '94%'}
-              </div>
-              <div className="text-gray-600">Taxa de Satisfação</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl font-bold mb-2" style={{ color: cores.principal }}>
-                {provaSocial?.tempoResultado || '30 dias'}
-              </div>
-              <div className="text-gray-600">Média p/ 1º Resultado</div>
-            </div>
-          </div>
+          )}
 
           {/* Depoimentos */}
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {(provaSocial?.depoimentos && provaSocial.depoimentos.length > 0 ? 
-              provaSocial.depoimentos : [
-                { nome: 'Dr. Roberto Silva', especialidade: 'Direito Empresarial', depoimento: 'Em 3 meses aumentei meus honorários em 250%. O método é realmente transformador!', iniciais: 'DR' },
-                { nome: 'Dra. Ana Martins', especialidade: 'Direito Trabalhista', depoimento: 'Consegui me especializar e hoje sou referência na minha área. Recomendo!', iniciais: 'AM' },
-                { nome: 'Dr. Carlos Santos', especialidade: 'Direito Civil', depoimento: 'Método prático e direto ao ponto. Resultados desde a primeira semana!', iniciais: 'CS' }
-              ]
-            ).map((depoimento, idx) => {
-              const colors = ['blue', 'pink', 'green'];
-              const color = colors[idx % colors.length];
-              return (
-                <div key={idx} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-                  <div className="flex items-center mb-4">
-                    <div className={`w-12 h-12 bg-${color}-100 rounded-full flex items-center justify-center mr-4`}>
-                      <span className={`text-${color}-600 font-bold`}>{depoimento.iniciais}</span>
+          {provaSocial?.depoimentos && provaSocial.depoimentos.length > 0 && (
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {provaSocial.depoimentos.map((depoimento, idx) => {
+                const colors = ['blue', 'pink', 'green'];
+                const color = colors[idx % colors.length];
+                return (
+                  <div key={idx} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+                    <div className="flex items-center mb-4">
+                      <div className={`w-12 h-12 bg-${color}-100 rounded-full flex items-center justify-center mr-4`}>
+                        <span className={`text-${color}-600 font-bold`}>{depoimento.iniciais}</span>
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900">{depoimento.nome}</div>
+                        <div className="text-gray-600 text-sm">{depoimento.especialidade}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-bold text-gray-900">{depoimento.nome}</div>
-                      <div className="text-gray-600 text-sm">{depoimento.especialidade}</div>
+                    <p className="text-gray-700 mb-4">
+                      "{depoimento.depoimento}"
+                    </p>
+                <div className="flex text-yellow-400">
+                  ⭐⭐⭐⭐⭐
                     </div>
                   </div>
-                  <p className="text-gray-700 mb-4">
-                    "{depoimento.depoimento}"
-                  </p>
-                  <div className="flex text-yellow-400">
-                    ⭐⭐⭐⭐⭐
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Seção de Vídeos */}
+      {/* SeÃ§Ã£o de VÃ­deos */}
       {videos.length > 0 && (
         <section className="py-20 bg-white">
           <div className="container mx-auto px-4">
@@ -552,7 +586,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
               ))}
             </div>
 
-            {/* CTA após vídeos */}
+            {/* CTA apÃ³s vÃ­deos */}
             <div className="text-center mt-12">
               <button 
                 onClick={() => handleComprar(mainProduct)}
@@ -575,83 +609,43 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
         </section>
       )}
 
-      {/* Seção de Benefícios Detalhados */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Por Que Milhares de Advogados Escolheram Este Método?
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Um sistema completo que vai muito além do que você encontra em outros cursos
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center mb-6">
-                <span className="text-3xl">⚡</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Acesso Imediato</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Comece a aprender assim que finalizar sua inscrição. Todo o conteúdo disponível na sua área de membros.
+      {/* SeÃ§Ã£o de BenefÃ­cios Detalhados */}
+      {beneficiosDetalhados && beneficiosDetalhados.length > 0 && (
+        <section className="py-20 bg-gradient-to-br from-blue-50 to-indigo-100">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Por Que Milhares de Advogados Escolheram Este Método?
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Um sistema completo que vai muito além do que você encontra em outros cursos
               </p>
             </div>
 
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center mb-6">
-                <span className="text-3xl">🎓</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Certificado Reconhecido</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Receba certificado válido ao concluir o curso. Comprove sua especialização no mercado.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-16 h-16 bg-purple-100 rounded-xl flex items-center justify-center mb-6">
-                <span className="text-3xl">🤝</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Suporte VIP</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Grupo exclusivo no WhatsApp + suporte direto com a equipe para tirar todas suas dúvidas.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-16 h-16 bg-orange-100 rounded-xl flex items-center justify-center mb-6">
-                <span className="text-3xl">📚</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Material Completo</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Mais de 100 modelos de petições, contratos e documentos prontos para usar na sua prática.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-16 h-16 bg-red-100 rounded-xl flex items-center justify-center mb-6">
-                <span className="text-3xl">🎯</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Método Testado</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Sistema desenvolvido e refinado ao longo de 10 anos, testado por milhares de profissionais.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="w-16 h-16 bg-indigo-100 rounded-xl flex items-center justify-center mb-6">
-                <span className="text-3xl">♾️</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Acesso Vitalício</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Pague uma vez e tenha acesso para sempre. Todas as atualizações futuras incluídas.
-              </p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+              {beneficiosDetalhados.map((beneficio, idx) => {
+                // Cores de fundo para os Ã­cones baseadas no Ã­ndice
+                const bgColors = ['bg-green-100', 'bg-blue-100', 'bg-purple-100', 'bg-orange-100', 'bg-red-100', 'bg-indigo-100'];
+                const bgColor = bgColors[idx % bgColors.length];
+                
+                return (
+                  <div key={idx} className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div className={`w-16 h-16 ${bgColor} rounded-xl flex items-center justify-center mb-6`}>
+                      <span className="text-3xl">{beneficio.icon}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">{beneficio.titulo}</h3>
+                    <p className="text-gray-600 leading-relaxed">
+                      {beneficio.descricao}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* Seção de Oferta Principal */}
+      {/* SeÃ§Ã£o de Oferta Principal */}
       <section 
         className="py-20 text-white relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, #1f2937, ${cores.principal}dd, ${cores.secundaria}dd, #1f2937)` }}
@@ -660,7 +654,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-block bg-red-600 text-white px-6 py-2 rounded-full font-bold text-sm mb-6 animate-pulse">
-              🔥 OFERTA ESPECIAL POR TEMPO LIMITADO
+              ðŸ”¥ OFERTA ESPECIAL POR TEMPO LIMITADO
             </div>
             
             <h2 className="text-4xl md:text-5xl font-bold mb-8">
@@ -669,80 +663,227 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
             </h2>
 
             {/* Cards de Produtos */}
-            {produtosDetalhes.length > 0 ? (
-              <div className="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto mb-12">
-                {produtosDetalhes.map((produto) => (
-                  <div key={produto.id} className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border-2 border-yellow-400 relative">
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-2 rounded-full font-bold text-sm">
-                      MAIS VENDIDO
-                    </div>
-                    
-                    <h3 className="text-2xl font-bold mb-4">{produto.title}</h3>
-                    <p className="text-gray-300 mb-6 leading-relaxed">{produto.description}</p>
-                    
-                    <div className="mb-8">
-                      <div className="flex items-center justify-center gap-4 mb-4">
-                        {produto.priceOriginal && (
-                          <span className="text-2xl text-gray-400 line-through">
-                            R$ {Number(produto.priceOriginal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                        )}
-                        {produto.priceSale && (
-                          <span className="text-4xl font-bold" style={{ color: cores.destaque }}>
-                            R$ {Number(produto.priceSale).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                        )}
-                      </div>
-                      {discount > 0 && (
-                        <div className="bg-green-600 text-white px-4 py-2 rounded-full font-bold text-sm inline-block">
-                          ECONOMIZE {discount}% - R$ {(originalPrice - salePrice).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            {produtosDetalhes.length > 0 && (
+              <div className="max-w-4xl mx-auto mb-12">
+                {produtosDetalhes.length === 1 ? (
+                  // Layout para um Ãºnico produto
+                  <div className="max-w-2xl mx-auto">
+                    {produtosDetalhes.map((produto) => (
+                      <div key={produto.id} className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border-2 border-yellow-400 relative">
+                        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-2 rounded-full font-bold text-sm">
+                          MAIS VENDIDO
                         </div>
-                      )}
-                    </div>
+                        
+                        <h3 className="text-2xl font-bold mb-4">{produto.title}</h3>
+                        <p className="text-gray-300 mb-6 leading-relaxed">{produto.description}</p>
+                        
+                        <div className="mb-8">
+                          {produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0) ? (
+                            <div className="text-center">
+                              <div className="bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-2xl inline-block mb-4">
+                                🎁 100% GRATUITO
+                              </div>
+                              <p className="text-green-400 text-lg font-semibold">
+                                Acesso totalmente gratuito - Sem pegadinhas!
+                              </p>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center justify-center gap-4 mb-4">
+                                {produto.priceOriginal && (
+                                  <span className="text-2xl text-gray-400 line-through">
+                                    R$ {Number(produto.priceOriginal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </span>
+                                )}
+                                {produto.priceSale && (
+                                  <span className="text-4xl font-bold" style={{ color: cores.destaque }}>
+                                    R$ {Number(produto.priceSale).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </span>
+                                )}
+                              </div>
+                              {produto.priceOriginal && produto.priceSale && (
+                                <div className="bg-green-600 text-white px-4 py-2 rounded-full font-bold text-sm inline-block">
+                                  ECONOMIZE {Math.round(((produto.priceOriginal - produto.priceSale) / produto.priceOriginal) * 100)}% - R$ {(produto.priceOriginal - produto.priceSale).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
 
-                    <button
-                      onClick={() => handleComprar(produto)}
-                      className="w-full text-white font-bold text-xl py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
-                      style={{
-                        background: `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`,
-                        ...pulseStyle
-                      }}
-                      onMouseEnter={e => {
-                        e.target.style.background = `linear-gradient(to right, ${cores.principal}, ${cores.destaque})`;
-                      }}
-                      onMouseLeave={e => {
-                        e.target.style.background = `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`;
-                      }}
-                    >
-                      {randomCtas[2]}
-                    </button>
-                    
-                    <p className="text-gray-300 text-sm">
-                      🔒 Pagamento 100% Seguro | 📱 Acesso Imediato | ✅ Garantia de 7 dias
-                    </p>
+                        <button
+                          onClick={() => handleComprar(produto)}
+                          className="w-full text-white font-bold text-xl py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
+                          style={{
+                            background: (produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0))
+                              ? `linear-gradient(to right, #059669, #10b981)` 
+                              : `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`,
+                            ...pulseStyle
+                          }}
+                          onMouseEnter={e => {
+                            if (produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0)) {
+                              e.target.style.background = `linear-gradient(to right, #10b981, #059669)`;
+                            } else {
+                              e.target.style.background = `linear-gradient(to right, ${cores.principal}, ${cores.destaque})`;
+                            }
+                          }}
+                          onMouseLeave={e => {
+                            if (produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0)) {
+                              e.target.style.background = `linear-gradient(to right, #059669, #10b981)`;
+                            } else {
+                              e.target.style.background = `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`;
+                            }
+                          }}
+                        >
+                          {(produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0)) ? '🎁 QUERO MEU ACESSO GRATUITO AGORA!' : randomCtas[2]}
+                        </button>
+                        
+                        <p className="text-gray-300 text-sm">
+                          {(produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0))
+                            ? '🎁 100% Gratuito | 📱 Acesso Imediato | ✅ Sem Pegadinhas' 
+                            : '🔒 Pagamento 100% Seguro | 📱 Acesso Imediato | ✅ Garantia de 7 dias'
+                          }
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  // Carrossel para mÃºltiplos produtos
+                  <div className="relative">
+                    <ProductCarousel produtos={produtosDetalhes} cores={cores} randomCtas={randomCtas} handleComprar={handleComprar} pulseStyle={pulseStyle} />
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border-2 border-yellow-400 max-w-2xl mx-auto mb-12">
-                <h3 className="text-2xl font-bold mb-4">Curso Completo de Especialização Jurídica</h3>
-                <p className="text-gray-300 mb-6">
-                  O método mais completo para transformar sua carreira jurídica em 90 dias
-                </p>
-                
-                <div className="mb-8">
-                  <div className="flex items-center justify-center gap-4 mb-4">
-                    <span className="text-2xl text-gray-400 line-through">R$ 997,00</span>
-                    <span className="text-4xl font-bold text-yellow-400">R$ 497,00</span>
-                  </div>
-                  <div className="bg-green-600 text-white px-4 py-2 rounded-full font-bold text-sm inline-block">
-                    ECONOMIZE 50% - R$ 500,00
-                  </div>
-                </div>
+            )}
 
+            {/* BonificaÃ§Ãµes - SÃ³ aparece para cursos pagos */}
+            {produtosDetalhes.length > 0 && 
+             !produtosDetalhes.some(produto => produto.isFree) && 
+             bonus && (bonus.valor || (bonus.itens && bonus.itens.length > 0)) && (
+              <div className="bg-yellow-400 text-gray-900 rounded-2xl p-6 mb-8">
+                <h3 className="text-xl font-bold mb-4">
+                  🎁 BÔNUS EXCLUSIVOS{bonus.valor && ` (Valor: ${bonus.valor})`}
+                </h3>
+                {bonus.itens && bonus.itens.length > 0 && (
+                  <div className="grid md:grid-cols-3 gap-4 text-sm">
+                    {bonus.itens.filter(item => item).map((item, idx) => (
+                      <div key={idx}>✅ {item}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Seção de Garantia */}
+      {!(produtosDetalhes.length > 0 && produtosDetalhes.every(produto => produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0))) && (
+        <section className="py-16 bg-green-50">
+          <div className="container mx-auto px-4 text-center">
+            <div className="max-w-3xl mx-auto">
+              <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-5xl">🛡️</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-green-800 mb-6">
+                {garantia?.titulo || `Garantia Incondicional de ${garantia?.dias || '7'} Dias`}
+              </h2>
+              <p className="text-xl text-green-700 mb-8 leading-relaxed">
+                {garantia?.descricao || (
+                  <>
+                    Experimente todo o conteúdo por {garantia?.dias || '7'} dias. Se não ficar completamente satisfeito, 
+                    devolvemos 100% do seu investimento. <strong>Sem perguntas, sem burocracia.</strong>
+                  </>
+                )}
+              </p>
+              <div className="bg-white rounded-xl p-6 shadow-lg inline-block">
+                <p className="text-green-800 font-bold">
+                  ✅ Teste por 7 dias<br/>
+                  ✅ Satisfação garantida<br/>
+                  ✅ Reembolso imediato
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* FAQ Section */}
+      {faq && faq.length > 0 && (
+        <section className="py-20 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Perguntas Frequentes
+              </h2>
+              <p className="text-xl text-gray-600">
+                Tire suas dúvidas antes de começar
+              </p>
+            </div>
+
+            <div className="max-w-4xl mx-auto space-y-6">
+              {faq.filter(item => item.pergunta && item.resposta).map((item, idx) => (
+                <div key={idx} className="bg-white rounded-xl p-6 shadow-lg">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    ✔️ {item.pergunta}
+                  </h3>
+                  <p className="text-gray-600">
+                    {item.resposta}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Última Chance CTA */}
+      <section className={`py-20 text-white text-center ${
+        mainProduct.isFree 
+          ? 'bg-gradient-to-r from-green-600 to-emerald-700' 
+          : 'bg-gradient-to-r from-red-600 to-red-700'
+      }`}>
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            {mainProduct.isFree ? (
+              <>
+                <h2 className="text-4xl md:text-5xl font-bold mb-6">🎁 Aproveite: Curso 100% Gratuito!</h2>
+                <p className="text-xl md:text-2xl mb-8 opacity-90">
+                  Acesso imediato e sem pegadinhas. Garanta já o seu acesso gratuito!
+                </p>
                 <button
-                  onClick={() => handleComprar({})}
-                  className="w-full text-white font-bold text-xl py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
+                  onClick={() => handleComprar(mainProduct)}
+                  className="inline-block text-white font-bold text-2xl px-12 py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
+                  style={{
+                    background: `linear-gradient(to right, #059669, #10b981)`,
+                    ...pulseStyle
+                  }}
+                  onMouseEnter={e => {
+                    e.target.style.background = `linear-gradient(to right, #10b981, #059669)`;
+                  }}
+                  onMouseLeave={e => {
+                    e.target.style.background = `linear-gradient(to right, #059669, #10b981)`;
+                  }}
+                >
+                  🎁 QUERO MEU ACESSO GRATUITO AGORA!
+                </button>
+                <p className="text-sm opacity-75">
+                  🎁 100% Gratuito | 📱 Acesso Imediato | ✅ Sem Pegadinhas
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-4xl md:text-5xl font-bold mb-6">⏰ Esta é Sua Última Chance!</h2>
+                <p className="text-xl md:text-2xl mb-8 opacity-90">
+                  A oferta especial expira em <span className="font-mono font-bold bg-white text-red-600 px-4 py-2 rounded">{countdown}</span>
+                </p>
+                {mainProduct.priceOriginal && (
+                  <p className="text-lg mb-8">
+                    Depois disso, o curso volta ao preço normal de R$ {Number(mainProduct.priceOriginal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                )}
+                <button
+                  onClick={() => handleComprar(mainProduct)}
+                  className="inline-block text-white font-bold text-2xl px-12 py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
                   style={{
                     background: `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`,
                     ...pulseStyle
@@ -754,128 +895,13 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
                     e.target.style.background = `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`;
                   }}
                 >
-                  {randomCtas[2]}
+                  {randomCtas[3]}
                 </button>
-                
-                <p className="text-gray-300 text-sm">
-                  🔒 Pagamento 100% Seguro | 📱 Acesso Imediato | ✅ Garantia de 7 dias
+                <p className="text-sm opacity-75">
+                   Pagamento 100% Seguro | ✅ Garantia de 7 dias | 📱 Acesso Imediato
                 </p>
-              </div>
+              </>
             )}
-
-            {/* Bonificações */}
-            <div className="bg-yellow-400 text-gray-900 rounded-2xl p-6 mb-8">
-              <h3 className="text-xl font-bold mb-4">
-                🎁 BÔNUS EXCLUSIVOS (Valor: {bonus?.valor || 'R$ 897'})
-              </h3>
-              <div className="grid md:grid-cols-3 gap-4 text-sm">
-                {(bonus?.itens && bonus.itens.length > 0 ? 
-                  bonus.itens : 
-                  ['Planilha de Gestão Financeira', 'Kit Modelos de Contratos', 'Acesso ao Grupo VIP']
-                ).filter(item => item).map((item, idx) => (
-                  <div key={idx}>✅ {item}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Seção de Garantia */}
-      <section className="py-16 bg-green-50">
-        <div className="container mx-auto px-4 text-center">
-          <div className="max-w-3xl mx-auto">
-            <div className="w-32 h-32 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-5xl">🛡️</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-green-800 mb-6">
-              {garantia?.titulo || `Garantia Incondicional de ${garantia?.dias || '7'} Dias`}
-            </h2>
-            <p className="text-xl text-green-700 mb-8 leading-relaxed">
-              {garantia?.descricao || (
-                <>
-                  Experimente todo o conteúdo por {garantia?.dias || '7'} dias. Se não ficar completamente satisfeito, 
-                  devolvemos 100% do seu investimento. <strong>Sem perguntas, sem burocracia.</strong>
-                </>
-              )}
-            </p>
-            <div className="bg-white rounded-xl p-6 shadow-lg inline-block">
-              <p className="text-green-800 font-bold">
-                ✅ Teste por 7 dias<br/>
-                ✅ Satisfação garantida<br/>
-                ✅ Reembolso imediato
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Perguntas Frequentes
-            </h2>
-            <p className="text-xl text-gray-600">
-              Tire suas dúvidas antes de começar
-            </p>
-          </div>
-
-          <div className="max-w-4xl mx-auto space-y-6">
-            {(faq && faq.length > 0 ? faq : [
-              { pergunta: 'Como funciona o acesso ao curso?', resposta: 'Após a confirmação do pagamento, você recebe imediatamente os dados de acesso à nossa plataforma exclusiva, onde poderá assistir às aulas quantas vezes quiser.' },
-              { pergunta: 'Por quanto tempo tenho acesso?', resposta: 'O acesso é vitalício! Você paga uma única vez e tem acesso para sempre, incluindo todas as futuras atualizações do conteúdo.' },
-              { pergunta: 'E se eu não conseguir resultados?', resposta: 'Oferecemos garantia incondicional de 7 dias. Se não estiver satisfeito, devolvemos 100% do valor investido, sem questionamentos.' },
-              { pergunta: 'Preciso de conhecimento prévio?', resposta: 'Não! O curso foi desenvolvido tanto para advogados iniciantes quanto experientes. Começamos do básico e evoluímos gradualmente.' }
-            ]).filter(item => item.pergunta && item.resposta).map((item, idx) => (
-              <div key={idx} className="bg-white rounded-xl p-6 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  ❓ {item.pergunta}
-                </h3>
-                <p className="text-gray-600">
-                  {item.resposta}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Última Chance CTA */}
-      <section className="py-20 bg-gradient-to-r from-red-600 to-red-700 text-white text-center">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              ⏰ Esta é Sua Última Chance!
-            </h2>
-            <p className="text-xl md:text-2xl mb-8 opacity-90">
-              A oferta especial expira em <span className="font-mono font-bold bg-white text-red-600 px-4 py-2 rounded">{countdown}</span>
-            </p>
-            <p className="text-lg mb-8">
-              Depois disso, o curso volta ao preço normal de R$ 997,00
-            </p>
-            
-            <button
-              onClick={() => handleComprar(mainProduct)}
-              className="inline-block text-white font-bold text-2xl px-12 py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
-              style={{
-                background: `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`,
-                ...pulseStyle
-              }}
-              onMouseEnter={e => {
-                e.target.style.background = `linear-gradient(to right, ${cores.principal}, ${cores.destaque})`;
-              }}
-              onMouseLeave={e => {
-                e.target.style.background = `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`;
-              }}
-            >
-              {randomCtas[3]}
-            </button>
-            
-            <p className="text-sm opacity-75">
-              🔒 Pagamento 100% Seguro | ✅ Garantia de 7 dias | 📱 Acesso Imediato
-            </p>
           </div>
         </div>
       </section>
@@ -908,7 +934,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
               >
-                📱 WhatsApp
+                ðŸ“± WhatsApp
               </a>
             )}
             {contatoEmail && (
@@ -916,17 +942,17 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
                 href={`mailto:${contatoEmail}`} 
                 className="inline-flex items-center px-6 py-3 border-2 border-white text-white rounded-lg font-medium hover:bg-white hover:text-gray-900 transition-colors"
               >
-                ✉️ Email
+                âœ‰ï¸ Email
               </a>
             )}
           </div>
 
           <div className="border-t border-gray-700 pt-6">
-            <p className="text-gray-400 text-sm mb-2">
-              © {new Date().getFullYear()} {nomePagina}. Todos os direitos reservados.
+              <p className="text-gray-400 text-sm mb-2">
+                © {new Date().getFullYear()} {nomePagina}. Todos os direitos reservados.
             </p>
-            <p className="text-gray-500 text-xs">
-              Página criada com DireitoHub - CNPJ: XX.XXX.XXX/XXXX-XX
+              <p className="text-gray-500 text-xs">
+                Página criada com MarketPlace BIPETech - CNPJ: XX.XXX.XXX/XXXX-XX
             </p>
           </div>
         </div>
@@ -1012,7 +1038,7 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
               className="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
               onClick={() => setAcessoOk(false)}
             >
-              Começar Agora!
+              ComeÃ§ar Agora!
             </button>
           </div>
         </div>
@@ -1021,7 +1047,154 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
   );
 };
 
-// Formulário de login/cadastro de aluno inline
+// Componente de Carrossel para MÃºltiplos Produtos
+function ProductCarousel({ produtos, cores, randomCtas, handleComprar, pulseStyle }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % produtos.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + produtos.length) % produtos.length);
+  };
+
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
+
+  const produto = produtos[currentIndex];
+  const discount = produto.priceOriginal && produto.priceSale 
+    ? Math.round(((produto.priceOriginal - produto.priceSale) / produto.priceOriginal) * 100) 
+    : 0;
+
+  return (
+    <div className="relative max-w-2xl mx-auto">
+      {/* NavegaÃ§Ã£o anterior */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300"
+        disabled={produtos.length <= 1}
+      >
+        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      {/* Card do produto atual */}
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border-2 border-yellow-400 relative mx-12">
+        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-2 rounded-full font-bold text-sm">
+          {currentIndex === 0 ? 'MAIS VENDIDO' : 'OFERTA ESPECIAL'}
+        </div>
+        
+        <h3 className="text-2xl font-bold mb-4">{produto.title}</h3>
+        <p className="text-gray-300 mb-6 leading-relaxed">{produto.description}</p>
+        
+        <div className="mb-8">
+          {produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0) ? (
+            <div className="text-center">
+              <div className="bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-2xl inline-block mb-4">
+                 100% GRATUITO
+              </div>
+              <p className="text-green-400 text-lg font-semibold">
+                Acesso totalmente gratuito - Sem pegadinhas!
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-center gap-4 mb-4">
+                {produto.priceOriginal && (
+                  <span className="text-2xl text-gray-400 line-through">
+                    R$ {Number(produto.priceOriginal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                )}
+                {produto.priceSale && (
+                  <span className="text-4xl font-bold" style={{ color: cores.destaque }}>
+                    R$ {Number(produto.priceSale).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                )}
+              </div>
+              {discount > 0 && (
+                <div className="bg-green-600 text-white px-4 py-2 rounded-full font-bold text-sm inline-block">
+                  ECONOMIZE {discount}% - R$ {(produto.priceOriginal - produto.priceSale).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <button
+          onClick={() => handleComprar(produto)}
+          className="w-full text-white font-bold text-xl py-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 mb-4"
+          style={{
+            background: (produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0))
+              ? `linear-gradient(to right, #059669, #10b981)` 
+              : `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`,
+            ...pulseStyle
+          }}
+          onMouseEnter={e => {
+            if (produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0)) {
+              e.target.style.background = `linear-gradient(to right, #10b981, #059669)`;
+            } else {
+              e.target.style.background = `linear-gradient(to right, ${cores.principal}, ${cores.destaque})`;
+            }
+          }}
+          onMouseLeave={e => {
+            if (produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0)) {
+              e.target.style.background = `linear-gradient(to right, #059669, #10b981)`;
+            } else {
+              e.target.style.background = `linear-gradient(to right, ${cores.destaque}, ${cores.principal})`;
+            }
+          }}
+        >
+          {(produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0)) ? 'ðŸŽ QUERO MEU ACESSO GRATUITO AGORA!' : randomCtas[2]}
+        </button>
+        
+        <p className="text-gray-300 text-sm">
+          {(produto.isFree || (produto.priceSale === 0 && produto.priceOriginal === 0))
+            ? '🎁 100% Gratuito | 📱 Acesso Imediato | ✅ Sem Pegadinhas' 
+            : '🔒 Pagamento 100% Seguro | 📱 Acesso Imediato | ✅ Garantia de 7 dias'
+          }
+        </p>
+      </div>
+
+      {/* NavegaÃ§Ã£o prÃ³xima */}
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-3 transition-all duration-300"
+        disabled={produtos.length <= 1}
+      >
+        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      {/* Indicadores de slide */}
+      <div className="flex justify-center mt-6 space-x-2">
+        {produtos.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              index === currentIndex 
+                ? 'bg-yellow-400 scale-125' 
+                : 'bg-white/40 hover:bg-white/60'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Contador de produtos */}
+      <div className="text-center mt-4">
+        <span className="text-white/70 text-sm">
+          {currentIndex + 1} de {produtos.length} cursos disponÃ­veis
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// FormulÃ¡rio de login/cadastro de aluno inline
 function AlunoLoginCadastroForm({ onSuccess, onClose, login, register }) {
   const [isRegister, setIsRegister] = React.useState(false);
   const [email, setEmail] = React.useState('');
@@ -1106,3 +1279,4 @@ function AlunoLoginCadastroForm({ onSuccess, onClose, login, register }) {
 }
 
 export default SalesWebPage;
+

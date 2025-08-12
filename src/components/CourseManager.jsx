@@ -6,6 +6,16 @@ import LessonEditor from './LessonEditor';
 import LessonFormModal from './LessonFormModal';
 
 export default function CourseManager({ course, onUpdateCourse }) {
+  // Garante que todas as aulas tenham o campo aoVivo como booleano
+  function normalizeLessonsAoVivo(sections) {
+    return sections.map(section => ({
+      ...section,
+      lessons: section.lessons.map(lesson => ({
+        ...lesson,
+        aoVivo: Boolean(lesson.aoVivo)
+      }))
+    }));
+  }
   const [showLessonModal, setShowLessonModal] = useState(false);
   const [editingLesson, setEditingLesson] = useState(null);
   const [selectedSectionId, setSelectedSectionId] = useState(course.sections[0]?.id || null);
@@ -57,7 +67,7 @@ export default function CourseManager({ course, onUpdateCourse }) {
       ...lessonData,
       type: 'video',
     };
-    const updatedSections = course.sections.map(section => {
+    let updatedSections = course.sections.map(section => {
       if (section.id === selectedSectionId) {
         return {
           ...section,
@@ -66,6 +76,7 @@ export default function CourseManager({ course, onUpdateCourse }) {
       }
       return section;
     });
+    updatedSections = normalizeLessonsAoVivo(updatedSections);
     onUpdateCourse({ ...course, sections: updatedSections });
     setShowLessonModal(false);
   }
@@ -84,7 +95,7 @@ export default function CourseManager({ course, onUpdateCourse }) {
     if (!selectedSectionId || editingLesson == null) return;
     const sectionIdx = course.sections.findIndex(s => s.id === selectedSectionId);
     if (sectionIdx === -1) return;
-    const updatedSections = course.sections.map((section, sIdx) => {
+    let updatedSections = course.sections.map((section, sIdx) => {
       if (sIdx === sectionIdx) {
         return {
           ...section,
@@ -95,6 +106,7 @@ export default function CourseManager({ course, onUpdateCourse }) {
       }
       return section;
     });
+    updatedSections = normalizeLessonsAoVivo(updatedSections);
     onUpdateCourse({ ...course, sections: updatedSections });
     setShowLessonModal(false);
     setEditingLesson(null);

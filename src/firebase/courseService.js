@@ -25,6 +25,9 @@ const courseService = {
         const docRef = doc(db, 'courses', id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
+          // Loga o documento bruto do Firestore para debug
+          // eslint-disable-next-line no-console
+          console.log('Documento bruto do Firestore:', docSnap.data());
           courses.push({ id: docSnap.id, ...docSnap.data() });
         }
       }

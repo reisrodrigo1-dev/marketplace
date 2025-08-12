@@ -48,21 +48,43 @@ const AlunoDashboard = ({ paginaId }) => {
           modulos = course.sections.map(section => ({
             id: section.id,
             titulo: section.title,
-            aulas: (section.lessons || []).map(lesson => {
-              // eslint-disable-next-line no-console
-              console.log('Lesson do banco:', lesson);
-              return {
-                id: lesson.id,
-                titulo: lesson.title,
-                descricao: lesson.description || '',
-                videoUrl: getYoutubeEmbedUrl(lesson.youtubeUrl) || lesson.videoUrl || lesson.url || '',
-                aoVivo: lesson.aoVivo,
-                dataAoVivo: lesson.dataAoVivo,
-                horaAoVivo: lesson.horaAoVivo,
-              };
-            })
+            aulas: (section.lessons || []).map(lesson => ({
+              // Inclui todos os campos brutos do Firestore
+              ...lesson,
+              // Campos mapeados
+              titulo: lesson.title,
+              descricao: lesson.description || '',
+              videoUrl: getYoutubeEmbedUrl(lesson.youtubeUrl) || lesson.videoUrl || lesson.url || '',
+              aoVivo: lesson.aoVivo || lesson.ao_vivo || false,
+              dataAoVivo: lesson.dataAoVivo || lesson.data_aovivo || lesson.data_ao_vivo || lesson.dataInicio || lesson.data || '',
+              horaAoVivo: lesson.horaAoVivo || lesson.hora_aovivo || lesson.hora_ao_vivo || lesson.horaInicio || lesson.hora || '',
+            }))
           }));
+          // Garante que o objeto do curso tenha sempre o campo modulos e remove sections para evitar duplicidade
+          course.modulos = modulos;
+          delete course.sections;
+        } else if (course.aulas && Array.isArray(course.aulas)) {
+          // Fallback para cursos que têm aulas diretas
+          modulos = [{
+            id: 'modulo-unico',
+            titulo: course.titulo || 'Módulo Único',
+            aulas: course.aulas.map(lesson => ({
+              // Inclui todos os campos brutos do Firestore
+              ...lesson,
+              // Campos mapeados
+              titulo: lesson.title,
+              descricao: lesson.description || '',
+              videoUrl: getYoutubeEmbedUrl(lesson.youtubeUrl) || lesson.videoUrl || lesson.url || '',
+              dataAoVivo: lesson.dataAoVivo || lesson.data_aovivo || lesson.data_ao_vivo || lesson.data || '',
+              horaAoVivo: lesson.horaAoVivo || lesson.hora_aovivo || lesson.hora_ao_vivo || lesson.hora || '',
+            }))
+          }];
         }
+        // Garante que o objeto do curso tenha sempre o campo modulos
+        course.modulos = modulos;
+        // LOG ANTES DE ENVIAR PARA O PLAYER
+        // eslint-disable-next-line no-console
+        console.log('Objeto mapeado para o player:', { ...course, ...selectedCourse, modulos });
         setSelectedCourseData({ ...course, ...selectedCourse, modulos });
       } else {
         setSelectedCourseData(null);
@@ -86,6 +108,21 @@ function getYoutubeEmbedUrl(url) {
   if (selectedCourse && selectedCourseData) {
     return (
       <div className="max-w-6xl mx-auto py-10 px-2">
+        {/* DEBUG: Exibe o objeto mapeado do curso e das aulas antes de enviar ao player */}
+        <div className="mb-6 p-4 border border-dashed border-red-400 rounded bg-red-50">
+          <div className="font-bold text-red-700 mb-2">DEBUG: Objeto mapeado para o player</div>
+          <pre className="text-xs text-gray-800 overflow-x-auto" style={{maxHeight: 300}}>{JSON.stringify(selectedCourseData, null, 2)}</pre>
+          {selectedCourseData.modulos && selectedCourseData.modulos.map((mod, idx) => (
+            <div key={mod.id || idx} className="mt-2">
+              <div className="font-semibold text-blue-700">Módulo: {mod.titulo}</div>
+              {mod.aulas && mod.aulas.map((aula, aIdx) => (
+                <div key={aula.id || aIdx} className="ml-4 mb-1 text-xs text-gray-700">
+                  <strong>Aula {aIdx + 1}:</strong> {JSON.stringify(aula)}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
         <CoursePlayer
           course={selectedCourseData}
           onBack={() => setSelectedCourse(null)}

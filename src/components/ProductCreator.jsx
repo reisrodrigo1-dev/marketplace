@@ -11,8 +11,18 @@ const courseSchema = z.object({
   title: z.string().min(3, 'Título obrigatório'),
   description: z.string().min(10, 'Descrição obrigatória'),
   cover: z.any().optional(),
-  priceOriginal: z.coerce.number().min(0, 'Preço riscado obrigatório'),
-  priceSale: z.coerce.number().min(0, 'Preço de venda obrigatório'),
+  isFree: z.boolean().optional(),
+  priceOriginal: z.coerce.number().min(0).optional(),
+  priceSale: z.coerce.number().min(0).optional(),
+}).refine((data) => {
+  // Se não for gratuito, os preços são obrigatórios
+  if (!data.isFree) {
+    return data.priceOriginal && data.priceOriginal > 0 && data.priceSale && data.priceSale >= 0;
+  }
+  return true;
+}, {
+  message: 'Para cursos pagos, os preços são obrigatórios',
+  path: ['priceOriginal']
 });
 
 export default function ProductCreator({ faseada }) {
@@ -24,6 +34,7 @@ export default function ProductCreator({ faseada }) {
   const [courses, setCourses] = useState([]);
   const [editCourse, setEditCourse] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isFree, setIsFree] = useState(false);
   const { register, handleSubmit, formState: { errors }, setValue, reset, watch } = useForm({
     resolver: zodResolver(courseSchema),
   });
@@ -48,10 +59,19 @@ export default function ProductCreator({ faseada }) {
           title: data.title,
           description: data.description,
           coverUrl: imageUrl || editCourse.coverUrl,
-          priceOriginal: data.priceOriginal,
-          priceSale: data.priceSale,
+          isFree: isFree,
+          priceOriginal: isFree ? 0 : data.priceOriginal,
+          priceSale: isFree ? 0 : data.priceSale,
         });
-        setCourses((prev) => prev.map(c => c.id === editCourse.id ? { ...editCourse, title: data.title, description: data.description, coverUrl: imageUrl || editCourse.coverUrl, priceOriginal: data.priceOriginal, priceSale: data.priceSale } : c));
+        setCourses((prev) => prev.map(c => c.id === editCourse.id ? { 
+          ...editCourse, 
+          title: data.title, 
+          description: data.description, 
+          coverUrl: imageUrl || editCourse.coverUrl, 
+          isFree: isFree,
+          priceOriginal: isFree ? 0 : data.priceOriginal, 
+          priceSale: isFree ? 0 : data.priceSale 
+        } : c));
         setEditCourse(null);
       } else {
         // Criar novo curso completo
@@ -59,8 +79,9 @@ export default function ProductCreator({ faseada }) {
           title: data.title,
           description: data.description,
           coverUrl: imageUrl,
-          priceOriginal: data.priceOriginal,
-          priceSale: data.priceSale,
+          isFree: isFree,
+          priceOriginal: isFree ? 0 : data.priceOriginal,
+          priceSale: isFree ? 0 : data.priceSale,
           status: 'rascunho',
           sections: [],
           createdAt: new Date(),
@@ -76,6 +97,7 @@ export default function ProductCreator({ faseada }) {
       }
       reset();
       setCoverUrl('');
+      setIsFree(false);
       setShowCreateForm(false);
     } catch (err) {
       setError('Erro ao salvar curso. Tente novamente.');
@@ -103,6 +125,7 @@ export default function ProductCreator({ faseada }) {
     setValue('description', course.description);
     setValue('priceOriginal', course.priceOriginal ?? '');
     setValue('priceSale', course.priceSale ?? '');
+    setIsFree(course.isFree || false);
     setCoverUrl(course.coverUrl || '');
   }
 
@@ -138,7 +161,7 @@ export default function ProductCreator({ faseada }) {
           <div className="mb-8">
             <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
               <button 
-                onClick={() => { setShowCreateForm(false); setEditCourse(null); reset(); setCoverUrl(''); }}
+                onClick={() => { setShowCreateForm(false); setEditCourse(null); reset(); setCoverUrl(''); setIsFree(false); }}
                 className="hover:text-blue-600 transition-colors"
               >
                 Meus Cursos
@@ -287,7 +310,7 @@ export default function ProductCreator({ faseada }) {
                     </button>
                     <button 
                       type="button" 
-                      onClick={() => { setShowCreateForm(false); setEditCourse(null); reset(); setCoverUrl(''); }} 
+                      onClick={() => { setShowCreateForm(false); setEditCourse(null); reset(); setCoverUrl(''); setIsFree(false); }} 
                       className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
                     >
                       Cancelar
@@ -364,7 +387,7 @@ export default function ProductCreator({ faseada }) {
                 <p className="text-blue-100 text-lg">Crie e gerencie seus cursos profissionais para transformar conhecimento em renda</p>
               </div>
               <button 
-                onClick={() => { setShowCreateForm(true); setEditCourse(null); reset(); setCoverUrl(''); }} 
+                onClick={() => { setShowCreateForm(true); setEditCourse(null); reset(); setCoverUrl(''); setIsFree(false); }} 
                 className="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-all flex items-center shadow-lg"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -453,7 +476,7 @@ export default function ProductCreator({ faseada }) {
                   Transforme seu conhecimento em uma fonte de renda. Crie cursos profissionais e alcance milhares de alunos.
                 </p>
                 <button 
-                  onClick={() => { setShowCreateForm(true); setEditCourse(null); reset(); setCoverUrl(''); }} 
+                  onClick={() => { setShowCreateForm(true); setEditCourse(null); reset(); setCoverUrl(''); setIsFree(false); }} 
                   className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg"
                 >
                   <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -503,11 +526,19 @@ export default function ProductCreator({ faseada }) {
                             </span>
                           </div>
                           <div className="flex items-center space-x-4">
-                            {course.priceOriginal && (
-                              <span className="text-gray-400 line-through text-lg">R$ {course.priceOriginal}</span>
-                            )}
-                            {course.priceSale && (
-                              <span className="text-green-600 font-bold text-xl">R$ {course.priceSale}</span>
+                            {course.isFree ? (
+                              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-bold">
+                                💚 GRATUITO
+                              </span>
+                            ) : (
+                              <>
+                                {course.priceOriginal && (
+                                  <span className="text-gray-400 line-through text-lg">R$ {course.priceOriginal}</span>
+                                )}
+                                {course.priceSale && (
+                                  <span className="text-green-600 font-bold text-xl">R$ {course.priceSale}</span>
+                                )}
+                              </>
                             )}
                             <div className="flex items-center text-sm text-gray-500">
                               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -590,7 +621,7 @@ export default function ProductCreator({ faseada }) {
         <div className="mb-8">
           <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-4">
             <button 
-              onClick={() => { setShowCreateForm(false); setEditCourse(null); reset(); setCoverUrl(''); }}
+              onClick={() => { setShowCreateForm(false); setEditCourse(null); reset(); setCoverUrl(''); setIsFree(false); }}
               className="hover:text-blue-600 transition-colors"
             >
               Meus Cursos
@@ -693,6 +724,56 @@ export default function ProductCreator({ faseada }) {
               </div>
             </div>
 
+            {/* Toggle para Curso Gratuito */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Tipo de Curso</h3>
+                    <p className="text-sm text-gray-600">
+                      {isFree ? 'Curso gratuito - ideal para captar leads e demonstrar expertise' : 'Curso pago - monetize seu conhecimento'}
+                    </p>
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isFree}
+                    onChange={(e) => setIsFree(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                  <span className="ml-3 text-sm font-medium text-gray-900">
+                    {isFree ? '💚 Gratuito' : '💰 Pago'}
+                  </span>
+                </label>
+              </div>
+              
+              {isFree && (
+                <div className="mt-4 p-4 bg-green-100 rounded-lg border border-green-300">
+                  <div className="flex">
+                    <svg className="w-5 h-5 text-green-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <div className="text-sm text-green-800">
+                      <strong>Cursos gratuitos são ótimos para:</strong>
+                      <ul className="mt-2 list-disc list-inside space-y-1">
+                        <li>Captar leads qualificados</li>
+                        <li>Demonstrar sua expertise</li>
+                        <li>Construir relacionamento com potenciais clientes</li>
+                        <li>Aumentar sua autoridade no mercado</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Seção de Preços - Só aparece se não for gratuito */}
+            {!isFree && (
             <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -744,6 +825,7 @@ export default function ProductCreator({ faseada }) {
                 O preço promocional será destacado para atrair mais alunos
               </p>
             </div>
+            )}
 
             <div className="flex gap-4 pt-8 border-t border-gray-200">
               <button 
@@ -770,7 +852,7 @@ export default function ProductCreator({ faseada }) {
               </button>
               <button 
                 type="button" 
-                onClick={() => { setShowCreateForm(false); setEditCourse(null); reset(); setCoverUrl(''); }} 
+                onClick={() => { setShowCreateForm(false); setEditCourse(null); reset(); setCoverUrl(''); setIsFree(false); }} 
                 className="px-8 py-4 border-2 border-gray-300 text-gray-700 rounded-xl text-lg font-semibold hover:bg-gray-50 transition-colors"
               >
                 Cancelar
