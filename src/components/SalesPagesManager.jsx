@@ -372,6 +372,15 @@ export default function SalesPagesManager() {
                         </svg>
                         Visualizar Página
                       </button>
+                      <button
+                        onClick={() => window.open(`/minha-pagina-de-vendas/aluno-login?paginaId=${page.id}`, '_blank')}
+                        className="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white font-bold rounded-2xl hover:from-yellow-500 hover:to-yellow-700 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 mt-2"
+                      >
+                        <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 17l-4 4m0 0l-4-4m4 4V3" />
+                        </svg>
+                        Acesso aluno
+                      </button>
 
                       <div className="flex space-x-3">
                         <button
