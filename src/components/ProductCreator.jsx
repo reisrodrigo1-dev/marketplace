@@ -290,6 +290,55 @@ export default function ProductCreator({ faseada }) {
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Toggle para Curso Gratuito - sempre visível e destacado */}
+                    <div className="bg-gradient-to-r from-green-100 to-emerald-200 rounded-xl p-6 border-2 border-green-500 shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <svg className="w-7 h-7 text-green-700 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                          <div>
+                            <h3 className="text-lg font-bold text-green-900">Tipo de Curso</h3>
+                            <p className="text-sm text-green-800">
+                              {isFree ? 'Curso gratuito - ideal para captar leads e demonstrar expertise' : 'Curso pago - monetize seu conhecimento'}
+                            </p>
+                          </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isFree}
+                            onChange={(e) => setIsFree(e.target.checked)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-16 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-[6px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                          <span className="ml-4 text-base font-bold text-green-900">
+                            {isFree ? '💚 Gratuito' : '💰 Pago'}
+                          </span>
+                        </label>
+                      </div>
+                      {isFree && (
+                        <div className="mt-4 p-4 bg-green-200 rounded-lg border border-green-400">
+                          <div className="flex">
+                            <svg className="w-5 h-5 text-green-700 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                            <div className="text-sm text-green-900">
+                              <strong>Cursos gratuitos são ótimos para:</strong>
+                              <ul className="mt-2 list-disc list-inside space-y-1">
+                                <li>Captar leads qualificados</li>
+                                <li>Demonstrar sua expertise</li>
+                                <li>Construir relacionamento com potenciais clientes</li>
+                                <li>Aumentar sua autoridade no mercado</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="flex gap-4 pt-6 border-t border-gray-200">
                     <button 
                       type="submit" 
@@ -686,7 +735,7 @@ export default function ProductCreator({ faseada }) {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-3">
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
                 Adicione uma imagem de capa atrativa
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-blue-400 transition-colors bg-gray-50">
@@ -724,16 +773,54 @@ export default function ProductCreator({ faseada }) {
               </div>
             </div>
 
-            {/* Toggle para Curso Gratuito */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  Preço Original (R$) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-lg">R$</span>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    min="0" 
+                    {...register('priceOriginal')} 
+                    className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 focus:ring-0 transition-colors"
+                    placeholder="499,90"
+                  />
+                </div>
+                {errors.priceOriginal && <p className="text-red-500 text-sm mt-2">{errors.priceOriginal.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  Preço Promocional (R$) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-green-600 font-semibold text-lg">R$</span>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    min="0" 
+                    {...register('priceSale')} 
+                    className="w-full pl-12 pr-4 py-4 border-2 border-green-200 rounded-xl text-lg focus:border-green-500 focus:ring-0 transition-colors"
+                    placeholder="299,90"
+                  />
+                </div>
+                {errors.priceSale && <p className="text-red-500 text-sm mt-2">{errors.priceSale.message}</p>}
+              </div>
+            </div>
+
+            {/* Toggle para Curso Gratuito - abaixo dos campos de preço no editor */}
+            <div className="bg-gradient-to-r from-green-100 to-emerald-200 rounded-xl p-6 border-2 border-green-500 shadow-lg mt-6 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <svg className="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-7 h-7 text-green-700 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                   </svg>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Tipo de Curso</h3>
-                    <p className="text-sm text-gray-600">
+                    <h3 className="text-lg font-bold text-green-900">Tipo de Curso</h3>
+                    <p className="text-sm text-green-800">
                       {isFree ? 'Curso gratuito - ideal para captar leads e demonstrar expertise' : 'Curso pago - monetize seu conhecimento'}
                     </p>
                   </div>
@@ -745,20 +832,19 @@ export default function ProductCreator({ faseada }) {
                     onChange={(e) => setIsFree(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
-                  <span className="ml-3 text-sm font-medium text-gray-900">
+                  <div className="w-16 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-[6px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-600"></div>
+                  <span className="ml-4 text-base font-bold text-green-900">
                     {isFree ? '💚 Gratuito' : '💰 Pago'}
                   </span>
                 </label>
               </div>
-              
               {isFree && (
-                <div className="mt-4 p-4 bg-green-100 rounded-lg border border-green-300">
+                <div className="mt-4 p-4 bg-green-200 rounded-lg border border-green-400">
                   <div className="flex">
-                    <svg className="w-5 h-5 text-green-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-5 h-5 text-green-700 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                     </svg>
-                    <div className="text-sm text-green-800">
+                    <div className="text-sm text-green-900">
                       <strong>Cursos gratuitos são ótimos para:</strong>
                       <ul className="mt-2 list-disc list-inside space-y-1">
                         <li>Captar leads qualificados</li>
@@ -772,66 +858,11 @@ export default function ProductCreator({ faseada }) {
               )}
             </div>
 
-            {/* Seção de Preços - Só aparece se não for gratuito */}
-            {!isFree && (
-            <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-                Defina o preço do seu curso
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    Preço Original (R$) *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-semibold text-lg">R$</span>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      {...register('priceOriginal')} 
-                      className="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl text-lg focus:border-blue-500 focus:ring-0 transition-colors"
-                      placeholder="499,90"
-                    />
-                  </div>
-                  {errors.priceOriginal && <p className="text-red-500 text-sm mt-2">{errors.priceOriginal.message}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    Preço Promocional (R$) *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-green-600 font-semibold text-lg">R$</span>
-                    <input 
-                      type="number" 
-                      step="0.01" 
-                      min="0" 
-                      {...register('priceSale')} 
-                      className="w-full pl-12 pr-4 py-4 border-2 border-green-200 rounded-xl text-lg focus:border-green-500 focus:ring-0 transition-colors"
-                      placeholder="299,90"
-                    />
-                  </div>
-                  {errors.priceSale && <p className="text-red-500 text-sm mt-2">{errors.priceSale.message}</p>}
-                </div>
-              </div>
-              <p className="text-sm text-blue-600 mt-3 flex items-center">
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                O preço promocional será destacado para atrair mais alunos
-              </p>
-            </div>
-            )}
-
             <div className="flex gap-4 pt-8 border-t border-gray-200">
               <button 
                 type="submit" 
                 disabled={loading} 
-                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center shadow-lg"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center"
               >
                 {loading ? (
                   <>

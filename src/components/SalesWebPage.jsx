@@ -353,23 +353,26 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
           )}
           
           {/* ConteÃºdo central */}
-          <div className="flex flex-col md:flex-row items-center justify-center gap-2 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="animate-pulse text-yellow-300">🔥</span>
-              <span className="font-bold text-sm md:text-base">OFERTA EXPIRA EM:</span>
-              <span className="bg-white text-red-600 px-3 py-1 rounded-full font-mono font-bold text-sm md:text-base">
-                {countdown}
-              </span>
+          {/* Só mostra barra de oferta se houver pelo menos um produto pago */}
+          {produtosDetalhes.some(prod => !(prod.isFree || (prod.priceSale === 0 && prod.priceOriginal === 0))) && (
+            <div className="flex flex-col md:flex-row items-center justify-center gap-2 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="animate-pulse text-yellow-300">🔥</span>
+                <span className="font-bold text-sm md:text-base">OFERTA EXPIRA EM:</span>
+                <span className="bg-white text-red-600 px-3 py-1 rounded-full font-mono font-bold text-sm md:text-base">
+                  {countdown}
+                </span>
+              </div>
+              <div className="flex items-center gap-4 text-xs md:text-sm">
+                <span className="bg-yellow-400 text-red-800 px-2 py-1 rounded-full font-bold animate-pulse">
+                  🚨 Apenas 7 vagas restantes
+                </span>
+                <span className="bg-green-400 text-green-900 px-2 py-1 rounded-full font-bold">
+                  👀 23 pessoas vendo agora
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-4 text-xs md:text-sm">
-              <span className="bg-yellow-400 text-red-800 px-2 py-1 rounded-full font-bold animate-pulse">
-                🚨 Apenas 7 vagas restantes
-              </span>
-              <span className="bg-green-400 text-green-900 px-2 py-1 rounded-full font-bold">
-                👀 23 pessoas vendo agora
-              </span>
-            </div>
-          </div>
+          )}
           
           {/* EspaÃ§o reservado para balance visual */}
           <div className="hidden md:flex w-24"></div>
@@ -653,9 +656,12 @@ const SalesWebPage = ({ salesData: propSalesData, isPreview = false }) => {
         <div className="absolute inset-0 bg-black opacity-40"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-block bg-red-600 text-white px-6 py-2 rounded-full font-bold text-sm mb-6 animate-pulse">
-              ðŸ”¥ OFERTA ESPECIAL POR TEMPO LIMITADO
-            </div>
+            {/* Só mostra oferta especial se não for produto gratuito */}
+            {!(produtosDetalhes.length === 1 && (produtosDetalhes[0].isFree || (produtosDetalhes[0].priceSale === 0 && produtosDetalhes[0].priceOriginal === 0))) && (
+              <div className="inline-block bg-red-600 text-white px-6 py-2 rounded-full font-bold text-sm mb-6 animate-pulse">
+                OFERTA ESPECIAL POR TEMPO LIMITADO
+              </div>
+            )}
             
             <h2 className="text-4xl md:text-5xl font-bold mb-8">
               Transforme Sua Carreira Jurídica

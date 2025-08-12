@@ -12,6 +12,9 @@ export default function AlunosManager() {
   const [salesPages, setSalesPages] = useState([]);
   const [selectedPageId, setSelectedPageId] = useState('');
   const [alunos, setAlunos] = useState([]);
+  const [showCursosModal, setShowCursosModal] = useState(false);
+  const [cursosAluno, setCursosAluno] = useState([]);
+  const [alunoSelecionado, setAlunoSelecionado] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingPages, setLoadingPages] = useState(true);
   const [editingAluno, setEditingAluno] = useState(null);
@@ -281,9 +284,23 @@ export default function AlunosManager() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <button
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition-colors"
+                            title="Ver cursos do aluno"
+                            onClick={async () => {
+                              setAlunoSelecionado(aluno);
+                              setShowCursosModal(true);
+                              // Buscar cursos do aluno
+                              const result = await alunoService.getAcessosPorAlunoGlobal(aluno.alunoId);
+                              if (result.success) {
+                                setCursosAluno(result.data);
+                              } else {
+                                setCursosAluno([]);
+                              }
+                            }}
+                          >
                             {aluno.totalCursos} curso(s)
-                          </span>
+                          </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {formatDate(aluno.primeiroAcesso)}
@@ -316,6 +333,25 @@ export default function AlunosManager() {
             )}
           </div>
         )}
+
+        {/* Modal de Cursos do Aluno */}
+        <Modal isOpen={showCursosModal} onClose={() => setShowCursosModal(false)} title={`Cursos de ${alunoSelecionado?.nome || ''}`}>
+          <div className="space-y-4">
+            {cursosAluno.length === 0 ? (
+              <div className="text-center text-gray-500">Nenhum curso encontrado para este aluno.</div>
+            ) : (
+              <ul className="divide-y divide-gray-200">
+                {cursosAluno.map((curso, idx) => (
+                  <li key={curso.cursoId || idx} className="py-2">
+                    <div className="font-semibold text-blue-700">{curso.cursoTitulo || curso.nomeProduto || 'Curso sem título'}</div>
+                    <div className="text-sm text-gray-600">{curso.cursoDescricao || ''}</div>
+                    <div className="text-xs text-gray-400">Acesso em: {formatDate(curso.dataAcesso)}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </Modal>
 
         {/* Modal de Edição */}
         <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Editar Aluno">

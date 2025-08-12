@@ -1,4 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
+import { db } from '../firebase/config';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import DebateHistory from '../pages/DebateHistory';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -50,13 +52,52 @@ const AdminDashboard = () => {
     };
   }, [showUserDropdown]);
 
-  // Dados fictícios para demonstração
-  const stats = {
-    totalClients: 15,
-    activeCases: 8,
-    pendingTasks: 3,
-    upcomingHearings: 2
-  };
+
+  // Dashboard dinâmico com dados reais do Firebase
+  const [stats, setStats] = useState({
+    totalCourses: 0,
+    totalStudents: 0,
+    totalSalesPages: 0
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      if (!user?.uid) return;
+
+      // Buscar cursos
+      const coursesSnap = await getDocs(query(
+        collection(db, 'courses'),
+        where('userId', '==', user.uid)
+      ));
+
+      // Buscar páginas de vendas
+      const salesPagesSnap = await getDocs(query(
+        collection(db, 'salesPages'),
+        where('userId', '==', user.uid)
+      ));
+
+      // Buscar alunos únicos nas páginas de vendas do criador
+      let alunoIdsSet = new Set();
+      for (const pageDoc of salesPagesSnap.docs) {
+        const paginaId = pageDoc.id;
+        const alunosSnap = await getDocs(query(
+          collection(db, 'alunosPorPagina'),
+          where('paginaId', '==', paginaId)
+        ));
+        alunosSnap.forEach(alunoDoc => {
+          const alunoId = alunoDoc.data().alunoId;
+          if (alunoId) alunoIdsSet.add(alunoId);
+        });
+      }
+
+      setStats({
+        totalCourses: coursesSnap.size,
+        totalSalesPages: salesPagesSnap.size,
+        totalStudents: alunoIdsSet.size
+      });
+    }
+    fetchStats();
+  }, [user]);
 
   const recentActivities = [
     { id: 1, type: 'client', message: 'Novo cliente: Maria Silva', time: '2 horas atrás' },
@@ -256,18 +297,19 @@ const AdminDashboard = () => {
           {activeTab === 'dashboard' && (
             <div>
               <h1 className="text-2xl font-inter-bold text-gray-900 mb-8">Dashboard</h1>
-              {/* Cards de estatísticas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {/* Cards de estatísticas do criador */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center">
                     <div className="p-3 bg-blue-100 rounded-lg">
                       <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                       </svg>
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-inter-medium text-gray-600">Total de Clientes</p>
-                      <p className="text-2xl font-inter-bold text-gray-900">{stats.totalClients}</p>
+                      <p className="text-sm font-inter-medium text-gray-600">Total de Cursos</p>
+                      <p className="text-2xl font-inter-bold text-gray-900">{stats.totalCourses}</p>
                     </div>
                   </div>
                 </div>
@@ -275,12 +317,12 @@ const AdminDashboard = () => {
                   <div className="flex items-center">
                     <div className="p-3 bg-green-100 rounded-lg">
                       <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-inter-medium text-gray-600">Processos Ativos</p>
-                      <p className="text-2xl font-inter-bold text-gray-900">{stats.activeCases}</p>
+                      <p className="text-sm font-inter-medium text-gray-600">Total de Alunos</p>
+                      <p className="text-2xl font-inter-bold text-gray-900">{stats.totalStudents}</p>
                     </div>
                   </div>
                 </div>
@@ -288,25 +330,12 @@ const AdminDashboard = () => {
                   <div className="flex items-center">
                     <div className="p-3 bg-yellow-100 rounded-lg">
                       <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
                     </div>
                     <div className="ml-4">
-                      <p className="text-sm font-inter-medium text-gray-600">Tarefas Pendentes</p>
-                      <p className="text-2xl font-inter-bold text-gray-900">{stats.pendingTasks}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-red-100 rounded-lg">
-                      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2v16a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-inter-medium text-gray-600">Próximas Audiências</p>
-                      <p className="text-2xl font-inter-bold text-gray-900">{stats.upcomingHearings}</p>
+                      <p className="text-sm font-inter-medium text-gray-600">Páginas de Vendas</p>
+                      <p className="text-2xl font-inter-bold text-gray-900">{stats.totalSalesPages}</p>
                     </div>
                   </div>
                 </div>
